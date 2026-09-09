@@ -2,11 +2,6 @@
 
 ## Mayores
 
-- Elegir licencia antes de publicar el repositorio (bloqueante para
-  publicación pública — ver `README.md` § Licencia).
-- Crear el remoto de git y publicar el repositorio (hoy no tiene remoto
-  configurado; `git subtree`, `sync-template` y la instalación en otros
-  proyectos dependen de que exista una URL real).
 - Decidir sobre adoptar GitHub Spec Kit en lugar del sistema de tareas
   propio (`docs/decision-log.md` ADR-004, decisión abierta).
 - Aplicar el rollout (`docs/rollout-guide.md`) a los proyectos reales que

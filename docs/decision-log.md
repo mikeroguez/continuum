@@ -117,3 +117,20 @@ completo.
 etc. en la raíz de este mismo repositorio) usando ya el nombre `continuum`
 para el CLI, de forma que no quedó una migración de nombre pendiente sobre
 el propio proyecto.
+
+## ADR-006 — Licencia: MIT
+
+**Decisión.** El repositorio se publica bajo licencia MIT (`LICENSE`, en la
+raíz).
+
+**Contexto.** El repositorio se publicó en
+`git@github.com:mikeroguez/continuum.git` sin licencia explícita, lo que
+legalmente reserva todos los derechos y no permite a terceros reutilizar el
+código pese a tratarse de un repositorio público.
+
+**Alcance.** La licencia cubre el contenido de este repositorio (protocolo,
+plantillas, CLI en `template/` y su instancia autoalojada en la raíz). No se
+duplicó el archivo `LICENSE` dentro de `template/`: un proyecto que
+incorpore la plantilla vía `git subtree` queda regido por la licencia de su
+propio repositorio; los términos de MIT ya permiten esa redistribución sin
+necesidad de un archivo adicional.

@@ -124,4 +124,4 @@ Requiere únicamente Python 3 (sin dependencias externas) y git.
 
 ## Licencia
 
-Pendiente de definir antes de la publicación pública del repositorio.
+[MIT](LICENSE).

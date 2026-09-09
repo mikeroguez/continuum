@@ -97,6 +97,40 @@ git subtree split --prefix=template -b export
 Los proyectos destino deben apuntar su subtree a la rama `export`, no a
 `main`.
 
+### ¿El historial de desarrollo de Continuum se mezcla con el de mi proyecto?
+
+No, siempre que se instale con `--squash` (como en el comando de arriba —
+es la razón por la que está ahí, no es opcional). Verificado de forma
+empírica, no solo por documentación de `git subtree`:
+
+- **`git log` del proyecto destino** solo gana **un commit** por instalación
+  (o por actualización), sin importar cuántos commits tenga Continuum en su
+  propio historial. Los commits individuales de Continuum nunca aparecen
+  intercalados con los del proyecto.
+- **Nadie que clone el proyecto después ve ese historial.** Se probó con un
+  clon real (forzando el mecanismo de transferencia por red, el mismo que
+  usa GitHub): el `.git` de un clon fresco no contiene los commits
+  individuales de Continuum — ni con `git log --all`, ni pidiéndolos por
+  hash directamente. Solo se transfieren los blobs/árboles necesarios para
+  el commit "squash", no la historia completa.
+- El único lugar donde el historial completo de Continuum existe de forma
+  temporal es el `.git` local de quien ejecuta `git subtree add` por
+  primera vez (queda referenciado por la rama de seguimiento
+  `continuum/main`, necesaria para poder hacer `subtree pull`/`push`
+  después). No se sube a ningún remoto compartido ni le llega a nadie más
+  del equipo.
+
+**Sin `--squash`**, en cambio, sí ocurre lo que se quiere evitar: los
+commits de Continuum quedan intercalados en el historial real del proyecto
+de forma permanente, visibles para siempre en `git log`.
+
+Si aun así se prefiere cero rastro —ni siquiera esa presencia local y
+temporal—, la alternativa es no usar `git subtree` en absoluto: copiar
+`template/` a mano (`cp -r`/`rsync`) y comitearlo como archivos nuevos del
+proyecto, sin agregar el remoto `continuum`. El costo es perder
+`git subtree pull`/`push` para sincronizar actualizaciones — cada
+actualización futura sería copiar de nuevo y revisar el diff a mano.
+
 ## Actualizar un proyecto que ya tiene Continuum instalado
 
 ```bash

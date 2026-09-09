@@ -18,6 +18,10 @@ from . import common as c
 
 
 def packetize(root: Path, target: Path, slug: str | None, chunk_lines: int = 200) -> int:
+    # Resolver ambos (no solo target) evita que `relative_to` falle cuando
+    # `root` cuelga de un symlink que `target.resolve()` sí sigue -- p. ej.
+    # macOS resuelve /tmp como /private/tmp.
+    root = root.resolve()
     target = target.resolve()
     if not target.exists():
         c.err(f"No existe {target}")

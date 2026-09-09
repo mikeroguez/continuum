@@ -6,6 +6,8 @@ import io
 import json
 import unittest
 
+from unittest.mock import patch
+
 from .helpers import temp_project
 from _continuum import github
 
@@ -17,6 +19,15 @@ class TestGithubCmd(unittest.TestCase):
             self.assertIn("is_github", info)
             self.assertIn("recommended_rules", info)
             self.assertEqual(len(info["recommended_rules"]), 3)
+
+    @patch("shutil.which", return_value="/usr/bin/gh")
+    @patch("subprocess.run")
+    def test_detect_github_info_with_gh(self, mock_run, mock_which):
+        mock_run.return_value.returncode = 0
+        with temp_project() as tmp:
+            info = github.detect_github_info(tmp)
+            self.assertTrue(info["has_gh_cli"])
+            self.assertTrue(info["gh_authenticated"])
 
     def test_cmd_protect_human_and_apply(self):
         with temp_project() as tmp:

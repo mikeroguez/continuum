@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 from . import common as c
@@ -18,7 +19,7 @@ def detect_github_info(root: Path) -> dict:
 
     gh_authenticated = False
     if has_gh:
-        r = c.git_cmd(["gh", "auth", "status"])
+        r = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
         gh_authenticated = (r.returncode == 0)
 
     rules = [

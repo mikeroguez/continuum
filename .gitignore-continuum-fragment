@@ -1,0 +1,5 @@
+# Fragmento a fusionar dentro del .gitignore real del proyecto (no se aplica
+# solo, para no pisar el .gitignore existente al hacer git subtree pull).
+tools/_continuum/__pycache__/
+tools/_continuum/**/__pycache__/
+.ai/state/packets/

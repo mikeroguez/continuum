@@ -75,6 +75,22 @@ def git(*args: str, check: bool = False) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], capture_output=True, text=True, check=check)
 
 
+def pre_commit_hook_installed(root: Path) -> bool:
+    """True si git invocará un pre-commit hook que corre `continuum doctor`.
+
+    Resuelve la ruta real con `git rev-parse --git-path hooks/pre-commit`,
+    que respeta `core.hooksPath` (p. ej. `.githooks/` instalado por
+    `continuum install-hooks`) en vez de asumir siempre `.git/hooks/`.
+    """
+    r = git("rev-parse", "--git-path", "hooks/pre-commit")
+    if r.returncode != 0:
+        return False
+    hook_path = root / r.stdout.strip()
+    if not hook_path.exists():
+        return False
+    return "continuum doctor" in read_text(hook_path)
+
+
 def is_tracked(path: Path) -> bool:
     root = repo_root()
     try:

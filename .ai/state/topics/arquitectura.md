@@ -16,4 +16,11 @@ regla.
 
 **Regla de mantenimiento:** un cambio al protocolo o al CLI se hace primero
 en `template/`, y luego se sincroniza a la raíz copiando los archivos
-afectados (no al revés) — `template/` es la fuente de verdad.
+afectados (no al revés) — `template/` es la fuente de verdad. `.ai/roles/`
+sigue la misma regla.
+
+Este repositorio declara `roles.packs: ["comun", "software"]` en
+`.ai/config.json` (Continuum es software, no investigación ni contenido
+educativo). `.claude/agents/` (generado por `continuum roles sync`) está en
+`.gitignore` — no es parte de lo que se sincroniza entre `template/` y la
+raíz, se regenera localmente.

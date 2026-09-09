@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import bootstrap, common as c, doctor, handoff, memory, packets, tasks
+from . import bootstrap, common as c, doctor, handoff, memory, packets, roles, tasks
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -24,6 +24,7 @@ def build_parser() -> argparse.ArgumentParser:
     ts.add_argument("slug")
     ts.add_argument("--size", choices=["small", "medium", "large"], default="medium")
     ts.add_argument("--owner", default=None)
+    ts.add_argument("--role", default=None, help="Slug de un rol de .ai/roles/ (ver `continuum roles list`).")
 
     tc = tsub.add_parser("claim", help="Marca quién está trabajando la tarea.")
     tc.add_argument("slug")
@@ -39,6 +40,7 @@ def build_parser() -> argparse.ArgumentParser:
     h.add_argument("--auto", action="store_true", help="Genera un borrador desde git status/diff.")
     h.add_argument("--provider", default=None, help="claude|codex|gemini|humano (informativo).")
     h.add_argument("--message", default=None, help="Texto libre a insertar en el handoff manual.")
+    h.add_argument("--role", default=None, help="Slug de un rol de .ai/roles/ (informativo).")
 
     m = sub.add_parser("compact", help="Archiva entradas viejas de un tema (o del índice) por mes.")
     m.add_argument("--topic", default=None, help="Nombre del archivo en .ai/state/topics/ (sin .md). Sin esto, opera sobre el índice.")
@@ -56,6 +58,12 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("install-hooks", help="Instala el git hook local de pre-commit.")
     sub.add_parser("sync-template", help="Muestra los comandos de git subtree para sincronizar la plantilla.")
 
+    ro = sub.add_parser("roles", help="Catálogo de roles/personas (ver AI_COLLABORATION.md §9).")
+    rosub = ro.add_subparsers(dest="roles_cmd", required=True)
+    rosub.add_parser("list", help="Lista los roles de los packs activos en .ai/config.json.")
+    rsy = rosub.add_parser("sync", help="Genera subagentes nativos a partir del catálogo canónico.")
+    rsy.add_argument("--provider", default="claude", choices=["claude"])
+
     return p
 
 
@@ -69,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "task":
         if args.task_cmd == "start":
-            return tasks.start(root, args.slug, args.size, args.owner)
+            return tasks.start(root, args.slug, args.size, args.owner, args.role)
         if args.task_cmd == "claim":
             return tasks.claim(root, args.slug, args.owner)
         if args.task_cmd == "close":
@@ -79,8 +87,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "handoff":
         if args.auto:
-            return handoff.write_auto(root, args.provider)
-        return handoff.write_manual(root, args.message)
+            return handoff.write_auto(root, args.provider, args.role)
+        return handoff.write_manual(root, args.message, args.role)
 
     if args.cmd == "compact":
         return memory.compact(root, topic=args.topic, keep_last=args.keep_last)
@@ -96,6 +104,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "sync-template":
         return bootstrap.sync_template_instructions(root)
+
+    if args.cmd == "roles":
+        if args.roles_cmd == "list":
+            return roles.list_roles(root)
+        if args.roles_cmd == "sync":
+            return roles.sync(root, provider=args.provider)
 
     return 1
 

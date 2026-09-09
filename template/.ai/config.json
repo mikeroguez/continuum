@@ -17,6 +17,10 @@
     "archive_dir": ".ai/state/archive/handoffs",
     "stale_after_hours": 24
   },
+  "roles": {
+    "dir": ".ai/roles",
+    "packs": ["comun"]
+  },
   "template_remote": "",
   "template_prefix": ""
 }

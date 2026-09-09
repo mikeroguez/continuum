@@ -8,3 +8,7 @@ __pycache__/
 tools/_continuum/__pycache__/
 tools/_continuum/**/__pycache__/
 .ai/state/packets/
+
+# Generado por `continuum roles sync` a partir de .ai/roles/ — no se
+# commitea para que nunca pueda divergir del canónico (ver AI_COLLABORATION.md §9).
+.claude/agents/

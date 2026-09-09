@@ -30,6 +30,10 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   Requests, versionado y proceso de release.
 - Suite de tests (`tests/`, stdlib `unittest`) para
   `template/tools/_continuum/`, con workflow de CI (`tests.yml`).
+- Catálogo de roles/personas (`.ai/roles/<pack>/<slug>.md`, 23 roles en 4
+  packs: `comun`, `software`, `investigacion`, `contenido-educativo`),
+  `--role` en `task start`/`handoff`, y `continuum roles list`/`roles sync`
+  (subagentes nativos de Claude Code) — ver ADR-009.
 
 Sin releases todavía — no hay un tag previo contra el cual comparar. El
 primer tag (`v1.0.0`) cierra esta sección `[Unreleased]`.

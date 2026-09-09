@@ -11,6 +11,8 @@ tools/continuum compact --topic <nombre>
 tools/continuum memory-split-legacy
 tools/continuum packetize <archivo> [--slug <slug>]
 tools/continuum install-hooks
+tools/continuum roles list
+tools/continuum roles sync   # regenerar tras clonar o tras cambios en .ai/roles/
 ```
 
 ## Suite de tests

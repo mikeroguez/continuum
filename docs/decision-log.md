@@ -196,3 +196,46 @@ proyecto que usa Continuum, esta decisión puede revisarse — el punto de
 extensión natural sería que `continuum task start` opcionalmente delegue el
 contenido inicial de `task.md`/`execution-plan.md` a un flujo tipo Spec
 Kit, sin reemplazar el resto del sistema (handoff, memoria, verificación).
+
+## ADR-009 — Catálogo de roles como personas versionadas, no como agentes reales
+
+**Contexto.** Continuum se usa en la práctica con configuraciones de
+"expertos" por especialidad (frontend, backend, producto/JTBD, UX, legal,
+gestión de proyecto) coordinados por una persona que hace de producción, y
+también para investigación (investigador, editor científico) y para
+revisión de contenido/software educativo (pedagogo, lingüista). Hacía falta
+una forma versionada de declarar esas personas sin romper ADR-003 (sin
+orquestación real entre agentes).
+
+**Decisión.** Los roles son archivos Markdown cortos en
+`.ai/roles/<pack>/<slug>.md` — una sesión los adopta como lente para una
+tarea puntual, no procesos que corren de forma concurrente ni negocian
+entre sí. Organizados en packs: `comun` (activo por defecto: orquestador,
+gestión de proyecto, design thinking, legal, QA, accesibilidad,
+ISO/calidad, privacidad de datos, seguridad) y packs de dominio opt-in
+(`software`, `investigacion`, `contenido-educativo`), declarados en
+`.ai/config.json` (`roles.packs`).
+
+**Por qué packs y no un solo catálogo plano.** Un proyecto de software no
+necesita ver roles de pedagogía en su contexto, y viceversa — activar solo
+lo relevante evita ruido sin fragmentar la distribución (todo el catálogo
+viaja igual por `git subtree`; los packs inactivos son archivos inertes,
+no ceremonia).
+
+**Por qué la mecánica se apoya en infraestructura existente.** `--role` se
+agregó a `task start` y `handoff` (registra qué experto trabajó qué, igual
+que `--provider` ya lo hacía para el proveedor de IA) en vez de crear un
+sistema de estado paralelo.
+
+**Sincronización a subagentes nativos.** Para Claude Code, `continuum roles
+sync` genera `.claude/agents/<slug>.md` (formato con frontmatter YAML) *a
+partir* del archivo canónico — no se escribe dos veces, mismo patrón
+anti-duplicación que `AI_COLLABORATION.md` → `CLAUDE.md`/`AGENTS.md`/
+`GEMINI.md`. Codex y Gemini CLI no tienen (todavía) un mecanismo nativo
+equivalente; para esos, el rol sigue siendo una instrucción de texto que el
+entrypoint del proveedor referencia.
+
+**Consistente con ADR-003.** No hay ejecución concurrente, ni cola de
+mensajes entre roles, ni bloqueos — la coordinación sigue siendo por
+archivos compartidos (`HANDOFF.md`, `continuum task list`), leídos por
+quien corresponda, cuando corresponda.

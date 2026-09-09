@@ -124,7 +124,20 @@ def run(root: Path, quiet: bool = False) -> int:
                f"debería vivir ahí, no en el índice.")
         warnings += 1
 
-    # 5. Tareas abandonadas
+    # 5. Roles activos
+    section("Roles")
+    roles_dir = root / cfg["roles"]["dir"]
+    for pack in cfg["roles"]["packs"]:
+        pack_dir = roles_dir / pack
+        if not pack_dir.is_dir() or not any(pack_dir.glob("*.md")):
+            c.warn(f"Pack de roles '{pack}' declarado en .ai/config.json pero "
+                   f"no existe o está vacío en {roles_dir.relative_to(root)}/.")
+            warnings += 1
+        else:
+            n = len(list(pack_dir.glob("*.md")))
+            c.ok(f"Pack '{pack}': {n} rol(es).")
+
+    # 6. Tareas abandonadas
     section("Tareas activas")
     tasks_dir = root / cfg["tasks"]["dir"]
     stale_days = cfg["tasks"]["stale_after_days"]
@@ -145,7 +158,7 @@ def run(root: Path, quiet: bool = False) -> int:
             else:
                 c.ok(f"Tarea '{task_dir.name}' — {'con' if handoff_md.exists() else 'sin'} handoff, {age_days:.0f}d")
 
-    # 6. Handoff (mailbox) global
+    # 7. Handoff (mailbox) global
     section("Handoff de continuidad")
     handoff_path = root / cfg["handoff"]["path"]
     if not handoff_path.exists():
@@ -162,7 +175,7 @@ def run(root: Path, quiet: bool = False) -> int:
         else:
             c.ok(f"Handoff con {age_h:.0f}h de antigüedad.")
 
-    # 7. Tamaño en tokens de los archivos "siempre cargados"
+    # 8. Tamaño en tokens de los archivos "siempre cargados"
     section("Costo de contexto (archivos que toda sesión nueva debería leer)")
     always_loaded = [c.CANONICAL_FILE] + [c.PROVIDER_FILES[p] for p in cfg["providers"] if p in c.PROVIDER_FILES]
     always_loaded.append(cfg["estado_dev"]["path"])

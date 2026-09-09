@@ -25,6 +25,14 @@ DEFAULT_CONFIG = {
         "topics_dir": ".ai/state/topics",
         "max_topic_lines": 300,
     },
+    "roles": {
+        # Catálogo de "personas" que una sesión puede adoptar para una
+        # tarea — no son agentes que corren de forma concurrente (ver
+        # docs/decision-log.md ADR-009). "comun" aplica casi siempre;
+        # los packs de dominio son opt-in por proyecto.
+        "dir": ".ai/roles",
+        "packs": ["comun"],
+    },
     "tasks": {
         "dir": ".ai/tasks",
         "closed_dir": ".ai/tasks/_closed",

@@ -88,7 +88,7 @@ a este diseño:
 flowchart TD
     C0["<b>Capa 0 · Entrypoints por proveedor</b><br/>se leen siempre<br/>AGENTS.md · CLAUDE.md · GEMINI.md<br/>remiten todos a AI_COLLABORATION.md"]
     C1["<b>Capa 1 · Memoria viva</b><br/>se lee siempre, tamaño acotado<br/>.ai/HANDOFF.md — continuidad entre sesiones<br/>.ai/state/estado-dev.md — índice ≤80 líneas"]
-    C2["<b>Capa 2 · Memoria de trabajo</b><br/>se lee bajo demanda<br/>.ai/state/topics/*.md<br/>.ai/tasks/&lt;slug&gt;/*.md"]
+    C2["<b>Capa 2 · Memoria de trabajo</b><br/>se lee bajo demanda<br/>.ai/state/topics/*.md<br/>.ai/tasks/&lt;slug&gt;/*.md<br/>.ai/roles/&lt;pack&gt;/*.md"]
     C3["<b>Capa 3 · Memoria de largo plazo</b><br/>docs/architecture/ADR-*.md<br/>.ai/state/archive/*.md · .ai/tasks/_closed/"]
     C4["<b>Capa 4 · Verificación</b><br/>continuum doctor · continuum compact<br/>hooks de cliente (SessionEnd/PreCompact)"]
 
@@ -101,6 +101,11 @@ flowchart TD
 Una sesión nueva —de cualquier proveedor, de cualquier persona— solo
 necesita leer las Capas 0 y 1 para empezar a trabajar; `continuum doctor`
 mide ese costo. Las Capas 2 y 3 se exploran bajo demanda, nunca por defecto.
+
+Dentro de la Capa 2, `.ai/roles/<pack>/*.md` es un catálogo de personas que
+una sesión adopta para una tarea (frontend, backend, legal, pedagogo,
+etc.) — no agentes que corren de forma concurrente (ver ADR-009). Detalle
+completo en `AI_COLLABORATION.md` §9.
 
 ## 4. Flujo de una sesión
 

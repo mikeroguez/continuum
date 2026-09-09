@@ -29,14 +29,15 @@ def _archive_previous(root: Path, cfg: dict) -> None:
     shutil.copy2(handoff_path, dest)
 
 
-def write_manual(root: Path, message: str | None) -> int:
+def write_manual(root: Path, message: str | None, role: str | None = None) -> int:
     cfg = c.load_config(root)
     _archive_previous(root, cfg)
     templates_dir = root / ".ai" / "templates"
     text = c.read_text(templates_dir / "HANDOFF.md")
     if not text:
-        text = "# Handoff\n\n**Fecha:** {{DATE}}\n\n{{MESSAGE}}\n"
+        text = "# Handoff\n\n**Fecha:** {{DATE}} · **Rol:** {{ROLE}}\n\n{{MESSAGE}}\n"
     text = text.replace("{{DATE}}", c.date_str()).replace("{{SLUG}}", "(general)")
+    text = text.replace("{{ROLE}}", role or "(sin asignar)")
     text = text.replace("{{MESSAGE}}", message or "")
     c.write_text(root / cfg["handoff"]["path"], text)
     c.ok(f"Handoff escrito en {cfg['handoff']['path']}. Complétalo con objetivo, "
@@ -44,7 +45,7 @@ def write_manual(root: Path, message: str | None) -> int:
     return 0
 
 
-def write_auto(root: Path, provider: str | None) -> int:
+def write_auto(root: Path, provider: str | None, role: str | None = None) -> int:
     """Genera un borrador de handoff a partir del estado real de git.
 
     No reemplaza el juicio de la IA/persona (no sabe "por qué" se hizo algo),
@@ -62,7 +63,8 @@ def write_auto(root: Path, provider: str | None) -> int:
     lines = [
         "# Handoff (auto-generado)",
         "",
-        f"**Fecha:** {c.date_str()} · **Proveedor:** {provider or 'desconocido'} · **Branch:** {branch}",
+        f"**Fecha:** {c.date_str()} · **Proveedor:** {provider or 'desconocido'} · "
+        f"**Rol:** {role or 'desconocido'} · **Branch:** {branch}",
         "",
         "> Este borrador se generó automáticamente al cortar la sesión "
         "(hook SessionEnd/PreCompact o pre-push). Complementa manualmente el "

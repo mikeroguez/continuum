@@ -3,3 +3,4 @@
 tools/_continuum/__pycache__/
 tools/_continuum/**/__pycache__/
 .ai/state/packets/
+.claude/agents/

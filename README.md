@@ -118,18 +118,22 @@ un Pull Request, y cómo se versiona y libera.
 
 ```bash
 tools/continuum                          # doctor: estado general en segundos
-tools/continuum task start <slug> --size small|medium|large
+tools/continuum task start <slug> --size small|medium|large [--role <slug>]
 tools/continuum task claim <slug> <owner>
 tools/continuum task close <slug>
-tools/continuum handoff --message "..."
-tools/continuum handoff --auto --provider claude
+tools/continuum handoff --message "..." [--role <slug>]
+tools/continuum handoff --auto --provider claude [--role <slug>]
 tools/continuum compact --topic <nombre>
 tools/continuum memory-split-legacy
 tools/continuum packetize <archivo> [--slug <slug>]
 tools/continuum install-hooks
+tools/continuum roles list                # roles disponibles en los packs activos
+tools/continuum roles sync                # genera subagentes de Claude Code (.claude/agents/)
 ```
 
-Requiere únicamente Python 3 (sin dependencias externas) y git.
+Requiere únicamente Python 3 (sin dependencias externas) y git. Ver
+`AI_COLLABORATION.md` §9 para el catálogo de roles/personas por dominio
+(software, investigación, contenido educativo).
 
 ## Licencia
 

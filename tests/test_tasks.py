@@ -16,6 +16,19 @@ class TestTaskLifecycle(unittest.TestCase):
             self.assertTrue((task_dir / "execution-plan.md").exists())
             self.assertIn("ana", (task_dir / "task.md").read_text())
 
+    def test_start_with_known_role_shows_title_and_pack(self):
+        with temp_project() as root:
+            tasks.start(root, "demo", "small", None, role="legal")
+            content = (root / ".ai" / "tasks" / "demo" / "task.md").read_text()
+            self.assertIn("Legal (`comun/legal`)", content)
+
+    def test_start_with_unknown_role_keeps_raw_text_and_warns(self):
+        with temp_project() as root:
+            code = tasks.start(root, "demo", "small", None, role="no-existe")
+            self.assertEqual(code, 0)  # un rol libre no bloquea la tarea
+            content = (root / ".ai" / "tasks" / "demo" / "task.md").read_text()
+            self.assertIn("**Rol:** no-existe", content)
+
     def test_start_large_creates_packets_dir(self):
         with temp_project() as root:
             tasks.start(root, "grande", "large", None)

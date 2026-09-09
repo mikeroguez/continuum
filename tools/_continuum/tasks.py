@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 
 from . import common as c
+from . import roles as r
 
 TEMPLATE_FILES = ["task.md", "notes.md", "execution-plan.md"]
 
@@ -24,7 +25,7 @@ def _render(template_text: str, **kwargs) -> str:
     return out
 
 
-def start(root: Path, slug: str, size: str, owner: str | None) -> int:
+def start(root: Path, slug: str, size: str, owner: str | None, role: str | None = None) -> int:
     cfg = c.load_config(root)
     tasks_dir = root / cfg["tasks"]["dir"]
     task_dir = tasks_dir / slug
@@ -32,11 +33,23 @@ def start(root: Path, slug: str, size: str, owner: str | None) -> int:
         c.err(f"La tarea '{slug}' ya existe en {task_dir.relative_to(root)}")
         return 1
 
+    role_display = "(sin asignar)"
+    if role:
+        found = r.find_role(root, role, cfg)
+        if found:
+            role_display = f"{found['title']} (`{found['pack']}/{found['slug']}`)"
+        else:
+            c.warn(f"Rol '{role}' no encontrado en los packs activos "
+                   f"({cfg['roles']['packs']}) — se guarda como texto libre. "
+                   f"Corre `continuum roles list` para ver los disponibles.")
+            role_display = role
+
     templates_dir = root / ".ai" / "templates"
     task_dir.mkdir(parents=True, exist_ok=True)
 
     common_vars = dict(
-        SLUG=slug, DATE=c.date_str(), SIZE=size, OWNER=owner or "(sin asignar)"
+        SLUG=slug, DATE=c.date_str(), SIZE=size, OWNER=owner or "(sin asignar)",
+        ROLE=role_display,
     )
     template_names = {
         "task.md": "TASK.md",

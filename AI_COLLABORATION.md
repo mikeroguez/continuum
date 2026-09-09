@@ -156,3 +156,34 @@ consistentes, sin duplicados divergentes, tamaño y frescura del índice y de
 cada tema, tareas abandonadas, y costo en tokens del arranque. Es una
 advertencia, no un bloqueo duro — usa `git commit --no-verify` conscientemente
 si el caso lo amerita.
+
+## 9. Roles: catálogo de expertos
+
+Un rol es una persona/lente que una sesión adopta para una tarea —
+**no es un agente que corre de forma concurrente ni un proceso separado**
+(ver `docs/decision-log.md` ADR-009). Vive como Markdown corto en
+`.ai/roles/<pack>/<slug>.md`, agrupado en packs por dominio:
+
+- `comun` — orquestador, gestión de proyecto, design thinking, legal, QA,
+  accesibilidad, ISO/calidad de proceso, privacidad de datos, seguridad.
+  Activo por defecto.
+- `software`, `investigacion`, `contenido-educativo` — packs de dominio,
+  opt-in: se activan agregando el pack a `roles.packs` en `.ai/config.json`.
+
+```bash
+tools/continuum roles list                    # roles disponibles en los packs activos
+tools/continuum task start <slug> --role backend
+tools/continuum handoff --role backend --provider claude
+tools/continuum roles sync                    # genera subagentes de Claude Code (.claude/agents/)
+```
+
+Si el rol no existe en ningún pack activo, se guarda como texto libre y se
+avisa — un typo no bloquea la tarea. `roles sync` solo tiene soporte real
+hoy para Claude Code (subagentes nativos, generados desde el archivo
+canónico); para otros proveedores el rol sigue siendo una instrucción de
+texto que el entrypoint referencia, no un archivo generado.
+
+`.claude/agents/` es un artefacto generado — está en `.gitignore`, no se
+commitea. Cada quien lo regenera con `continuum roles sync` después de
+clonar o de traer cambios a `.ai/roles/` (nunca edites esos archivos a
+mano: se sobrescriben en la siguiente sincronización).

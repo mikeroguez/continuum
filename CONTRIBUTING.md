@@ -106,7 +106,12 @@ mantenedor:
 
 - Exigir Pull Request antes de mergear.
 - Exigir que pase el check `continuum doctor` (workflow
-  `continuum-doctor.yml`) antes de mergear.
+  `continuum-doctor.yml`) antes de mergear. **Nota:** el workflow trae
+  `continue-on-error: true` por diseño (`ARCHITECTURE.md` §8: sin CI
+  bloqueante por defecto), lo que lo hace reportar éxito sin importar el
+  resultado real — exigirlo como *required check* no protege nada mientras
+  esa línea siga ahí. Quítala primero si de verdad se quiere bloquear el
+  merge.
 - No permitir force-push ni borrado de la rama.
 
 No se configuró desde este repositorio porque no hay acceso a la API de

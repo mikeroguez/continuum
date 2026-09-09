@@ -2,6 +2,11 @@
 
 <p align="center">Protocolo y herramientas de memoria para equipos que trabajan con múltiples asistentes de IA (Claude, Codex, Gemini) sobre el mismo repositorio.</p>
 
+<p align="center">
+  <a href="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml"><img alt="continuum doctor" src="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue.svg"></a>
+</p>
+
 ---
 
 ## Qué es

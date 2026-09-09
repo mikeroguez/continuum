@@ -1,12 +1,10 @@
 name: continuum-doctor
 
-# Corre `continuum doctor` en cada PR y en cada push a main, como reporte
-# visible, sin bloquear el merge por defecto (continue-on-error: true).
+# Corre `continuum doctor` en cada PR y en cada push a main como check
+# bloqueante cuando la protección de rama lo exige.
 # Si solo disparara en pull_request, un flujo de commits directos a main
 # (como el de este repositorio mientras hay un único mantenedor) nunca
-# lo ejecutaría — de ahí el trigger de push. Para hacerlo obligatorio en
-# un PR, quita `continue-on-error: true` y exige el check en la
-# protección de rama (ver CONTRIBUTING.md).
+# lo ejecutaría — de ahí el trigger de push.
 on:
   pull_request:
   push:
@@ -20,5 +18,4 @@ jobs:
         with:
           fetch-depth: 0
       - name: continuum doctor
-        continue-on-error: true
         run: python3 tools/continuum doctor

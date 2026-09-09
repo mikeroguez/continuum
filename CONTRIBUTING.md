@@ -102,12 +102,13 @@ La fuente de verdad de la versión es `template/tools/_continuum/__init__.py`
    a una sección nueva `## [X.Y.Z] - YYYY-MM-DD`.
 4. Regenerar la rama `export`:
    ```bash
-   git subtree split --prefix=template -b export --rejoin
-   git push origin export --force
+   git branch -D export
+   git subtree split --prefix=template -b export
+   git push origin export --force-with-lease
    ```
 5. Etiquetar y publicar:
    ```bash
-   git tag -a vX.Y.Z -m "vX.Y.Z"
+   git tag -a vX.Y.Z export -m "vX.Y.Z"
    git push origin vX.Y.Z
    ```
 6. Crear el Release en GitHub a partir del tag, con las notas del
@@ -118,20 +119,33 @@ add`/`pull` a un tag (`vX.Y.Z`) en vez de seguir `main` o `export` de forma
 flotante, para decidir de forma explícita cuándo se adopta una versión que
 podría no ser retrocompatible (ver `README.md` § Instalación).
 
-## Protección de rama (configuración en GitHub, no en archivos)
+## Protección de rama (configuración en GitHub)
 
-Recomendado en Settings → Branches para `main`, a medida que haya más de un
-mantenedor:
+Recomendado en Settings -> Branches / Rulesets:
+
+### `main`
 
 - Exigir Pull Request antes de mergear.
-- Exigir que pase el check `continuum doctor` (workflow
-  `continuum-doctor.yml`) antes de mergear. **Nota:** el workflow trae
-  `continue-on-error: true` por diseño (`ARCHITECTURE.md` §8: sin CI
-  bloqueante por defecto), lo que lo hace reportar éxito sin importar el
-  resultado real — exigirlo como *required check* no protege nada mientras
-  esa línea siga ahí. Quítala primero si de verdad se quiere bloquear el
-  merge.
-- No permitir force-push ni borrado de la rama.
+- Exigir checks antes de mergear:
+  - `doctor`
+  - `unittest (3.10)`
+  - `unittest (3.12)`
+- No permitir force-push.
+- No permitir borrado de la rama.
+- Requerir que la rama esté actualizada antes de mergear cuando haya más de
+  un mantenedor activo.
 
-No se configuró desde este repositorio porque no hay acceso a la API de
-GitHub en el entorno donde se escribió este documento — aplicarlo a mano.
+### `export`
+
+`export` es una rama generada; nadie commitea directamente ahí.
+
+- No exigir PR: no se desarrolla en esta rama.
+- Permitir actualizaciones mediante `git push origin export --force-with-lease`
+  desde el proceso de release.
+- No permitir borrado accidental.
+- Etiquetar cada release estable (`vX.Y.Z`) apuntando al commit de `export`.
+
+Si GitHub Rulesets no permite expresar "solo force-push controlado durante
+release", deja `export` sin protección estricta y trata los tags como la
+superficie estable de consumo. Los proyectos destino deberían preferir tags
+para instalaciones reproducibles.

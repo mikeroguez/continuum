@@ -6,6 +6,10 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+Sin cambios todavía.
+
+## [1.0.0] - 2026-09-09
+
 ### Added
 
 - Protocolo de colaboración con IA (`AI_COLLABORATION.md` + entrypoints
@@ -35,5 +39,5 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   `--role` en `task start`/`handoff`, y `continuum roles list`/`roles sync`
   (subagentes nativos de Claude Code) — ver ADR-009.
 
-Sin releases todavía — no hay un tag previo contra el cual comparar. El
-primer tag (`v1.0.0`) cierra esta sección `[Unreleased]`.
+Primer release estable de Continuum. El tag `v1.0.0` apunta a la rama
+generada `export`, que contiene únicamente la plantilla instalable.

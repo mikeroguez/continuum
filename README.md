@@ -54,13 +54,20 @@ Una sola vez por proyecto destino:
 
 ```bash
 git remote add continuum <url-de-este-repositorio>
-git subtree add --prefix=. continuum main --squash -m "chore: instala Continuum"
+git subtree add --prefix=. continuum v1.0.0 --squash -m "chore: instala Continuum"
 ```
 
 `--prefix=.` monta el contenido de `template/` en la raíz del proyecto
 destino. Ver la nota técnica sobre `git subtree split` más abajo para cómo
 se logra que solo el contenido de `template/`, y no el repositorio completo,
 termine en la raíz del proyecto destino.
+
+También puedes seguir la rama flotante `export` si quieres recibir siempre la
+plantilla instalable más reciente:
+
+```bash
+git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum"
+```
 
 Después de instalar, completar el nombre del proyecto, los proveedores en
 uso y los datos de sincronización (`template_remote` / `template_prefix`):
@@ -95,7 +102,8 @@ git subtree split --prefix=template -b export
 ```
 
 Los proyectos destino deben apuntar su subtree a la rama `export`, no a
-`main`.
+`main`, o a un tag de release (`v1.0.0`, `v1.1.0`, etc.) si quieren una
+versión fija y reproducible.
 
 ### ¿El historial de desarrollo de Continuum se mezcla con el de mi proyecto?
 

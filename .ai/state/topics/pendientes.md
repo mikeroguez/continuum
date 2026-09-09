@@ -2,8 +2,6 @@
 
 ## Mayores
 
-- Decidir sobre adoptar GitHub Spec Kit en lugar del sistema de tareas
-  propio (`docs/decision-log.md` ADR-004, decisión abierta).
 - Aplicar el rollout (`docs/rollout-guide.md`) a los proyectos reales que
   motivaron este diseño — no se ha aplicado a ninguno todavía.
 

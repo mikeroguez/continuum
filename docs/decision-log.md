@@ -89,12 +89,8 @@ para contrastarlo con evidencia externa.
    formalizando una práctica que ya existía de facto en el Proyecto A sin
    estar documentada en su protocolo.
 
-**Decisión abierta, no resuelta por esta revisión.** La adopción de GitHub
-Spec Kit (`/specify`, `/plan`, `/tasks`) en lugar del sistema de tareas
-propio de `template/.ai/tasks/` queda documentada como alternativa madura y
-más ampliamente adoptada, pero no se implementó: cambiaría la forma del
-subsistema de tareas, no solo su contenido, y esa decisión corresponde al
-equipo que mantiene este repositorio. Ver `docs/investigacion-2026.md` §6.
+**Decisión sobre GitHub Spec Kit: rechazada (cerrada 2026-09-09, ver ADR-008).**
+Se dejó abierta en esta revisión y se resolvió por separado.
 
 ## ADR-005 — Nombre del proyecto: Continuum
 
@@ -161,3 +157,42 @@ eximen de esta regla.
 (`vX.Y.Z`) en vez de seguir `main`/`export` sin anclar, para decidir de
 forma explícita cuándo se adopta una versión que podría no ser
 retrocompatible.
+
+## ADR-008 — No se adopta GitHub Spec Kit
+
+**Decisión.** Se rechaza adoptar GitHub Spec Kit (`/specify`, `/plan`,
+`/tasks`) como reemplazo del sistema de tareas propio
+(`template/.ai/tasks/`). Queda documentado como alternativa considerada y
+descartada, no como decisión pendiente.
+
+**Por qué.**
+
+1. **Resuelven problemas distintos.** Spec Kit cubre la planeación de una
+   feature antes de escribirla; Continuum cubre continuidad entre sesiones,
+   proveedores y personas, y memoria del proyecto en el tiempo. Spec Kit no
+   tiene handoff, no compacta memoria, no verifica soporte multi-proveedor
+   — no es un reemplazo del subsistema de tareas, es una pieza distinta del
+   ciclo de vida de una tarea.
+2. **Introduce una dependencia externa** en un proyecto cuya identidad es
+   no tener ninguna (Markdown + Python estándar, nada que instalar ni
+   mantener sincronizado con el ciclo de release de un tercero) — el mismo
+   motivo por el que se descartaron antes bases vectoriales y frameworks de
+   orquestación (LangGraph/CrewAI/AutoGen, `ARCHITECTURE.md` §8).
+3. **Va en contra de "ceremonia proporcional al riesgo"** (`ARCHITECTURE.md`
+   §2, principio 2): el flujo completo de Spec Kit genera spec, plan y
+   tareas por feature — más ceremonia que el sistema actual, que ya permite
+   saltarse la carpeta de tarea en cambios chicos. Adoptarlo agravaría el
+   patrón de abandono de toolkits pesados ya observado dos veces en la
+   auditoría original (ADR-002).
+
+**Evidencia a favor de Spec Kit que no alcanzó a justificar el cambio.**
+Adopción amplia (111,000+ estrellas, 30+ agentes compatibles) y reportes de
+3-10x más éxito al primer intento — pero esa mejora es sobre calidad de
+planeación, no sobre el problema que Continuum ataca.
+
+**Reversibilidad.** Si en el futuro aparece evidencia de que la planeación
+de tareas (no la memoria/continuidad) es el cuello de botella real de un
+proyecto que usa Continuum, esta decisión puede revisarse — el punto de
+extensión natural sería que `continuum task start` opcionalmente delegue el
+contenido inicial de `task.md`/`execution-plan.md` a un flujo tipo Spec
+Kit, sin reemplazar el resto del sistema (handoff, memoria, verificación).

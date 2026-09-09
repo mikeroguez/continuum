@@ -134,7 +134,7 @@ protocolo. Se incorporó como recomendación explícita en el diseño, como
 complemento al mecanismo de visibilidad social existente (`continuum task
 claim`), que no aísla archivos en disco.
 
-## 6. GitHub Spec Kit — alternativa madura, no adoptada
+## 6. GitHub Spec Kit — alternativa madura, evaluada y rechazada
 
 **Spec Kit** (github.com/github/spec-kit), mantenido por GitHub, cuenta con
 más de 111.000 estrellas, comandos estandarizados (`/specify`, `/plan`,
@@ -146,11 +146,11 @@ Es, en esencia, una alternativa considerablemente más adoptada y validada
 que el sistema de tareas construido en este proyecto
 (`TASK.md`/`EXECUTION_PLAN.md`/`NOTES.md`).
 
-Esta alternativa no se adoptó en la presente revisión porque implicaría un
-cambio de forma del subsistema de tareas —reemplazarlo por los comandos de
-una herramienta externa—, no solo de contenido. Queda documentada como
-decisión abierta en `docs/decision-log.md` (ADR-004), pendiente de
-resolución por el equipo que mantenga este repositorio.
+Esta alternativa se evaluó y se rechazó: resuelve la planeación de una
+feature, no la continuidad entre sesiones/proveedores/personas que es el
+problema central de Continuum, e implicaría una dependencia externa y más
+ceremonia que el sistema actual. Ver `docs/decision-log.md` ADR-008 para el
+razonamiento completo y las condiciones bajo las que se reconsideraría.
 
 ## 7. Frameworks de orquestación multi-agente — no aplican a este problema
 

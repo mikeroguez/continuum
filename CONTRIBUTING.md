@@ -52,6 +52,25 @@ ahí: se regenera en cada release (ver más abajo).
 El PR debe dejar `tools/continuum doctor` en cero problemas críticos antes
 de mergear (el hook de pre-commit y el workflow de CI ya lo verifican).
 
+## Tests
+
+Suite de tests (`tests/`, stdlib `unittest`, sin dependencias nuevas) contra
+el código fuente en `template/tools/_continuum/` — no contra la copia
+autoalojada en la raíz. Vive solo en este meta-repositorio: no se distribuye
+a los proyectos que incorporan Continuum (`.github/workflows/tests.yml` está
+únicamente en la raíz, no en `template/`).
+
+```bash
+python3 -m unittest discover -s tests -t . -v
+```
+
+Cualquier cambio en `template/tools/_continuum/` que toque comportamiento
+(no solo texto de ayuda) debería venir acompañado de un test — en particular
+si corrige un bug: dos bugs reales encontrados durante el desarrollo
+(`memory-split-legacy` sobreescribiendo un tema existente, `packetize` con
+rutas relativas) quedaron como pruebas de regresión en `tests/test_memory.py`
+y `tests/test_packets.py`, precisamente para que no vuelvan a aparecer.
+
 ## Convención de commits
 
 Conventional Commits, tipo en inglés, mensaje en español — igual que

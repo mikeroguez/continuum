@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml"><img alt="continuum doctor" src="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg"></a>
+  <a href="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-blue.svg"></a>
 </p>
 

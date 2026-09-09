@@ -13,16 +13,13 @@ tools/continuum packetize <archivo> [--slug <slug>]
 tools/continuum install-hooks
 ```
 
-## Smoke test manual del CLI (no hay suite automatizada todavía)
-
-Probar el ciclo completo en una copia descartable antes de tocar `template/`:
+## Suite de tests
 
 ```bash
-rm -rf /tmp/continuum-test && mkdir -p /tmp/continuum-test
-cp -r template/. /tmp/continuum-test/
-cd /tmp/continuum-test && git init -q && git add -A && git commit -qm init
-tools/continuum doctor
+python3 -m unittest discover -s tests -t . -v
 ```
+
+Ver `CONTRIBUTING.md` § Tests.
 
 ## Validar los diagramas Mermaid de `ARCHITECTURE.md`
 

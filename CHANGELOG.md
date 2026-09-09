@@ -21,11 +21,15 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - Revisión de literatura e industria 2026 (`docs/investigacion-2026.md`)
   que valida y corrige el diseño inicial.
 - Bitácora de decisiones en formato ADR (`docs/decision-log.md`,
-  ADR-001 a ADR-007).
+  ADR-001 a ADR-008).
 - Guía de adopción para proyectos existentes (`docs/rollout-guide.md`).
 - Licencia MIT.
 - El propio repositorio se autoaloja: corre su propia instancia de
   Continuum además de distribuirla como plantilla en `template/`.
+- Manual de colaboración (`CONTRIBUTING.md`): ramas, commits, Pull
+  Requests, versionado y proceso de release.
+- Suite de tests (`tests/`, stdlib `unittest`) para
+  `template/tools/_continuum/`, con workflow de CI (`tests.yml`).
 
 Sin releases todavía — no hay un tag previo contra el cual comparar. El
 primer tag (`v1.0.0`) cierra esta sección `[Unreleased]`.

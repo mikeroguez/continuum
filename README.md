@@ -35,6 +35,8 @@ Este README cubre solo instalación y operación.
 | `docs/investigacion-2026.md` | Revisión de literatura e industria que valida o corrige el diseño, con fuentes.                                                                                            |
 | `docs/decision-log.md`       | Historial de decisiones sobre la arquitectura misma, en formato ADR.                                                                                                       |
 | `docs/rollout-guide.md`      | Procedimiento para adoptar la plantilla en un proyecto ya existente.                                                                                                       |
+| `CONTRIBUTING.md`            | Manual de colaboración: ramas, commits, Pull Requests, versionado y releases.                                                                                              |
+| `CHANGELOG.md`               | Historial de cambios por versión (Keep a Changelog).                                                                                                                       |
 
 ## Instalación (git subtree)
 
@@ -102,8 +104,9 @@ Imprime el comando exacto de `git subtree pull`, usando `template_remote` y
 
 Un cambio genérico del protocolo o del CLI hecho mientras se trabaja en un
 proyecto concreto se propaga de vuelta con `git subtree push` (el mismo
-comando que imprime `sync-template`, en sentido inverso), para que el resto
-de los proyectos se beneficien en su próxima sincronización.
+comando que imprime `sync-template`, en sentido inverso). Ver
+[`CONTRIBUTING.md`](CONTRIBUTING.md) para ramas, commits, cuándo hace falta
+un Pull Request, y cómo se versiona y libera.
 
 ## Uso del CLI
 

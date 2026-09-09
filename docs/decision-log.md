@@ -134,3 +134,30 @@ duplicó el archivo `LICENSE` dentro de `template/`: un proyecto que
 incorpore la plantilla vía `git subtree` queda regido por la licencia de su
 propio repositorio; los términos de MIT ya permiten esa redistribución sin
 necesidad de un archivo adicional.
+
+## ADR-007 — Estrategia de ramas y versionado
+
+**Decisión.** Rama única de desarrollo de larga duración (`main`), ramas de
+trabajo cortas con prefijo por tipo (`feat/`, `fix/`, `docs/`, etc.), y una
+rama especial generada por máquina (`export`, vía `git subtree split
+--prefix=template`) que nadie edita a mano. Versionado semántico
+(`MAJOR.MINOR.PATCH`) para el conjunto protocolo + CLI, con `CHANGELOG.md`
+en formato Keep a Changelog y tags `vX.Y.Z` en cada release. El detalle
+operativo completo está en `CONTRIBUTING.md`, no se repite aquí.
+
+**Por qué no `develop`/staging.** El proyecto es un CLI más plantillas
+distribuidas por archivo, no un servicio con entornos que desplegar por
+etapas — una segunda rama larga sería ceremonia sin un riesgo real que
+mitigue (mismo principio de `ARCHITECTURE.md` §2, principio 2).
+
+**Por qué PR obligatorio en `template/` incluso para el propio mantenedor.**
+Un bug introducido ahí se propaga a cualquier proyecto que haga `git
+subtree pull` después — el costo de una revisión antes de mergear es bajo
+comparado con ese radio de impacto. Cambios de documentación pura
+(`docs/`, temas de `.ai/state/`) no tienen esa propagación automática y se
+eximen de esta regla.
+
+**Recomendación a proyectos consumidores.** Fijar el subtree a un tag
+(`vX.Y.Z`) en vez de seguir `main`/`export` sin anclar, para decidir de
+forma explícita cuándo se adopta una versión que podría no ser
+retrocompatible.

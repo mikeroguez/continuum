@@ -89,3 +89,24 @@ def write_auto(root: Path, provider: str | None, role: str | None = None) -> int
     c.ok(f"Handoff automático escrito en {cfg['handoff']['path']}. "
          f"Faltan por completar 'Objetivo' y 'Siguiente paso'.")
     return 0
+
+
+def lint_handoff(root: Path) -> list[str]:
+    cfg = c.load_config(root)
+    handoff_path = root / cfg["handoff"]["path"]
+    warnings = []
+    if not handoff_path.exists():
+        warnings.append(f"No existe {cfg['handoff']['path']}.")
+        return warnings
+
+    text = c.read_text(handoff_path)
+    tokens = c.estimate_tokens(text)
+
+    if tokens > 400:
+        warnings.append(f"El handoff tiene ~{tokens} tokens estimados (límite recomendado: ~400 tokens). "
+                        "Considera resumir secciones redundantes o diffs largos.")
+
+    if "_(completar manualmente)_" in text:
+        warnings.append("El handoff contiene secciones sin completar ('_(completar manualmente)_').")
+
+    return warnings

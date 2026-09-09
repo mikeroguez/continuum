@@ -3,4 +3,5 @@
 tools/_continuum/__pycache__/
 tools/_continuum/**/__pycache__/
 .ai/state/packets/
+.ai/metrics/events.jsonl
 .claude/agents/

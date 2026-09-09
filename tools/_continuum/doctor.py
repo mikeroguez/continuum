@@ -2,8 +2,8 @@
 
 Pensado para correr en <1s como git hook y para dar, sin memorizar subcomandos,
 una foto clara de qué está desactualizado o roto. Es la pieza que reemplaza a
-check-workflow.sh (que solo miraba que existieran archivos) con verificaciones
-que sí importan: frescura, duplicados, tamaño en tokens, tareas abandonadas.
+check-workflow.sh con verificaciones que sí importan: frescura, duplicados,
+tamaño en tokens, tareas abandonadas y auto-reparaciones seguras.
 """
 from __future__ import annotations
 
@@ -13,7 +13,90 @@ from pathlib import Path
 from . import common as c
 
 
-def run(root: Path, quiet: bool = False) -> int:
+def run_fix(root: Path, dry_run: bool = True) -> int:
+    cfg = c.load_config(root)
+    actions = []
+
+    # 1. Check directories
+    topics_dir = root / cfg["estado_dev"]["topics_dir"]
+    if not topics_dir.exists():
+        actions.append({
+            "id": "create_topics_dir",
+            "desc": f"Crear directorio de temas de memoria: {topics_dir.relative_to(root)}/",
+            "fn": lambda: topics_dir.mkdir(parents=True, exist_ok=True),
+        })
+
+    tasks_dir = root / cfg["tasks"]["dir"]
+    if not tasks_dir.exists():
+        actions.append({
+            "id": "create_tasks_dir",
+            "desc": f"Crear directorio de tareas: {tasks_dir.relative_to(root)}/",
+            "fn": lambda: tasks_dir.mkdir(parents=True, exist_ok=True),
+        })
+
+    archive_dir = root / cfg["handoff"]["archive_dir"]
+    if not archive_dir.exists():
+        actions.append({
+            "id": "create_archive_dir",
+            "desc": f"Crear directorio de archivo: {archive_dir.relative_to(root)}/",
+            "fn": lambda: archive_dir.mkdir(parents=True, exist_ok=True),
+        })
+
+    # 2. Check handoff
+    handoff_path = root / cfg["handoff"]["path"]
+    if not handoff_path.exists():
+        from . import handoff
+        actions.append({
+            "id": "create_handoff",
+            "desc": f"Crear {cfg['handoff']['path']} inicial",
+            "fn": lambda: handoff.write_manual(root, "Handoff inicial creado por doctor --fix"),
+        })
+
+    # 3. Check hook (.githooks/pre-commit)
+    hook_path = root / ".githooks" / "pre-commit"
+    if root.joinpath(".git").exists() and (not hook_path.exists() or "continuum doctor" not in c.read_text(hook_path)):
+        from . import bootstrap
+        actions.append({
+            "id": "install_hook",
+            "desc": "Instalar git hook pre-commit (continuum doctor)",
+            "fn": lambda: bootstrap.install_hooks(root),
+        })
+
+    # 4. Check Claude agents sync if claude is active provider
+    if "claude" in cfg["providers"]:
+        agents_dir = root / ".claude" / "agents"
+        if not agents_dir.exists() or not list(agents_dir.glob("*.md")):
+            from . import roles
+            actions.append({
+                "id": "sync_claude_roles",
+                "desc": "Generar subagentes de Claude Code desde el catálogo de roles (.ai/roles/)",
+                "fn": lambda: roles.sync(root, provider="claude"),
+            })
+
+    if not actions:
+        c.ok("No se requieren auto-reparaciones seguras. Todo está listo.")
+        return 0
+
+    if dry_run:
+        print("== Plan de Auto-Reparación Segura (Modo --dry-run) ==")
+        for act in actions:
+            print(f"  - [{act['id']}] {act['desc']}")
+        print("\nPara aplicar estas reparaciones en disco, ejecuta:")
+        print("  continuum doctor --fix --no-dry-run")
+        return 0
+
+    print("== Aplicando Reparaciones Seguras ==")
+    for act in actions:
+        act["fn"]()
+        c.ok(f"Aplicado: {act['desc']}")
+
+    return 0
+
+
+def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True) -> int:
+    if fix:
+        return run_fix(root, dry_run=dry_run)
+
     cfg = c.load_config(root)
     problems = 0
     warnings = 0
@@ -21,6 +104,10 @@ def run(root: Path, quiet: bool = False) -> int:
     def section(title: str) -> None:
         if not quiet:
             print(f"\n== {title} ==")
+
+    def ok(msg: str) -> None:
+        if not quiet:
+            c.ok(msg)
 
     # 1. Archivo canónico
     section("Protocolo canónico")
@@ -32,7 +119,7 @@ def run(root: Path, quiet: bool = False) -> int:
         c.err(f"{c.CANONICAL_FILE} existe pero no está en git (no viaja con el repo).")
         problems += 1
     else:
-        c.ok(f"{c.CANONICAL_FILE} presente y trackeado.")
+        ok(f"{c.CANONICAL_FILE} presente y trackeado.")
 
     # 2. Entrypoints por proveedor
     section("Entrypoints por proveedor")
@@ -57,15 +144,11 @@ def run(root: Path, quiet: bool = False) -> int:
                   f"(puede tener reglas divergentes)")
             problems += 1
         else:
-            c.ok(f"{provider}: {fname} OK, remite a {c.CANONICAL_FILE}")
+            ok(f"{provider}: {fname} OK, remite a {c.CANONICAL_FILE}")
 
-    # 3. Duplicados conocidos (mismo nombre de archivo en más de un lugar)
+    # 3. Duplicados conocidos
     section("Duplicados")
     watch_names = ["estado-dev.md", "estado-proyecto.md", "CHANGELOG.md", "AI_COLLABORATION.md"]
-    # "template" queda excluido a propósito: un repo que distribuye su propia
-    # plantilla (como este) mantiene ahí una copia fuente idéntica a la
-    # instancia activa en la raíz — eso no es la divergencia accidental que
-    # este chequeo busca detectar.
     for name in watch_names:
         matches = [p for p in root.rglob(name)
                    if ".git" not in p.parts and "_closed" not in p.parts
@@ -96,7 +179,7 @@ def run(root: Path, quiet: bool = False) -> int:
                    f"{cfg['estado_dev']['topics_dir']}/.")
             warnings += 1
         else:
-            c.ok(f"Índice: {lines} líneas, ~{tokens} tokens estimados (límite {max_lines}).")
+            ok(f"Índice: {lines} líneas, ~{tokens} tokens estimados (límite {max_lines}).")
 
         mtime_days = (time.time() - estado_path.stat().st_mtime) / 86400
         last_code_commit = c.git("log", "-1", "--format=%ct")
@@ -118,7 +201,7 @@ def run(root: Path, quiet: bool = False) -> int:
                        f"Corre `continuum compact --topic {topic_file.stem}` o divide el tema.")
                 warnings += 1
             else:
-                c.ok(f"{rel}: {t_lines} líneas.")
+                ok(f"{rel}: {t_lines} líneas.")
     else:
         c.warn(f"No existe {cfg['estado_dev']['topics_dir']}/ — la memoria detallada "
                f"debería vivir ahí, no en el índice.")
@@ -135,7 +218,7 @@ def run(root: Path, quiet: bool = False) -> int:
             warnings += 1
         else:
             n = len(list(pack_dir.glob("*.md")))
-            c.ok(f"Pack '{pack}': {n} rol(es).")
+            ok(f"Pack '{pack}': {n} rol(es).")
 
     # 6. Tareas abandonadas
     section("Tareas activas")
@@ -144,7 +227,7 @@ def run(root: Path, quiet: bool = False) -> int:
     if tasks_dir.exists():
         active = [p for p in tasks_dir.iterdir() if p.is_dir() and p.name != "_closed"]
         if not active:
-            c.ok("No hay tareas activas abiertas.")
+            ok("No hay tareas activas abiertas.")
         for task_dir in active:
             task_md = task_dir / "task.md"
             handoff_md = task_dir / "handoff.md"
@@ -156,9 +239,9 @@ def run(root: Path, quiet: bool = False) -> int:
                        f"(¿abandonada o a medio camino?). Revisa o cierra con `continuum task close {task_dir.name}`.")
                 warnings += 1
             else:
-                c.ok(f"Tarea '{task_dir.name}' — {'con' if handoff_md.exists() else 'sin'} handoff, {age_days:.0f}d")
+                ok(f"Tarea '{task_dir.name}' — {'con' if handoff_md.exists() else 'sin'} handoff, {age_days:.0f}d")
 
-    # 7. Handoff (mailbox) global
+    # 7. Handoff global
     section("Handoff de continuidad")
     handoff_path = root / cfg["handoff"]["path"]
     if not handoff_path.exists():
@@ -173,7 +256,7 @@ def run(root: Path, quiet: bool = False) -> int:
                    f"Si vas a cortar la sesión, actualiza {cfg['handoff']['path']} antes.")
             warnings += 1
         else:
-            c.ok(f"Handoff con {age_h:.0f}h de antigüedad.")
+            ok(f"Handoff con {age_h:.0f}h de antigüedad.")
 
     # 8. Tamaño en tokens de los archivos "siempre cargados"
     section("Costo de contexto (archivos que toda sesión nueva debería leer)")
@@ -198,5 +281,6 @@ def run(root: Path, quiet: bool = False) -> int:
                "asumir que hay que compactar más.")
         warnings += 1
 
-    print(f"\n{problems} problema(s) crítico(s), {warnings} advertencia(s).")
+    if not quiet:
+        print(f"\n{problems} problema(s) crítico(s), {warnings} advertencia(s).")
     return 1 if problems > 0 else 0

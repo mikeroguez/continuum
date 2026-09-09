@@ -2,4 +2,4 @@
 
 Ver AI_COLLABORATION.md en la raíz del proyecto para el protocolo completo.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"

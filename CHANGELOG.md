@@ -8,6 +8,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.1.0] - 2026-09-09
+
+### Added
+
+- Rediseño de UX y métricas completo (Sprints 0 al 8): `context`, `tokens`, `status`, `doctor --fix`, `session start/end`, `task current/resume`, `sync`, `export status/refresh`, `release`, `github protect` y `metrics report/export/compare`.
+- Sistema de exportación y anonimización de métricas en JSON y CSV (`continuum metrics export --anonymize`).
+- Protocolo de investigación y evidencia local (`docs/research-protocol.md`) con modelo ético y de privacidad Opt-In / Opt-Out.
+- Reglas avanzadas de colaboración en equipo, resolución de conflictos de handoffs y aislamiento de tareas en `AI_COLLABORATION.md`.
+- Cobertura completa de pruebas unitarias automatizadas (87 tests pasados).
+
 ## [1.0.0] - 2026-09-09
 
 ### Added

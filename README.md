@@ -160,16 +160,37 @@ un Pull Request, y cómo se versiona y libera.
 
 ```bash
 tools/continuum                          # doctor: estado general en segundos
+tools/continuum session start [--json]   # inicio de sesión: handoff, tareas activas y contexto sugerido
+tools/continuum session end [--message "..."] [--auto] [--provider <p>] [--role <r>] [--json] # cierre de sesión y lint
+tools/continuum status [--json]          # estado compacto y siguiente acción sugerida
+tools/continuum doctor --fix [--dry-run|--no-dry-run] # plan o ejecución de auto-reparaciones seguras
+
+tools/continuum context [--task <slug>] [--why] [--json] # lectura recomendada inicial
+tools/continuum tokens [--json]          # desglose de presupuesto de tokens
+tools/continuum metrics snapshot [--dry-run|--no-dry-run] [--json] # baseline de métricas
+tools/continuum metrics report [--json]    # reporte de impacto y métricas
+tools/continuum metrics export [--format json|csv] [--anonymize] [--json] # exportar métricas
+tools/continuum metrics compare [--json]   # comparación vs baseline
 tools/continuum task start <slug> --size small|medium|large [--role <slug>]
 tools/continuum task claim <slug> <owner>
+tools/continuum task current [--json]
+tools/continuum task resume [<slug>] [--json]
 tools/continuum task close <slug>
+
 tools/continuum handoff --message "..." [--role <slug>]
-tools/continuum handoff --auto --provider claude [--role <slug>]
+tools/continuum handoff --auto --provider claude|codex|gemini [--role <slug>]
 tools/continuum compact --topic <nombre>
 tools/continuum memory-split-legacy
 tools/continuum packetize <archivo> [--slug <slug>]
 tools/continuum install-hooks
+tools/continuum sync [--check|--dry-run|--apply] [--json] # sincronización con repositorio plantilla
+tools/continuum export status|refresh      # gestión de la rama export del meta-repositorio
+tools/continuum release <versión> [--dry-run|--no-dry-run] # liberación e id de versión SemVer
+tools/continuum github protect [--print|--apply] [--json] # auditoría y protección de ramas/tags en GitHub
 tools/continuum roles list                # roles disponibles en los packs activos
+
+
+
 tools/continuum roles sync                # genera subagentes de Claude Code (.claude/agents/)
 ```
 

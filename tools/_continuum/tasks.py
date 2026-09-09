@@ -137,3 +137,99 @@ def list_tasks(root: Path) -> int:
         print(f"  - {a}")
     print(f"Cerradas: {len(closed)} (en {cfg['tasks']['closed_dir']})")
     return 0
+
+
+def current(root: Path, json_output: bool = False) -> int:
+    import json
+
+    cfg = c.load_config(root)
+    tasks_dir = root / cfg["tasks"]["dir"]
+    active = []
+    if tasks_dir.exists():
+        active = sorted(p.name for p in tasks_dir.iterdir() if p.is_dir() and p.name != "_closed")
+
+    if json_output:
+        res = {
+            "active_count": len(active),
+            "active_tasks": active,
+            "current_task": active[0] if len(active) == 1 else None,
+        }
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if not active:
+        c.info("No hay tareas activas. Usa 'continuum task start <slug>' para crear una.")
+    elif len(active) == 1:
+        print(f"== Tarea Actual ==\nSlug: {active[0]}\nSiguiente acción: 'continuum task resume {active[0]}'")
+    else:
+        print(f"== Tareas Activas ({len(active)}) ==")
+        for a in active:
+            print(f"  - {a}")
+        print("\nSiguiente acción: Usa 'continuum task resume <slug>' para retomar la tarea que desees.")
+
+    return 0
+
+
+def resume(root: Path, slug: str | None = None, json_output: bool = False) -> int:
+    import json
+    from . import context
+
+    cfg = c.load_config(root)
+    tasks_dir = root / cfg["tasks"]["dir"]
+    active = sorted(p.name for p in tasks_dir.iterdir() if p.is_dir() and p.name != "_closed") if tasks_dir.exists() else []
+
+    if not slug:
+        if len(active) == 1:
+            slug = active[0]
+        elif not active:
+            c.err("No hay tareas activas para retomar. Especifica un slug o crea una tarea nueva.")
+            return 1
+        else:
+            c.err(f"Hay {len(active)} tareas activas ({', '.join(active)}). Especifica cuál deseas retomar: 'continuum task resume <slug>'")
+            return 1
+
+    task_dir = tasks_dir / slug
+    if not task_dir.exists():
+        c.err(f"No existe la tarea '{slug}' en {cfg['tasks']['dir']}/")
+        return 1
+
+    task_md = task_dir / "task.md"
+    plan_md = task_dir / "execution-plan.md"
+    notes_md = task_dir / "notes.md"
+
+    task_content = c.read_text(task_md) if task_md.exists() else None
+    plan_content = c.read_text(plan_md) if plan_md.exists() else None
+    notes_content = c.read_text(notes_md) if notes_md.exists() else None
+
+    ctx_data = context.build_context(root, task_slug=slug)
+
+    data = {
+        "slug": slug,
+        "path": str(task_dir.relative_to(root)),
+        "task_md": task_content,
+        "execution_plan": plan_content,
+        "notes": notes_content,
+        "suggested_context": ctx_data,
+    }
+
+    if json_output:
+        print(json.dumps(data, indent=2))
+        return 0
+
+    lines = [
+        f"== Retomando Tarea: {slug} ==",
+        f"Ubicación: {data['path']}",
+        "",
+    ]
+    if task_content:
+        lines.append("[Definición de Tarea (task.md)]")
+        for line in task_content.splitlines()[:15]:
+            lines.append(f"  {line}")
+        if len(task_content.splitlines()) > 15:
+            lines.append("  ...")
+        lines.append("")
+
+    lines.append(context.format_human_context(ctx_data))
+    print("\n".join(lines))
+    return 0
+

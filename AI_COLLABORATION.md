@@ -130,18 +130,12 @@ nativamente Claude Code (`MEMORY.md` + archivos por tema, ver
 
 ## 6. Trabajo en equipo (múltiples personas)
 
-- `continuum task claim <slug> <owner>` deja visible quién está en una tarea —
-  es una señal, no un lock real (git ya resuelve conflictos de contenido).
-- Prefijo de commit con el slug de la tarea cuando exista:
-  `[pagos-recurrentes] feat: agrega validación de monto mínimo` — convierte
-  `git log --grep` en un índice consultable sin infraestructura extra.
-- Antes de reclamar una tarea, revisa `tools/continuum task list` para no
-  duplicar trabajo con otra persona o con otra sesión de IA en curso.
-- **Si dos personas o dos agentes van a tocar el repo al mismo tiempo**, usa
-  un `git worktree` por tarea activa (`git worktree add ../repo-<slug>
-  <branch>`) en vez de compartir el mismo directorio de trabajo. `claim` solo
-  da visibilidad social; el worktree aísla los archivos en disco de verdad.
-  Sigue mergeando de forma secuencial, con revisión humana antes de mergear.
+- **Aislamiento por tarea**: Cada desarrollador o sesión trabaja en su subcarpeta `.ai/tasks/<slug>/`. Al estar aisladas por slug, los merges entre ramas de Git no producen conflictos en los archivos de tarea.
+- **Visibilidad y ownership**: `continuum task claim <slug> <owner>` marca quién está trabajando en una tarea para dar visibilidad al resto del equipo en `continuum status` o `continuum task list`.
+- **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto`.
+- **Cierre de tarea en PR**: Antes de hacer merge, la tarea se cierra con `continuum task close <slug>`, lo que traslada la carpeta a `.ai/tasks/_closed/<slug>/` para preservar la evidencia de pruebas en el historial de Git sin colisionar con las tareas activas de otros.
+- **Prefijo de commit**: Usar el slug de la tarea cuando exista: `[pagos-recurrentes] feat: agrega validación de monto mínimo` para facilitar búsquedas con `git log --grep`.
+- **Concurrencia local (`git worktree`)**: Si dos personas o agentes trabajan localmente al mismo tiempo en el mismo repo, usar `git worktree add ../repo-<slug> <branch>` para aislar los directorios de trabajo en disco.
 
 ## 7. Convención de commits
 

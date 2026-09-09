@@ -2,6 +2,7 @@
 
 ## Mayores
 
+- [COMPLETADO] Implementados y cerrados los 9 Sprints del rediseño UX y métricas de Continuum (Sprints 0 a 8 en `docs/ux-metrics-sprints.md`), incluyendo `context`, `tokens`, `status`, `doctor --fix`, `session`, `task`, `sync`, `release`, `github` y `metrics report|export|compare`.
 - Aplicar el rollout (`docs/rollout-guide.md`) a los proyectos reales que
   motivaron este diseño — no se ha aplicado a ninguno todavía.
 - Completar `template_remote` y `template_prefix` en `.ai/config.json` si este

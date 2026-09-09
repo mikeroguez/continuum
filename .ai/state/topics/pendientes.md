@@ -4,6 +4,10 @@
 
 - Aplicar el rollout (`docs/rollout-guide.md`) a los proyectos reales que
   motivaron este diseño — no se ha aplicado a ninguno todavía.
+- Completar `template_remote` y `template_prefix` en `.ai/config.json` si este
+  repositorio debe sincronizarse con otra plantilla mediante
+  `tools/continuum sync-template`; hoy el comando funciona, pero imprime
+  placeholders porque esos campos están vacíos.
 
 ## Menores
 

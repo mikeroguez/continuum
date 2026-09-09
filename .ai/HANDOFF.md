@@ -1,75 +1,31 @@
-# Handoff: (general)
+# Handoff (auto-generado)
 
-**Fecha:** 2026-09-09 · **Proveedor:** claude
+**Fecha:** 2026-09-09 · **Proveedor:** claude · **Branch:** main
 
-## Objetivo de la sesión
+> Este borrador se generó automáticamente al cortar la sesión (hook Stop/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
 
-Diseñar y construir Continuum (arquitectura de memoria de IA transportada
-por git), investigar su validez frente a evidencia externa 2026, hacer la
-documentación apta para un repositorio público (sin narrativa personal, con
-los casos de estudio anonimizados), nombrar el proyecto, y por último
-instalar Continuum sobre sí mismo (autoalojamiento).
+## Último commit
+`aacf7f4 feat: diseño inicial de Continuum — memoria de IA transportada por git`
 
-## Archivos modificados
+## Cambios sin commitear
+```
+?? .ai/state/archive/handoffs/
+?? .githooks/pre-commit
+```
 
-Prácticamente todo el repositorio. Los más relevantes por si hace falta
-revisar algo puntual:
+## Resumen de diff vs HEAD
+(sin diferencias)
 
-- `ARCHITECTURE.md`, `README.md`, `docs/decision-log.md` (ADR-001 a
-  ADR-005), `docs/rollout-guide.md`, `docs/investigacion-2026.md`.
-- `template/` completo (protocolo, CLI, plantillas) — es la fuente de
-  verdad; la raíz de este repositorio es una copia autoalojada de eso mismo.
-- Raíz del repositorio: `AGENTS.md`, `AI_COLLABORATION.md`, `CLAUDE.md`,
-  `GEMINI.md`, `.ai/`, `.claude/`, `.githooks/`, `.github/`, `tools/` — todo
-  copiado desde `template/` como instancia activa (ver
-  `.ai/state/topics/arquitectura.md` para la relación entre ambas copias).
+## Objetivo de esta sesión
 
-## Decisiones tomadas
-
-- Framework propio (CLI `continuum`) en vez de solo convención — ADR-002.
-- Distribución vía `git subtree` — ADR-001.
-- Sin orquestación real entre agentes de IA — ADR-003.
-- Memoria como índice corto + temas bajo demanda (no un snapshot que crece),
-  regla contra contenido inferible en entrypoints, hook `SessionEnd` en vez
-  de `Stop`, `packetize` degradado a último recurso, `git worktree` por
-  tarea concurrente — ADR-004, con fuentes en `docs/investigacion-2026.md`.
-- Nombre del proyecto: Continuum — ADR-005.
-
-## Suposiciones vigentes
-
-- Los cinco proyectos que motivaron el diseño (anonimizados como "Proyecto
-  A–E" en `ARCHITECTURE.md` §1) siguen sin recibir el rollout — el diseño
-  se validó contra su estado auditado, no se aplicó de vuelta a ellos.
-- El repositorio no tiene remoto de git ni licencia elegida; varias
-  instrucciones de `README.md` (`git subtree add`, `sync-template`) no son
-  ejecutables todavía tal cual, hasta que exista una URL real.
-
-## Validación
-
-- **Ejecutada:** ciclo completo del CLI probado manualmente en copias
-  descartables (`task start/claim/close`, `handoff` manual y `--auto`,
-  `compact --topic`, `memory-split-legacy` incluyendo el caso de colisión de
-  nombres, `install-hooks` con un commit real pasando por el hook). Los dos
-  diagramas Mermaid de `ARCHITECTURE.md` se renderizaron de verdad con
-  `@mermaid-js/mermaid-cli` para confirmar sintaxis válida.
-- **No ejecutada:** no hay suite de tests automatizada; toda la validación
-  fue manual. No se probó el flujo de `git subtree add/pull/push` contra un
-  remoto real (no existe todavía).
-
-## Riesgos / dudas abiertas
-
-- El framework (`continuum`) se construyó pese a evidencia de que un
-  toolkit similar se abandonó dos veces en los proyectos auditados — ver
-  ADR-002 para las mitigaciones aplicadas y la señal a monitorear si se
-  repite el patrón.
-- La adopción de GitHub Spec Kit como alternativa al sistema de tareas
-  propio quedó sin resolver (ADR-004) — afectaría la forma del subsistema de
-  tareas si se decide adoptarlo más adelante.
+Diseñar Continuum, validarlo contra evidencia externa 2026, preparar la
+documentación para un repositorio público, autoalojarlo, y publicarlo en
+`git@github.com:mikeroguez/continuum.git`. El handoff detallado de todo el
+trabajo de diseño está archivado en
+`.ai/state/archive/handoffs/` (versión anterior a este auto-generado).
 
 ## Siguiente paso recomendado
 
-1. Elegir licencia y crear el remoto de git para poder publicar.
-2. Decidir sobre GitHub Spec Kit (ADR-004) antes de que el sistema de tareas
-   propio acumule más uso — el costo de cambiarlo crece con el tiempo.
-3. Cuando se quiera aplicar esto a un proyecto real, seguir
-   `docs/rollout-guide.md` — no se ha ejecutado ese procedimiento todavía.
+1. Elegir licencia (`.ai/state/topics/pendientes.md`).
+2. Decidir sobre GitHub Spec Kit (`docs/decision-log.md` ADR-004).
+3. Aplicar `docs/rollout-guide.md` a un proyecto real cuando se decida hacerlo.

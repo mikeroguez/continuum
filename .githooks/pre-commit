@@ -1,0 +1,12 @@
+#!/bin/sh
+# Instalado por continuum install-hooks. Corre en <1s, no bloquea el commit
+# (solo advierte) salvo que falte el archivo canónico del protocolo.
+python3 "$(git rev-parse --show-toplevel)/tools/continuum" doctor --quiet
+status=$?
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "continuum doctor encontró problemas críticos (ver arriba)."
+  echo "Corrige o usa 'git commit --no-verify' si es intencional."
+  exit 1
+fi
+exit 0

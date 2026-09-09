@@ -5,7 +5,7 @@ carpeta de tarea formal. Se diseñó para dos disparadores:
 
 1. Manual: la IA o la persona lo actualiza al terminar una sesión o notar que
    se está por agotar el contexto/tokens.
-2. Automático: un hook (Claude Code Stop/PreCompact, o un git pre-push) llama
+2. Automático: un hook (Claude Code SessionEnd/PreCompact, o un git pre-push) llama
    `continuum handoff --auto`, que arma un borrador desde `git status`/`git diff`
    aunque nadie se acuerde de hacerlo a mano. Esto es lo que faltaba en los
    proyectos previos: la disciplina dependía 100% de la memoria humana/del
@@ -65,7 +65,7 @@ def write_auto(root: Path, provider: str | None) -> int:
         f"**Fecha:** {c.date_str()} · **Proveedor:** {provider or 'desconocido'} · **Branch:** {branch}",
         "",
         "> Este borrador se generó automáticamente al cortar la sesión "
-        "(hook Stop/PreCompact o pre-push). Complementa manualmente el "
+        "(hook SessionEnd/PreCompact o pre-push). Complementa manualmente el "
         "'por qué' y el 'siguiente paso' antes de continuar en otra sesión.",
         "",
         "## Último commit",

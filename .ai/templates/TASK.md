@@ -1,6 +1,6 @@
 # Tarea: {{SLUG}}
 
-**Creada:** {{DATE}} · **Tamaño:** {{SIZE}} · **Owner:** {{OWNER}}
+**Creada:** {{DATE}} · **Tamaño:** {{SIZE}} · **Owner:** {{OWNER}} · **Rol:** {{ROLE}}
 
 ## Objetivo
 _(una o dos frases: qué problema resuelve esta tarea)_

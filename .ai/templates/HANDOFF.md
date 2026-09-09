@@ -1,6 +1,6 @@
 # Handoff: {{SLUG}}
 
-**Fecha:** {{DATE}}
+**Fecha:** {{DATE}} · **Rol:** {{ROLE}}
 
 ## Objetivo
 _(qué se pidió hacer)_

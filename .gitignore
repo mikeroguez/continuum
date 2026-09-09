@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+
+# Continuum (instancia autoalojada en la raíz de este repositorio)
+tools/_continuum/__pycache__/
+tools/_continuum/**/__pycache__/
+.ai/state/packets/

@@ -1,0 +1,37 @@
+{
+  "$comment": "Verifica esta sintaxis de hooks contra la doc vigente de Claude Code (puede cambiar entre versiones) antes de confiar en que corre. Usamos SessionEnd (una vez por sesión, cuando de verdad termina) y PreCompact (justo antes de compactar contexto, la señal más cercana a 'se están acabando los tokens'). NO usar Stop: dispara en cada turno de respuesta, no solo al cerrar la sesión, y llenaría .ai/HANDOFF.md de ruido.",
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(tools/continuum:*)",
+      "Bash(python3 tools/continuum:*)"
+    ]
+  },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/continuum\" handoff --auto --provider claude"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/continuum\" handoff --auto --provider claude"
+          }
+        ]
+      }
+    ]
+  }
+}

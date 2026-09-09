@@ -1,0 +1,22 @@
+{
+  "project": "{{NOMBRE_DEL_PROYECTO}}",
+  "providers": ["claude", "codex", "gemini"],
+  "estado_dev": {
+    "path": ".ai/state/estado-dev.md",
+    "max_index_lines": 80,
+    "topics_dir": ".ai/state/topics",
+    "max_topic_lines": 300
+  },
+  "tasks": {
+    "dir": ".ai/tasks",
+    "closed_dir": ".ai/tasks/_closed",
+    "stale_after_days": 10
+  },
+  "handoff": {
+    "path": ".ai/HANDOFF.md",
+    "archive_dir": ".ai/state/archive/handoffs",
+    "stale_after_hours": 24
+  },
+  "template_remote": "",
+  "template_prefix": ""
+}

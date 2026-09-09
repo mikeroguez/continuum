@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""Punto de entrada ejecutable: `tools/continuum <comando>`, sin instalación.
+
+Depende solo de la librería estándar para que un proyecto que trajo esto vía
+`git subtree` nunca necesite pip/npm/composer para ejecutarlo. La
+implementación vive en el paquete `_continuum` (guion bajo inicial: uso
+interno, no un módulo pensado para importarse desde fuera) para que este
+script de nivel superior pueda usar el nombre `continuum` sin chocar con el
+directorio del paquete.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from _continuum.__main__ import main  # noqa: E402
+
+if __name__ == "__main__":
+    sys.exit(main())

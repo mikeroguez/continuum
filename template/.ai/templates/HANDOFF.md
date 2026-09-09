@@ -1,0 +1,31 @@
+# Handoff: {{SLUG}}
+
+**Fecha:** {{DATE}}
+
+## Objetivo
+_(qué se pidió hacer)_
+
+## Archivos revisados
+-
+
+## Archivos modificados
+-
+
+## Decisión(es) tomada(s)
+-
+
+## Suposiciones vigentes
+_(cosas que se asumieron como ciertas sin confirmarlas del todo)_
+-
+
+## Validación
+- Ejecutada:
+- No ejecutada / pendiente:
+
+## Riesgos / dudas abiertas
+-
+
+## Siguiente paso recomendado
+_(lo primero que debería hacer quien retome esto, sea otra IA, otro proveedor u otra persona)_
+
+{{MESSAGE}}

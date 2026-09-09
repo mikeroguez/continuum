@@ -125,3 +125,7 @@ Requiere únicamente Python 3 (sin dependencias externas) y git.
 ## Licencia
 
 [MIT](LICENSE).
+
+## Autor
+
+Mike Roguez — [mikeroguez.me](https://mikeroguez.me/) · [github.com/mikeroguez](https://github.com/mikeroguez/)

@@ -172,6 +172,11 @@ def cmd_release(
         c.info(f"El tag '{tag_name}' ya está creado e idempotente.")
         return 0
 
+    refresh_res = cmd_export_refresh(root, dry_run=False)
+    if refresh_res != 0:
+        c.err("No se pudo regenerar la rama export para el release.")
+        return refresh_res
+
     c.info(f"Ejecutando: {tag_cmd}")
     res = c.git("tag", "-a", tag_name, "export", "-m", f"Release {tag_name}")
     if res.returncode == 0:

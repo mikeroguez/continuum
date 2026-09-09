@@ -1,10 +1,16 @@
 name: continuum-doctor
 
-# Corre `continuum doctor` en cada PR como reporte visible, sin bloquear el
-# merge por defecto (continue-on-error: true). Para hacerlo obligatorio,
-# basta con quitar esa línea.
+# Corre `continuum doctor` en cada PR y en cada push a main, como reporte
+# visible, sin bloquear el merge por defecto (continue-on-error: true).
+# Si solo disparara en pull_request, un flujo de commits directos a main
+# (como el de este repositorio mientras hay un único mantenedor) nunca
+# lo ejecutaría — de ahí el trigger de push. Para hacerlo obligatorio en
+# un PR, quita `continue-on-error: true` y exige el check en la
+# protección de rama (ver CONTRIBUTING.md).
 on:
   pull_request:
+  push:
+    branches: [main]
 
 jobs:
   doctor:

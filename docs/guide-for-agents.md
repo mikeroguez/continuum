@@ -1,51 +1,62 @@
-# Guide for agents working with Continuum
+# Guide for AI Agents (Continuum)
 
-> [Leer en español](guia-para-agentes.md)
+> [Leer en español](guia-para-agentes.md) · [Manual for People](using-continuum.md) · [Canonical Protocol](../AI_COLLABORATION.md)
 
-**Source version:** `c85cf9a`. The Spanish guide is canonical if the two versions differ.
+> [!NOTE]
+> `AI_COLLABORATION.md` is the canonical, non-negotiable rulebook. This guide provides practical application context for AI assistants.
 
-`AI_COLLABORATION.md` contains mandatory rules. This guide explains how to apply them. If they differ, follow the canonical file.
+---
 
-## Goal
+## Primary Objective
 
-Leave the repository in a state that another session can understand and verify. Do not preserve important information only in the conversation.
+Leave the repository in a fully interpretable and verifiable state for any future session (human or AI). **The repository is the memory; the conversation is merely the execution channel.**
 
-## Minimal start
+---
 
-1. Read `AI_COLLABORATION.md`, `.ai/HANDOFF.md`, and `.ai/state/estado-dev.md`.
-2. If a task exists, read its `task.md` and plan.
-3. Use `tools/continuum context --task <slug> --why` to guide further reading.
-4. Open topics, code, and additional documentation only when a concrete task need requires them.
+## Minimal Session Startup
 
-Do not load every topic or repeat in a handoff what the diff or tests already establish.
+1. Read [`AI_COLLABORATION.md`](../AI_COLLABORATION.md), [`.ai/HANDOFF.md`](../.ai/HANDOFF.md), and [`.ai/state/estado-dev.md`](../.ai/state/estado-dev.md).
+2. If a formal task exists, consult its `task.md` and execution plan.
+3. Use `tools/continuum context` to guide initial reading.
+4. Consult code, memory topic files, and additional technical docs **only when addressing a specific need**.
 
-## Choose the workflow
+---
 
-A small, clear change can be handled without a task folder. If it spans a module, several files, risk, or ambiguity, create or resume a task. For large work, use the execution plan as a persistent work queue.
+## Workflow Selection
 
-## What to record
+- **Small/trivial change**: Work directly without creating a formal task directory.
+- **Medium/complex change**: Create or resume a formal task (`tools/continuum task start <slug>`).
+- **Architectural change**: Use an execution plan (`execution-plan.md`) as a persistent step list.
 
-Record non-inferable decisions: rejected alternatives, product boundaries, risks, validation, and the next step. Do not record secrets, personal data, local paths, chat transcripts, internal reasoning, or third-party information without authorisation.
+---
 
-When interrupted or finished, update the general handoff, complete a formal task handoff before closing it, and name validation that ran or remains pending. A short exact handoff is better than a long chronicle.
+## Memory Logging and Handoffs
 
-## Rules and documentation
+Record non-inferrible decisions: discarded alternatives, product boundaries, risks, validations, and next steps.
 
-- Treat `AI_COLLABORATION.md` as a map of non-negotiable rules.
-- Treat `estado-dev.md` as an index, not a history.
-- Treat topics and `docs/` as on-demand sources.
-- When a rule is critical and recurring, prefer a test, linter, hook, or CI check over more prose.
+> [!CAUTION]
+> **Privacy and Security:**
+> Never record secrets, credentials, personal data, local absolute paths, raw chat transcripts, or confidential information in versioned memory.
 
-Do not invent rules to fill gaps. Ask for direction before changing scope, publishing, deleting, disclosing information, or taking irreversible action.
+Upon interruption or session conclusion:
+- Update `.ai/HANDOFF.md`.
+- Complete the task handoff in `.ai/tasks/<slug>/handoff.md` before closing.
+- List executed and pending unit/integration tests.
 
-## Coordination and closure
+---
 
-Declare the task and owner when more than one person or agent is involved. Use a branch or worktree for concurrent work. A claim provides visibility; it does not authorise overwriting another person’s work.
+## Coordination and Handoff Checklist
 
-A role is a working lens, not a concurrent subprocess. Inspect enabled packs with `tools/continuum roles list`; record a role when starting a task or handoff. `roles sync` generates local Claude Code artifacts that must never be edited manually or committed to Git.
+1. Execute validations proportional to the changes made.
+2. Inspect Git diff (`git status`, `git diff`) and clean untracked or temporary files.
+3. Run `tools/continuum doctor` if protocol, memory, or `.ai/` infrastructure was modified.
+4. Log results and pending risks in the handoff.
+5. Defer commits, merges, and pushes to the authorized developer (unless explicitly granted).
 
-Before proposing completion, run validation proportional to the change, inspect the diff and untracked files, run `tools/continuum doctor` when protocol, memory, or tasks changed, and record residual risk. Leave commits, publication, deployment, and external actions to whoever holds that authority.
+---
 
-## Signals to simplify
+<div align="center">
 
-Simplify when startup context grows, an instruction repeats repository information, or a small task creates too many files. Split memory by topic and keep only non-inferable facts and necessary actions in the protocol.
+Continuum · [MIT License](../LICENSE)
+
+</div>

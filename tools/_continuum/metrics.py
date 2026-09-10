@@ -67,12 +67,7 @@ def build_snapshot(root: Path) -> dict:
         handoff_age_hours = round((time.time() - handoff_path.stat().st_mtime) / 3600, 1)
 
     # 6. Hooks status
-    hook_path = root / ".git" / "hooks" / "pre-commit"
-    hook_installed = False
-    if hook_path.exists():
-        content = c.read_text(hook_path)
-        if "continuum doctor" in content:
-            hook_installed = True
+    hook_installed = c.pre_commit_hook_installed(root)
 
     return {
         "timestamp": c.stamp(),

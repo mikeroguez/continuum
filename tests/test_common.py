@@ -68,5 +68,44 @@ class TestGitHelpers(unittest.TestCase):
             self.assertTrue(c.is_tracked(f))
 
 
+class TestPreCommitHookInstalled(unittest.TestCase):
+    def test_false_without_hook(self):
+        with temp_project() as root:
+            self.assertFalse(c.pre_commit_hook_installed(root))
+
+    def test_true_with_default_git_hooks_path(self):
+        with temp_project() as root:
+            hook = root / ".git" / "hooks" / "pre-commit"
+            hook.write_text("#!/bin/sh\ncontinuum doctor --quiet\n")
+            hook.chmod(0o755)
+            self.assertTrue(c.pre_commit_hook_installed(root))
+
+    def test_true_with_custom_core_hooks_path(self):
+        # Regresión: antes solo se miraba `.git/hooks/pre-commit`, así que
+        # un hook instalado vía `core.hooksPath` (como hace
+        # `bootstrap.install_hooks`, en `.githooks/`) se reportaba como "no
+        # instalado" aunque git sí lo fuera a ejecutar.
+        with temp_project() as root:
+            hooks_dir = root / ".githooks"
+            hooks_dir.mkdir(exist_ok=True)
+            hook = hooks_dir / "pre-commit"
+            hook.write_text("#!/bin/sh\ncontinuum doctor --quiet\n")
+            hook.chmod(0o755)
+            c.git("config", "core.hooksPath", ".githooks")
+
+            self.assertTrue(c.pre_commit_hook_installed(root))
+
+    def test_false_when_custom_hooks_path_has_no_matching_content(self):
+        with temp_project() as root:
+            hooks_dir = root / ".githooks"
+            hooks_dir.mkdir(exist_ok=True)
+            hook = hooks_dir / "pre-commit"
+            hook.write_text("#!/bin/sh\necho otra cosa\n")
+            hook.chmod(0o755)
+            c.git("config", "core.hooksPath", ".githooks")
+
+            self.assertFalse(c.pre_commit_hook_installed(root))
+
+
 if __name__ == "__main__":
     unittest.main()

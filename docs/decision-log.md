@@ -239,3 +239,41 @@ entrypoint del proveedor referencia.
 mensajes entre roles, ni bloqueos — la coordinación sigue siendo por
 archivos compartidos (`HANDOFF.md`, `continuum task list`), leídos por
 quien corresponda, cuando corresponda.
+
+## ADR-010 — Compatibilidad con GitHub Copilot por proyecciones verificables
+
+**Contexto.** Continuum ya ofrece compatibilidad básica con agentes que
+descubren `AGENTS.md`, pero no modela las superficies propias de GitHub
+Copilot: instrucciones globales, instrucciones por ruta y agentes
+personalizados. Declarar compatibilidad sin validar esas superficies dejaría
+un soporte simbólico y no distribuible.
+
+**Decisión.** El baseline de compatibilidad será GitHub Copilot Coding Agent,
+Copilot Chat/Agent en VS Code, Copilot Chat en GitHub.com y Copilot Code
+Review. `AI_COLLABORATION.md` seguirá siendo la única fuente canónica; los
+archivos `.github/` serán proyecciones breves, deterministas y verificadas por
+`continuum doctor`.
+
+Copilot se modelará como una integración basada en
+`.github/copilot-instructions.md`, no mediante un `COPILOT.md` inventado.
+`AGENTS.md` seguirá siendo el entrypoint común para agentes. Los roles
+canónicos de `.ai/roles/` podrán proyectarse a `.github/agents/`, igual que
+hoy se proyectan a `.claude/agents/`.
+
+**Fuera del baseline.** No se promete soporte equivalente para otros IDEs sin
+pruebas específicas; no se activan aprobaciones automáticas ni reglas nuevas
+de protección de ramas; no se construye un orquestador entre proveedores.
+
+**Consecuencias.** La compatibilidad requerirá detectar drift entre fuentes y
+proyecciones, documentar limitaciones por superficie y mantener los artefactos
+también en `template/`. El handoff de Copilot se realizará mediante el CLI,
+sin asumir hooks de cierre equivalentes a los de Claude Code.
+
+**Aclaración Sprint 2.** El contenido operativo común permanece agnóstico del
+modelo en `AI_COLLABORATION.md` y en los roles de `.ai/roles/`. Las capacidades
+propias de cada cliente se expresan en sus adaptadores: `.claude/settings.json`
+para hooks y permisos de Claude Code, `.github/copilot-instructions.md` para
+el descubrimiento de Copilot, `.github/instructions/` para reglas por ruta y
+`.github/agents/` para roles nativos generados. Esta separación permite
+aprovechar las capacidades de cada cliente sin duplicar ni contradecir el
+protocolo común.

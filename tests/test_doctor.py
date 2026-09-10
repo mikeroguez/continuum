@@ -49,6 +49,23 @@ class TestDoctorCriticalProblems(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("no referencia AI_COLLABORATION.md", out)
 
+    def test_missing_copilot_instructions_is_critical(self):
+        with temp_project() as root:
+            (root / ".github" / "copilot-instructions.md").unlink()
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 1)
+            self.assertIn("copilot: falta .github/copilot-instructions.md", out)
+
+    def test_stale_copilot_instructions_are_critical(self):
+        with temp_project() as root:
+            source = root / "AI_COLLABORATION.md"
+            source.write_text(source.read_text() + "\nCambio de protocolo.\n")
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 1)
+            self.assertIn("está desactualizado", out)
+
 
 class TestDoctorWarnings(unittest.TestCase):
     def test_duplicate_files_warn_but_not_critical(self):

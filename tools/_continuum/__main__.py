@@ -52,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     h = sub.add_parser("handoff", help="Escribe/actualiza .ai/HANDOFF.md.")
     h.add_argument("--auto", action="store_true", help="Genera un borrador desde git status/diff.")
-    h.add_argument("--provider", default=None, help="claude|codex|gemini|humano (informativo).")
+    h.add_argument("--provider", default=None, help="claude|codex|gemini|copilot|humano (informativo).")
     h.add_argument("--message", default=None, help="Texto libre a insertar en el handoff manual.")
     h.add_argument("--role", default=None, help="Slug de un rol de .ai/roles/ (informativo).")
 
@@ -83,7 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     rosub = ro.add_subparsers(dest="roles_cmd", required=True)
     rosub.add_parser("list", help="Lista los roles de los packs activos en .ai/config.json.")
     rsy = rosub.add_parser("sync", help="Genera subagentes nativos a partir del catálogo canónico.")
-    rsy.add_argument("--provider", default="claude", choices=["claude"])
+    rsy.add_argument("--provider", default="claude", choices=["claude", "copilot"])
 
     met = sub.add_parser("metrics", help="Métricas locales y baseline de Continuum.")
     metsub = met.add_subparsers(dest="metrics_cmd", required=True)
@@ -124,7 +124,7 @@ def build_parser() -> argparse.ArgumentParser:
     send = sessub.add_parser("end", help="Genera/actualiza el handoff y ejecuta linting de calidad.")
     send.add_argument("--message", default=None, help="Resumen o mensaje de la sesión (para handoff manual).")
     send.add_argument("--auto", action="store_true", help="Genera un borrador desde git status/diff.")
-    send.add_argument("--provider", default=None, help="Proveedor de la IA (claude|codex|gemini|humano).")
+    send.add_argument("--provider", default=None, help="Proveedor de la IA (claude|codex|gemini|copilot|humano).")
     send.add_argument("--role", default=None, help="Slug de rol del agente.")
     send.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 

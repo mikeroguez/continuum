@@ -26,3 +26,5 @@ Guías que se copian e instalan en proyectos consumidores:
   - **Plantillas de prompts listas para usar** (iniciar tarea, retomar, trabajo en equipo, QA).
 - **[Guía para Agentes](../template/docs/guia-para-agentes.md)** / **[English](../template/docs/guide-for-agents.md)**
   - Directivas y principios operativos para asistentes de IA.
+- **[Revisión con asistentes](../template/docs/copilot-code-review.md)**
+  - Criterios, fixture y flujo para revisión asistida sin aprobación automática.

@@ -7,10 +7,38 @@ tamaño en tokens, tareas abandonadas y auto-reparaciones seguras.
 """
 from __future__ import annotations
 
+import hashlib
+import re
 import time
 from pathlib import Path
 
 from . import common as c
+
+COPILOT_SOURCE_RE = re.compile(
+    r"<!-- Continuum source: AI_COLLABORATION\.md sha256:([0-9a-f]{64}) -->"
+)
+
+
+def _copilot_instruction_warnings(root: Path, instruction_path: Path) -> list[str]:
+    source = root / c.CANONICAL_FILE
+    if not source.exists():
+        return []
+
+    content = c.read_text(instruction_path)
+    match = COPILOT_SOURCE_RE.search(content)
+    if not match:
+        return [
+            "copilot: .github/copilot-instructions.md no contiene la huella "
+            "de AI_COLLABORATION.md"
+        ]
+
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    if match.group(1) != digest:
+        return [
+            "copilot: .github/copilot-instructions.md está desactualizado "
+            "respecto de AI_COLLABORATION.md"
+        ]
+    return []
 
 
 def run_fix(root: Path, dry_run: bool = True) -> int:
@@ -71,6 +99,16 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "id": "sync_claude_roles",
                 "desc": "Generar subagentes de Claude Code desde el catálogo de roles (.ai/roles/)",
                 "fn": lambda: roles.sync(root, provider="claude"),
+            })
+
+    if "copilot" in cfg["providers"]:
+        agents_dir = root / ".github" / "agents"
+        if not agents_dir.exists() or not list(agents_dir.glob("*.agent.md")):
+            from . import roles
+            actions.append({
+                "id": "sync_copilot_roles",
+                "desc": "Generar agentes de GitHub Copilot desde el catálogo de roles (.ai/roles/)",
+                "fn": lambda: roles.sync(root, provider="copilot"),
             })
 
     if not actions:
@@ -143,6 +181,13 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
             c.err(f"{provider}: {fname} no referencia {c.CANONICAL_FILE} "
                   f"(puede tener reglas divergentes)")
             problems += 1
+        elif provider == "copilot":
+            copilot_warnings = _copilot_instruction_warnings(root, fpath)
+            for warning in copilot_warnings:
+                c.err(warning)
+                problems += 1
+            if not copilot_warnings:
+                ok(f"{provider}: {fname} OK, remite a {c.CANONICAL_FILE} y no tiene drift")
         else:
             ok(f"{provider}: {fname} OK, remite a {c.CANONICAL_FILE}")
 

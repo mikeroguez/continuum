@@ -61,6 +61,13 @@ class TestHandoffAuto(unittest.TestCase):
             content = (root / ".ai" / "HANDOFF.md").read_text()
             self.assertIn("Rol:** qa", content)
 
+    def test_auto_records_copilot_provider(self):
+        with temp_project() as root:
+            code = handoff.write_auto(root, "copilot")
+            self.assertEqual(code, 0)
+            content = (root / ".ai" / "HANDOFF.md").read_text()
+            self.assertIn("Proveedor:** copilot", content)
+
     def test_auto_on_clean_tree_says_no_changes(self):
         with temp_project() as root:
             # Si se deja el .ai/HANDOFF.md por defecto, write_auto lo

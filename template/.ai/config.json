@@ -1,6 +1,6 @@
 {
   "project": "{{NOMBRE_DEL_PROYECTO}}",
-  "providers": ["claude", "codex", "gemini"],
+  "providers": ["claude", "codex", "gemini", "copilot"],
   "estado_dev": {
     "path": ".ai/state/estado-dev.md",
     "max_index_lines": 80,

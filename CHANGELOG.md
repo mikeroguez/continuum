@@ -8,6 +8,14 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.2.0] - 2026-09-10
+
+### Added
+
+- `continuum sync` ahora acepta `template_branch` en `.ai/config.json` y usa
+  `export` como valor predeterminado. Así los proyectos pueden sincronizar una
+  rama de plantilla explícita sin depender de que se llame `main`.
+
 ## [1.1.1] - 2026-09-09
 
 ### Fixed

@@ -45,8 +45,14 @@ desactualizadas o divulgación prematura de investigación.
   tests.test_packets -v`: 5 pruebas correctas. No hace falta una corrección
   adicional salvo que aparezca una ruta simbólica distinta no cubierta.
 
+## Release en curso
+
+- Se prepara `v1.2.0` para distribuir `template_branch` en `continuum sync`.
+- Las 93 pruebas y `continuum doctor` pasaron; falta publicar `export`, el tag
+  y el release desde un árbol limpio para excluir un archivo archivado previo.
+
 ## Siguiente paso recomendado
 Revisar y aprobar el diff de documentación; los detalles están en
 `.ai/tasks/_closed/bilingual-documentation/handoff.md`. No traducir material de
 investigación antes de definir su estrategia de publicación. El pendiente de
-symlinks en `packetize` puede cerrarse.
+symlinks en `packetize` puede cerrarse. Completar el release `v1.2.0`.

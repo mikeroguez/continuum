@@ -52,7 +52,7 @@ Use a released tag when you need a fixed, reproducible version:
 
 ```bash
 git remote add continuum <continuum-repository-url>
-git subtree add --prefix=. continuum v1.1.1 --squash -m "chore: install Continuum"
+git subtree add --prefix=. continuum v1.2.0 --squash -m "chore: install Continuum"
 ```
 
 You can instead follow the `export` branch for the latest installable template:

@@ -1,60 +1,67 @@
 # Handoff (auto-generado)
 
-**Fecha:** 2026-09-10 · **Proveedor:** codex · **Rol:** documentación · **Branch:** main
+**Fecha:** 2026-09-10 · **Proveedor:** claude · **Rol:** desconocido · **Branch:** main
 
 > Este borrador se generó automáticamente al cortar la sesión (hook SessionEnd/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
 
 ## Último commit
-`1dacfc8 chore(release): prepara v1.1.1 (#3)`
+`c85cf9a chore: registra publicación v1.2.0`
 
 ## Cambios sin commitear
 ```
+M .ai/HANDOFF.md
+ M .gitignore
+ M AI_COLLABORATION.md
+ M README.en.md
+ M README.md
+ M docs/LANGUAGE_POLICY.en.md
+ M docs/LANGUAGE_POLICY.md
+ M docs/en/README.md
+ M docs/research-protocol.md
+ M docs/ux-metrics-roadmap.md
+ M template/AI_COLLABORATION.md
 ?? .ai/state/archive/handoffs/2026-09-10T010039Z.md
+?? .ai/state/archive/handoffs/2026-09-10T143148Z.md
+?? .ai/tasks/_closed/evaluation-pilot-fixture/
+?? .ai/tasks/_closed/evaluation-protocol/
+?? .ai/tasks/_closed/manuals-and-minimal-protocol/
+?? .ai/tasks/_closed/team-use-cases-and-prompts/
+?? docs/evaluation-plan.md
+?? evaluation/
+?? template/docs/README.md
+?? template/docs/como-usar-continuum.md
+?? template/docs/guia-para-agentes.md
+?? template/docs/guide-for-agents.md
+?? template/docs/using-continuum.md
+?? tests/test_evaluation_pilot.py
 ```
 
 ## Resumen de diff vs HEAD
-(sin diferencias)
+```
+.ai/HANDOFF.md               |  37 +++++--
+ .gitignore                   |   4 +
+ AI_COLLABORATION.md          |  47 ++++-----
+ README.en.md                 |   2 +
+ README.md                    |   2 +
+ docs/LANGUAGE_POLICY.en.md   |   2 +
+ docs/LANGUAGE_POLICY.md      |   2 +
+ docs/en/README.md            |   1 +
+ docs/research-protocol.md    | 223 +++++++++++++++++++++++++++++++++----------
+ docs/ux-metrics-roadmap.md   |  15 ++-
+ template/AI_COLLABORATION.md |  47 ++++-----
+ 11 files changed, 258 insertions(+), 124 deletions(-)
+```
 
 ## Objetivo de esta sesión
-Establecer documentación bilingüe sostenible para Continuum: español canónico,
-guías de incorporación en inglés y una política para evitar traducciones
-desactualizadas o divulgación prematura de investigación.
 
-## Contexto heredado (sesión previa)
-
-- Se corrigió la detección de hooks de pre-commit mediante
-  `common.pre_commit_hook_installed(root)`, que respeta `core.hooksPath`, y se
-  reutilizó en `status.py` y `metrics.py`.
-- Queda pendiente aplicar el rollout (`docs/rollout-guide.md`) a un proyecto
-  real.
-- No urgente: investigar fallos de `test_packets.py` relacionados con symlinks
-  de macOS, resolviendo ambos paths antes de comparar subpaths.
-- La sesión anterior registró el commit `86f84ca fix(status): detecta el
-  pre-commit hook vía core.hooksPath`; verificar el historial antes de retomar
-  ese hilo porque el último commit actual es `1dacfc8`.
-
-## Investigación posterior
-
-- El supuesto pendiente sobre symlinks de macOS en `test_packets.py` ya está
-  resuelto por `1ca079b fix(packets): resuelve root además de target antes de
-  relative_to (#2)`.
-- `packetize()` resuelve tanto `root` como `target` antes de usar
-  `relative_to`; la prueba `test_root_reached_via_symlink_is_resolved` cubre
-  el caso equivalente a `/tmp` → `/private/tmp` en macOS.
-- Se ejecutó `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest
-  tests.test_packets -v`: 5 pruebas correctas. No hace falta una corrección
-  adicional salvo que aparezca una ruta simbólica distinta no cubierta.
-
-## Release en curso
-
-- `v1.2.0` se publicó el 2026-09-10: `main`, la rama generada `export`, el tag
-  y el release de GitHub ya están disponibles.
-- La versión distribuye `template_branch` en `continuum sync`. Se validó con
-  93 pruebas y `continuum doctor` sin problemas ni advertencias.
+Continuar el piloto de instrumentación del relevo entre sesiones (verificar
+condiciones A/B/C ya preparadas) y, a petición del usuario, preparar y
+publicar la versión `v1.3.0` con ese piloto, el plan de evaluación y las
+guías bilingües pendientes.
 
 ## Siguiente paso recomendado
-Revisar y aprobar el diff de documentación; los detalles están en
-`.ai/tasks/_closed/bilingual-documentation/handoff.md`. No traducir material de
-investigación antes de definir su estrategia de publicación. El pendiente de
-symlinks en `packetize` puede cerrarse. El siguiente trabajo puede partir de
-la versión publicada `v1.2.0`.
+
+Con `v1.3.0` publicada: ejecutar el piloto con agentes o personas
+independientes en sesiones nuevas y aisladas (ver
+`evaluation/pilot/README.md`) antes de atribuir cualquier resultado a una
+condición; no mezclar con una muestra confirmatoria sin prerregistro.

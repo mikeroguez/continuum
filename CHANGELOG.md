@@ -8,6 +8,30 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.3.0] - 2026-09-10
+
+### Added
+
+- `docs/evaluation-plan.md`: plan operativo prerregistrable derivado de
+  `docs/research-protocol.md` (presupuesto, aleatorización, exclusiones y
+  análisis), separado de las hipótesis y el modelo de privacidad.
+- Piloto local de instrumentación (`evaluation/pilot/`,
+  `tests/test_evaluation_pilot.py`) que verifica las condiciones A/B/C del
+  protocolo de relevo entre sesiones con un fixture sin red ni datos
+  personales; el registro de ejecución queda fuera de Git
+  (`evaluation/pilot/local-runs/`).
+- Guías de uso bilingües distribuidas en `template/docs/` (para personas y
+  para agentes), enlazadas desde ambos README.
+
+### Changed
+
+- `AI_COLLABORATION.md` (y su copia en `template/`) recorta el detalle
+  operativo hacia las nuevas guías de `template/docs/`, para no convertir el
+  protocolo canónico en una enciclopedia.
+- `docs/ux-metrics-roadmap.md` ya no afirma hipótesis científicas
+  directamente: remite a `docs/research-protocol.md` como fuente canónica.
+- `docs/research-protocol.md` revisado y ampliado.
+
 ## [1.2.0] - 2026-09-10
 
 ### Added

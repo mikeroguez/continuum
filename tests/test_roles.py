@@ -70,7 +70,7 @@ class TestSync(unittest.TestCase):
             roles.sync(root, provider="claude")
             content = (root / ".claude" / "agents" / "qa.md").read_text()
             self.assertTrue(content.startswith("---\nname: qa\n"))
-            self.assertIn("description:", content)
+            self.assertIn('description: "', content)
             self.assertIn('Eres el rol "QA', content)
 
     def test_sync_generates_copilot_agents(self):
@@ -87,7 +87,7 @@ class TestSync(unittest.TestCase):
             roles.sync(root, provider="copilot")
             content = (root / ".github" / "agents" / "qa.agent.md").read_text()
             self.assertTrue(content.startswith("---\nname: qa\n"))
-            self.assertIn("description:", content)
+            self.assertIn('description: "', content)
             self.assertIn('Eres el rol "QA', content)
 
     def test_copilot_sync_is_deterministic(self):
@@ -103,6 +103,22 @@ class TestSync(unittest.TestCase):
                 for path in (root / ".github" / "agents").glob("*.agent.md")
             }
             self.assertEqual(first, second)
+
+    def test_sync_generates_codex_skills(self):
+        with temp_project() as root:
+            code = roles.sync(root, provider="codex")
+            self.assertEqual(code, 0)
+            skills_dir = root / ".agents" / "skills"
+            generated = sorted(p.name for p in skills_dir.iterdir() if p.is_dir())
+            expected = sorted(r["slug"] for r in roles.discover_roles(root))
+            self.assertEqual(generated, expected)
+            qa_skill = skills_dir / "qa" / "SKILL.md"
+            self.assertTrue(qa_skill.exists())
+            content = qa_skill.read_text()
+            self.assertTrue(content.startswith("---\nname: qa\n"))
+            self.assertIn('description: "', content)
+            self.assertIn('Eres el rol "QA', content)
+
     def test_sync_generates_gemini_skills(self):
         with temp_project() as root:
             code = roles.sync(root, provider="gemini")
@@ -115,6 +131,7 @@ class TestSync(unittest.TestCase):
             self.assertTrue(qa_skill.exists())
             content = qa_skill.read_text()
             self.assertTrue(content.startswith("---\nname: qa\n"))
+            self.assertIn('description: "', content)
             self.assertIn('Eres el rol "QA', content)
 
     def test_unsupported_provider_fails_cleanly(self):

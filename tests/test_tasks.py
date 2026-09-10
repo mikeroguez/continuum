@@ -1,6 +1,7 @@
+import shutil
 import unittest
 
-from .helpers import temp_project
+from .helpers import run_git, temp_project
 
 from _continuum import tasks  # noqa: E402
 
@@ -92,6 +93,43 @@ class TestTaskLifecycle(unittest.TestCase):
             self.assertEqual(active, ["activa"])
             closed = [p.name for p in (root / ".ai" / "tasks" / "_closed").iterdir()]
             self.assertEqual(closed, ["para-cerrar"])
+
+
+class TestTaskWorktree(unittest.TestCase):
+    def test_worktree_flag_creates_sibling_checkout(self):
+        with temp_project() as root:
+            wt_path = root.parent / f"{root.name}-demo"
+            self.addCleanup(shutil.rmtree, wt_path, ignore_errors=True)
+            code = tasks.start(root, "demo", "small", None, worktree=True)
+            self.assertEqual(code, 0)
+            self.assertTrue(wt_path.is_dir())
+            branches = run_git("branch", "--list", "task/demo")
+            self.assertIn("task/demo", branches.stdout)
+
+    def test_worktree_path_collision_warns_but_task_still_created(self):
+        with temp_project() as root:
+            wt_path = root.parent / f"{root.name}-demo"
+            wt_path.mkdir()
+            self.addCleanup(shutil.rmtree, wt_path, ignore_errors=True)
+            code = tasks.start(root, "demo", "small", None, worktree=True)
+            self.assertEqual(code, 0)
+            self.assertTrue((root / ".ai" / "tasks" / "demo" / "task.md").exists())
+
+    def test_worktree_reuses_existing_branch(self):
+        with temp_project() as root:
+            run_git("branch", "task/demo")
+            wt_path = root.parent / f"{root.name}-demo"
+            self.addCleanup(shutil.rmtree, wt_path, ignore_errors=True)
+            code = tasks.start(root, "demo", "small", None, worktree=True)
+            self.assertEqual(code, 0)
+            self.assertTrue(wt_path.is_dir())
+
+    def test_no_worktree_flag_does_not_touch_git(self):
+        with temp_project() as root:
+            wt_path = root.parent / f"{root.name}-demo"
+            code = tasks.start(root, "demo", "small", None)
+            self.assertEqual(code, 0)
+            self.assertFalse(wt_path.exists())
 
 
 if __name__ == "__main__":

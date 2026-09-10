@@ -7,6 +7,7 @@ subagente real a partir del archivo canónico, sin duplicar el contenido a mano.
 """
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -71,7 +72,7 @@ def list_roles(root: Path) -> int:
 
 
 def sync(root: Path, provider: str = "claude") -> int:
-    if provider not in {"claude", "copilot", "gemini"}:
+    if provider not in {"claude", "codex", "copilot", "gemini"}:
         c.err(f"Sin soporte de subagentes nativos para '{provider}' todavía "
               f"— el rol sigue siendo una instrucción de texto que el "
               f"entrypoint de ese proveedor referencia, no un archivo generado.")
@@ -83,15 +84,19 @@ def sync(root: Path, provider: str = "claude") -> int:
         c.warn("No hay roles activos que sincronizar.")
         return 0
 
-    if provider == "gemini":
-        skills_dir = root / ".gemini" / "skills"
+    if provider in {"codex", "gemini"}:
+        skills_dir = (
+            root / ".agents" / "skills"
+            if provider == "codex"
+            else root / ".gemini" / "skills"
+        )
         skills_dir.mkdir(parents=True, exist_ok=True)
         for role in roles:
             description = role["mandato"] or role["title"]
             frontmatter = (
                 "---\n"
                 f"name: {role['slug']}\n"
-                f"description: {description}\n"
+                f"description: {json.dumps(description, ensure_ascii=False)}\n"
                 "---\n\n"
             )
             body = (
@@ -103,7 +108,8 @@ def sync(root: Path, provider: str = "claude") -> int:
             role_skill_dir = skills_dir / role["slug"]
             role_skill_dir.mkdir(parents=True, exist_ok=True)
             c.write_text(role_skill_dir / "SKILL.md", frontmatter + body)
-        c.ok(f"{len(roles)} skill(s) de Gemini CLI / Antigravity generados en "
+        provider_name = "Codex" if provider == "codex" else "Gemini CLI / Antigravity"
+        c.ok(f"{len(roles)} skill(s) de {provider_name} generados en "
              f"{skills_dir.relative_to(root)}/ a partir de {cfg['roles']['dir']}/.")
         return 0
 
@@ -118,7 +124,7 @@ def sync(root: Path, provider: str = "claude") -> int:
         frontmatter = (
             "---\n"
             f"name: {role['slug']}\n"
-            f"description: {description}\n"
+            f"description: {json.dumps(description, ensure_ascii=False)}\n"
             "---\n\n"
         )
         body = (

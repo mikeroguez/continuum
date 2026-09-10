@@ -13,4 +13,6 @@ _(agrega aquí solo lo que sea realmente específico de este proyecto: stack,
 comandos de build/test, estructura de carpetas — no reglas de proceso de IA,
 esas van en AI_COLLABORATION.md)_
 
--
+- Los roles de `.ai/roles/` pueden proyectarse como skills nativas de Codex en
+  `.agents/skills/<slug>/SKILL.md` con
+  `tools/continuum roles sync --provider codex`.

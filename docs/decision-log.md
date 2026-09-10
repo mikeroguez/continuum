@@ -277,3 +277,45 @@ el descubrimiento de Copilot, `.github/instructions/` para reglas por ruta y
 `.github/agents/` para roles nativos generados. Esta separación permite
 aprovechar las capacidades de cada cliente sin duplicar ni contradecir el
 protocolo común.
+
+## ADR-011 — Aislamiento de agentes concurrentes vía `--worktree`, no locks
+
+**Contexto.** `ARCHITECTURE.md` §5 dejaba explícito un punto de extensión
+sin construir: si alguna vez surgía necesidad real de concurrencia entre
+agentes de IA sobre el mismo repositorio, el candidato natural era
+evolucionar `continuum task claim` (hoy señal de visibilidad) hacia un
+mecanismo de bloqueo. Esa necesidad llegó en la práctica: varios agentes
+(Claude Code, Codex CLI, GitHub Copilot) corriendo a la vez, en la misma
+máquina, sobre este mismo repositorio.
+
+**Evidencia revisada.** Fuentes de industria de 2026 (Augment Code,
+MindStudio, PHP Architect, y reportes independientes de uso de Claude Code
+en paralelo) convergen en un patrón único, ya adoptado como línea base por
+múltiples equipos: aislamiento físico vía `git worktree`, un worktree por
+agente/tarea, nunca dos procesos de agente escribiendo en el mismo
+directorio de trabajo a la vez. Ninguna fuente describe locks de aplicación
+o colas de bloqueo como solución preferida para este escenario — el
+problema que resuelven los locks (dos escritores en el mismo directorio) se
+evita de raíz separando los directorios, no arbitrando el acceso a uno
+compartido.
+
+**Decisión.** Se activa el punto de extensión de §5 construyendo
+`continuum task start <slug> --worktree` (crea la tarea y un `git worktree`
+hermano en una rama `task/<slug>`) y una advertencia no bloqueante en
+`continuum doctor` cuando detecta varias tareas activas sin evidencia de
+aislamiento por worktree. `continuum task claim` **no** se convierte en un
+lock — sigue siendo la señal social que ya era, consistente con ADR-003 y
+con `ARCHITECTURE.md` §8 (sin bloqueos duros).
+
+**Hallazgo nuevo incorporado a la documentación.** La investigación reveló
+una advertencia que no estaba documentada en ningún lugar del repositorio:
+nunca usar `git stash` con otros worktrees activos, porque la lista de
+stash es del repositorio completo, no de cada worktree — un stash hecho en
+uno puede aplicarse por error en otro. Se agregó a `AI_COLLABORATION.md` §6
+y a las guías de uso en `template/docs/`.
+
+**Por qué no bloquear la creación de la tarea si el worktree falla.** Un
+fallo de `git worktree add` (ruta ocupada, no hay repo git) es una
+precondición de entorno, no de contenido — los archivos de la tarea, que
+son el entregable principal de `task start`, ya se escribieron. Se reporta
+con `c.warn`, igual que el resto de `doctor`, en vez de abortar.

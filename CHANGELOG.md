@@ -6,7 +6,23 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
-Sin cambios todavía.
+### Added
+
+- `continuum task start <slug> --worktree` crea la tarea y aísla el
+  directorio de trabajo en un `git worktree` propio, para agentes o
+  personas trabajando en paralelo sobre el mismo repositorio (ver
+  ADR-011).
+- `continuum doctor` advierte cuando detecta varias tareas activas sin
+  evidencia de aislamiento por worktree.
+
+### Changed
+
+- `AI_COLLABORATION.md` y las guías de uso documentan `--worktree` y
+  advierten contra `git stash` con otros worktrees activos (la lista de
+  stash es del repositorio, no de cada worktree).
+- `.claude/settings.json` agrega un hook `SessionStart` que corre
+  `continuum context` al arrancar o resumir una sesión de Claude Code,
+  simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
 
 ## [1.4.0] - 2026-09-10
 

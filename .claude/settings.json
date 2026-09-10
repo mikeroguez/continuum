@@ -1,5 +1,5 @@
 {
-  "$comment": "Verifica esta sintaxis de hooks contra la doc vigente de Claude Code (puede cambiar entre versiones) antes de confiar en que corre. Usamos SessionEnd (una vez por sesión, cuando de verdad termina) y PreCompact (justo antes de compactar contexto, la señal más cercana a 'se están acabando los tokens'). NO usar Stop: dispara en cada turno de respuesta, no solo al cerrar la sesión, y llenaría .ai/HANDOFF.md de ruido.",
+  "$comment": "Verifica esta sintaxis de hooks contra la doc vigente de Claude Code (puede cambiar entre versiones) antes de confiar en que corre. Usamos SessionStart (al arrancar o resumir, para inyectar qué leer antes de trabajar — ver AI_COLLABORATION.md §0), SessionEnd (una vez por sesión, cuando de verdad termina) y PreCompact (justo antes de compactar contexto, la señal más cercana a 'se están acabando los tokens'). NO usar Stop: dispara en cada turno de respuesta, no solo al cerrar la sesión, y llenaría .ai/HANDOFF.md de ruido.",
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -13,6 +13,16 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/continuum\" context"
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "hooks": [

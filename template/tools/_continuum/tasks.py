@@ -25,7 +25,37 @@ def _render(template_text: str, **kwargs) -> str:
     return out
 
 
-def start(root: Path, slug: str, size: str, owner: str | None, role: str | None = None) -> int:
+def _create_worktree(root: Path, slug: str) -> None:
+    """Aísla la tarea en un `git worktree` propio (ver AI_COLLABORATION.md §6).
+
+    No bloquea la creación de la tarea si falla: los archivos de la tarea ya
+    se escribieron y son el entregable principal. Un fallo aquí es una
+    precondición de entorno (no hay git, ruta ocupada), no de contenido.
+    """
+    inside = c.git("-C", str(root), "rev-parse", "--is-inside-work-tree")
+    if inside.returncode != 0 or inside.stdout.strip() != "true":
+        c.warn("No se pudo crear worktree: no se detectó un repositorio git en la raíz.")
+        return
+
+    branch = f"task/{slug}"
+    worktree_path = root.parent / f"{root.name}-{slug}"
+    if worktree_path.exists():
+        c.warn(f"No se pudo crear worktree: {worktree_path} ya existe. "
+               f"Elige otro slug o elimina el directorio manualmente.")
+        return
+
+    branch_exists = bool(c.git("-C", str(root), "branch", "--list", branch).stdout.strip())
+    args = ["-C", str(root), "worktree", "add", str(worktree_path)]
+    args += [branch] if branch_exists else ["-b", branch]
+    res = c.git(*args)
+    if res.returncode != 0:
+        c.warn(f"`git worktree add` falló: {res.stderr.strip()}")
+        return
+    c.ok(f"Worktree creado en {worktree_path} (rama '{branch}'). Cambia con: cd {worktree_path}")
+
+
+def start(root: Path, slug: str, size: str, owner: str | None, role: str | None = None,
+          worktree: bool = False) -> int:
     cfg = c.load_config(root)
     tasks_dir = root / cfg["tasks"]["dir"]
     task_dir = tasks_dir / slug
@@ -67,6 +97,8 @@ def start(root: Path, slug: str, size: str, owner: str | None, role: str | None 
         (task_dir / "packets").mkdir(exist_ok=True)
 
     c.ok(f"Tarea '{slug}' creada en {task_dir.relative_to(root)} (size={size})")
+    if worktree:
+        _create_worktree(root, slug)
     return 0
 
 

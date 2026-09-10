@@ -1,38 +1,45 @@
 # Handoff (auto-generado)
 
-**Fecha:** 2026-09-10 · **Proveedor:** copilot · **Rol:** desconocido · **Branch:** main
+**Fecha:** 2026-09-10 · **Proveedor:** codex · **Rol:** desconocido · **Branch:** develop
 
 > Este borrador se generó automáticamente al cortar la sesión (hook SessionEnd/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
 
 ## Último commit
-`62c1d67 feat: integra compatibilidad con GitHub Copilot`
+`06583b8 feat(gemini): integra proyección nativa de roles a .gemini/skills/ y directivas de persistencia`
 
 ## Cambios sin commitear
 ```
-?? .ai/state/archive/handoffs/2026-09-10T192554Z.md
+M AGENTS.md
+M AI_COLLABORATION.md
+M tools/_continuum/{__main__.py,doctor.py,roles.py}
+M tests/test_roles.py
+M template/AGENTS.md
+M template/AI_COLLABORATION.md
+M template/tools/_continuum/{__main__.py,doctor.py,roles.py}
+M .github/copilot-instructions.md
+M template/.github/copilot-instructions.md
+M .claude/agents/*.md
+M .gemini/skills/*/SKILL.md
+M .github/agents/*.agent.md
+M template/.github/agents/*.agent.md
+?? .agents/skills/*/SKILL.md
+?? template/.agents/skills/*/SKILL.md
+?? .ai/state/archive/handoffs/2026-09-10T194557Z.md
 ```
 
 ## Resumen de diff vs HEAD
-(sin diferencias)
+Continuum ahora soporta `tools/continuum roles sync --provider codex` y genera
+skills nativas de Codex en `.agents/skills/<slug>/SKILL.md`. `doctor --fix`
+también puede auto-generarlas cuando `codex` está activo en `.ai/config.json`.
+El generador ahora escribe `description` como cadena YAML quoted para evitar
+frontmatter inválido cuando un mandato contiene `:`.
 
 ## Objetivo de esta sesión
-
-Publicar la integración de GitHub Copilot como Continuum v1.4.0, manteniendo
-el contrato común agnóstico del modelo y los adaptadores específicos del
-cliente.
-
-## Validación ejecutada
-
-- 105 pruebas unitarias pasan.
-- `continuum doctor`: 0 problemas críticos y 0 advertencias.
-- Sintaxis Python, formato y paridad raíz/`template/` validados.
-
-## Pendientes
-
-- Ejecutar al final los smoke tests externos de Coding Agent, VS Code Chat/Agent
-  y Code Review, sujetos a acceso/licencia.
+Mejorar la configuración de Continuum para aprovechar mejor Codex, alineando
+los roles de `.ai/roles/` con la ubicación oficial de skills de repo que Codex
+carga (`.agents/skills`).
 
 ## Siguiente paso recomendado
-
-Ejecutar las validaciones externas cuando estén disponibles y registrar su
-evidencia sin datos sensibles.
+Revisar el diff, confirmar que se quieren versionar las nuevas skills generadas
+en `.agents/skills/` y `template/.agents/skills/`, y commitear si el cambio se
+aprueba.

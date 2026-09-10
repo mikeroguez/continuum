@@ -111,6 +111,16 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "fn": lambda: roles.sync(root, provider="copilot"),
             })
 
+    if "codex" in cfg["providers"]:
+        skills_dir = root / ".agents" / "skills"
+        if not skills_dir.exists() or not list(skills_dir.glob("*/SKILL.md")):
+            from . import roles
+            actions.append({
+                "id": "sync_codex_roles",
+                "desc": "Generar skills de Codex desde el catálogo de roles (.ai/roles/)",
+                "fn": lambda: roles.sync(root, provider="codex"),
+            })
+
     if "gemini" in cfg["providers"]:
         skills_dir = root / ".gemini" / "skills"
         if not skills_dir.exists() or not list(skills_dir.glob("*/SKILL.md")):
@@ -295,6 +305,15 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
                 warnings += 1
             else:
                 ok(f"Tarea '{task_dir.name}' — {'con' if handoff_md.exists() else 'sin'} handoff, {age_days:.0f}d")
+        if len(active) > 1:
+            wt = c.git("-C", str(root), "worktree", "list", "--porcelain")
+            wt_count = wt.stdout.count("worktree ") if wt.returncode == 0 else 1
+            if wt_count <= 1:
+                c.warn(f"Hay {len(active)} tareas activas pero un solo worktree de git detectado. "
+                       f"Si son personas/agentes distintos trabajando en paralelo, aísla cada una con "
+                       f"`continuum task start <slug> --worktree` (ver AI_COLLABORATION.md §6). Si es la "
+                       f"misma persona/agente avanzando varias tareas en serie, ignora esto.")
+                warnings += 1
 
     # 7. Handoff global
     section("Handoff de continuidad")

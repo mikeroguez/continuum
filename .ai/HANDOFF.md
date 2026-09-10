@@ -1,11 +1,11 @@
 # Handoff (auto-generado)
 
-**Fecha:** 2026-09-10 · **Proveedor:** claude · **Rol:** desconocido · **Branch:** develop
+**Fecha:** 2026-09-10 · **Proveedor:** copilot · **Rol:** desconocido · **Branch:** main
 
 > Este borrador se generó automáticamente al cortar la sesión (hook SessionEnd/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
 
 ## Último commit
-`b3ba799 chore: archiva handoffs de sesiones`
+`62c1d67 feat: integra compatibilidad con GitHub Copilot`
 
 ## Cambios sin commitear
 ```
@@ -29,12 +29,10 @@ cliente.
 
 ## Pendientes
 
-- Mergear `develop` a `main`, refrescar `export`, crear el tag `v1.4.0` y
-  publicar ramas y tag.
-- Validar un consumidor canary.
 - Ejecutar al final los smoke tests externos de Coding Agent, VS Code Chat/Agent
-  y Code Review.
+  y Code Review, sujetos a acceso/licencia.
 
 ## Siguiente paso recomendado
 
-Integrar `develop` en `main` y completar el procedimiento de release autorizado.
+Ejecutar las validaciones externas cuando estén disponibles y registrar su
+evidencia sin datos sensibles.

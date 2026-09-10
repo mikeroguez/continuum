@@ -30,6 +30,16 @@
   criterios, documentación y fixture ya están implementados.
 - Sprint 4: paridad de plantilla, CI, release y consumidor canary.
 
+## Evidencia de publicación
+
+- `develop` se integró en `main` y se publicó junto con `export`.
+- Se creó y publicó el tag anotado `v1.4.0`.
+- El consumidor canary se ejecutó desde la rama `export` en un repositorio
+  limpio: `doctor --quiet` pasó y `roles sync --provider copilot` generó los
+  agentes esperados.
+- Los smoke tests de Coding Agent, VS Code Chat/Agent y Code Review permanecen
+  condicionados a acceso y licencia de las superficies externas.
+
 ## Evidencia
 
 - El baseline previo a la implementación específica de Copilot permanece

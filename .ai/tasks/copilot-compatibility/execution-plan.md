@@ -58,8 +58,9 @@ de todos los sprints.
   paridad de plantilla.
 - [x] Actualizar README, guías, arquitectura y changelog.
 - [x] Preparar la versión `v1.4.0` con SemVer minor.
-- [ ] Publicar la versión que contiene la integración.
-- [ ] Validar un consumidor canary y documentar el rollout posterior.
+- [x] Publicar la versión que contiene la integración (`v1.4.0`, `main`,
+  `export` y tag publicados).
+- [x] Validar un consumidor canary desde la rama `export` publicada.
 
 **Salida parcial:** la compatibilidad queda distribuible y verificable; faltan
 la publicación autorizada y la validación de un consumidor canary.
@@ -88,8 +89,8 @@ la publicación autorizada y la validación de un consumidor canary.
 
 ## Estado actual
 
-Sprints 0, 2 y 3 de implementación local completados. El contrato está en
-`.ai/tasks/copilot-compatibility/compatibility-matrix.md` y las decisiones,
-pendientes y evidencia en `notes.md`. La arquitectura actual tiene
-compatibilidad básica mediante `AGENTS.md`; Sprint 1 añade la integración global
-verificable, pero requiere seguimiento del smoke test antes de cerrarse.
+La implementación local y la publicación de Sprint 4 están completadas.
+`v1.4.0` está publicado en `main` y `export`, y el consumidor canary validó
+`doctor` y la regeneración de agentes Copilot desde el artefacto exportado.
+Siguen pendientes únicamente las validaciones externas que requieren acceso a
+Copilot Coding Agent, VS Code Chat/Agent y Code Review.

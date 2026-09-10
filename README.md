@@ -2,6 +2,8 @@
 
 <p align="center">Protocolo y herramientas de memoria para equipos que trabajan con múltiples asistentes de IA (Claude, Codex, Gemini) sobre el mismo repositorio.</p>
 
+<p align="center"><a href="README.en.md">Read in English</a> · <a href="docs/LANGUAGE_POLICY.md">Política de idiomas</a></p>
+
 <p align="center">
   <a href="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml"><img alt="continuum doctor" src="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main"></a>

@@ -1,5 +1,9 @@
 # Guía de contribución
 
+> [Read this guide in English](CONTRIBUTING.en.md). La política que define la
+> fuente canónica y el mantenimiento de traducciones está en
+> [`docs/LANGUAGE_POLICY.md`](docs/LANGUAGE_POLICY.md).
+
 Manual de colaboración de Continuum: cómo proponer cambios, convención de
 ramas y commits, cuándo hace falta un PR, y cómo se versiona y libera. La
 convención de commits detallada y las reglas de trabajo en equipo (incluido

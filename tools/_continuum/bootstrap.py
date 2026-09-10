@@ -58,6 +58,7 @@ def cmd_sync(
     cfg = c.load_config(root)
     remote = cfg.get("template_remote") or ""
     prefix = cfg.get("template_prefix") or ""
+    branch = cfg.get("template_branch") or "export"
 
     has_remote = bool(remote and not remote.startswith("<"))
     has_prefix = bool(prefix and not prefix.startswith("<"))
@@ -78,8 +79,8 @@ def cmd_sync(
     if not is_clean:
         warnings.append("El working tree de git tiene cambios sin commitear.")
 
-    pull_cmd = f"git subtree pull --prefix={display_prefix} {display_remote} main --squash"
-    push_cmd = f"git subtree push --prefix={display_prefix} {display_remote} main"
+    pull_cmd = f"git subtree pull --prefix={display_prefix} {display_remote} {branch} --squash"
+    push_cmd = f"git subtree push --prefix={display_prefix} {display_remote} {branch}"
 
 
     if json_output:
@@ -88,6 +89,7 @@ def cmd_sync(
             "working_tree_clean": is_clean,
             "remote": remote if has_remote else None,
             "prefix": prefix if has_prefix else None,
+            "branch": branch,
             "pull_command": pull_cmd,
             "push_command": push_cmd,
             "errors": errors,
@@ -122,7 +124,7 @@ def cmd_sync(
             return 1
 
         c.info(f"Ejecutando: {pull_cmd}")
-        res_pull = c.git("subtree", "pull", f"--prefix={prefix}", remote, "main", "--squash")
+        res_pull = c.git("subtree", "pull", f"--prefix={prefix}", remote, branch, "--squash")
         if res_pull.returncode == 0:
             c.ok("Sincronización completada con éxito.")
             return 0

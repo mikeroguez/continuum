@@ -52,6 +52,28 @@ class TestPacketize(unittest.TestCase):
             self.assertIn("grande.txt", header)
             self.assertIn("líneas 1-200", header)
 
+    def test_root_reached_via_symlink_is_resolved(self):
+        """Regresión: `target.resolve()` sigue symlinks pero `root` se usaba
+        tal cual, así que si `root` cuelga de un symlink (p. ej. macOS
+        resuelve /tmp como /private/tmp) `target.relative_to(root)` fallaba
+        con ValueError aunque ambas rutas apuntaran al mismo directorio."""
+        with temp_project() as root:
+            real_dir = root / "real"
+            real_dir.mkdir()
+            link_dir = root / "link"
+            link_dir.symlink_to(real_dir)
+
+            target = link_dir / "grande.txt"
+            (real_dir / "grande.txt").write_text(
+                "\n".join(f"linea {i}" for i in range(500)) + "\n"
+            )
+
+            code = packets.packetize(link_dir, target, None, chunk_lines=200)
+
+            self.assertEqual(code, 0)
+            out_dir = real_dir / ".ai" / "state" / "packets"
+            self.assertEqual(len(list(out_dir.glob("grande.txt__chunk-*.md"))), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

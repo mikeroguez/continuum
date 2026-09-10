@@ -1,14 +1,13 @@
 # Guías de Continuum
 
-Estas guías se instalan junto con la plantilla:
+Estas guías se instalan junto con la plantilla en repositorios consumidores:
 
-- [Cómo usar Continuum](como-usar-continuum.md) — para personas que usan o mantienen el proyecto.
-- [Guía para agentes](guia-para-agentes.md) — para asistentes que trabajan en el repositorio.
+- **[Cómo usar Continuum](como-usar-continuum.md)** — Manual de uso diario para personas, **casos de uso para equipos de desarrollo** y **plantillas de prompts** para asistentes de IA.
+- **[Guía para agentes](guia-para-agentes.md)** — Directivas y conducta para asistentes que trabajan en el repositorio.
 
-English guides:
+English versions:
 
-- [Using Continuum](using-continuum.md)
-- [Guide for agents](guide-for-agents.md)
+- **[Using Continuum](using-continuum.md)** — Daily manual, team use cases, and prompt templates.
+- **[Guide for agents](guide-for-agents.md)** — Directives and rules for AI assistants.
 
-Las reglas obligatorias siguen en `AI_COLLABORATION.md`; estas guías explican
-cómo aplicarlas sin añadir contexto innecesario al arranque de una sesión.
+> **Nota:** Las reglas operativas obligatorias siguen en [`AI_COLLABORATION.md`](../AI_COLLABORATION.md); estas guías detallan cómo aplicarlas y usarlas eficientemente sin saturar el contexto de arranque.

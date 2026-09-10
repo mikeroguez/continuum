@@ -73,6 +73,36 @@ class TestSync(unittest.TestCase):
             self.assertIn("description:", content)
             self.assertIn('Eres el rol "QA', content)
 
+    def test_sync_generates_copilot_agents(self):
+        with temp_project() as root:
+            code = roles.sync(root, provider="copilot")
+            self.assertEqual(code, 0)
+            agents_dir = root / ".github" / "agents"
+            generated = sorted(p.name for p in agents_dir.glob("*.agent.md"))
+            expected = sorted(f"{r['slug']}.agent.md" for r in roles.discover_roles(root))
+            self.assertEqual(generated, expected)
+
+    def test_generated_copilot_agent_has_valid_frontmatter(self):
+        with temp_project() as root:
+            roles.sync(root, provider="copilot")
+            content = (root / ".github" / "agents" / "qa.agent.md").read_text()
+            self.assertTrue(content.startswith("---\nname: qa\n"))
+            self.assertIn("description:", content)
+            self.assertIn('Eres el rol "QA', content)
+
+    def test_copilot_sync_is_deterministic(self):
+        with temp_project() as root:
+            roles.sync(root, provider="copilot")
+            first = {
+                path.name: path.read_text()
+                for path in (root / ".github" / "agents").glob("*.agent.md")
+            }
+            roles.sync(root, provider="copilot")
+            second = {
+                path.name: path.read_text()
+                for path in (root / ".github" / "agents").glob("*.agent.md")
+            }
+            self.assertEqual(first, second)
     def test_unsupported_provider_fails_cleanly(self):
         with temp_project() as root:
             code = roles.sync(root, provider="gemini")

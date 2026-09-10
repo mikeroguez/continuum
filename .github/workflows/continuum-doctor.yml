@@ -19,3 +19,5 @@ jobs:
           fetch-depth: 0
       - name: continuum doctor
         run: python3 tools/continuum doctor
+      - name: Copilot integration tests
+        run: python3 -m unittest tests.test_copilot_integration -v

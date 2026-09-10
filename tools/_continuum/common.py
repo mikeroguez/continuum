@@ -12,10 +12,11 @@ PROVIDER_FILES = {
     "claude": "CLAUDE.md",
     "codex": "AGENTS.md",
     "gemini": "GEMINI.md",
+    "copilot": ".github/copilot-instructions.md",
 }
 DEFAULT_CONFIG = {
     "project": "",
-    "providers": ["claude", "codex", "gemini"],
+    "providers": ["claude", "codex", "gemini", "copilot"],
     "estado_dev": {
         # estado-dev.md es un INDICE corto (patrón MEMORY.md + temas, igual
         # al de Auto Memory de Claude Code): apunta a archivos de tema que

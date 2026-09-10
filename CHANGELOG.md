@@ -8,6 +8,22 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.4.0] - 2026-09-10
+
+### Added
+
+- Integración verificable con GitHub Copilot mediante
+  `.github/copilot-instructions.md`, instrucciones por ruta y agentes
+  personalizados generados desde `.ai/roles/`.
+- Criterios y fixture seguro para revisión asistida de cambios.
+- Validación de huella de `AI_COLLABORATION.md`, paridad de artefactos Copilot
+  y handoff con proveedor `copilot`.
+
+### Changed
+
+- La documentación separa el protocolo común agnóstico del modelo de los
+  adaptadores específicos de cada cliente.
+
 ## [1.3.2] - 2026-09-10
 
 ### Changed

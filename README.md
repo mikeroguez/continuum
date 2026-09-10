@@ -4,7 +4,7 @@
 
 **Protocolo y herramientas de memoria persistente para equipos que trabajan con múltiples asistentes de IA sobre el mismo repositorio Git.**
 
-[![Version](https://img.shields.io/badge/version-v1.3.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
@@ -114,6 +114,8 @@ tools/continuum install-hooks          # Instalar pre-commit githook local
 
 - [Manual de Uso para Personas y Equipos](template/docs/como-usar-continuum.md) — Guía de adopción, casos de uso en equipo y plantillas de prompts.
 - [Guía de Conducta para Agentes IA](template/docs/guia-para-agentes.md) — Directivas y límites operativos para asistentes.
+- [Revisión con asistentes](docs/copilot-code-review.md) — Criterios y flujo
+  para revisión asistida sin sustituir la aprobación humana.
 - [Decisiones de Arquitectura (ADRs)](docs/decision-log.md) — Historial de decisiones técnicas de Continuum.
 - [Guía de Contribución](CONTRIBUTING.md) — Estándares de commits, Pull Requests y lanzamientos SemVer.
 

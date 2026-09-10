@@ -4,7 +4,7 @@
 
 **Git-backed persistent memory protocol and CLI tools for teams working with multiple AI assistants.**
 
-[![Version](https://img.shields.io/badge/version-v1.3.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -114,6 +114,8 @@ tools/continuum install-hooks          # Install local pre-commit githook
 
 - [Manual for People and Teams](template/docs/using-continuum.md) — Adoption guide, team use cases, and prompt templates.
 - [Conduct Guide for AI Agents](template/docs/guide-for-agents.md) — Directives and operational boundaries for assistants.
+- [Assisted Review](template/docs/copilot-code-review.md) — Review criteria
+  without replacing human approval.
 - [Architecture Decision Records (ADRs)](docs/decision-log.md) — Continuum technical decision history.
 - [Contributing Guide](CONTRIBUTING.en.md) — Guidelines for commits, Pull Requests, and SemVer releases.
 

@@ -36,6 +36,7 @@ No leas más que eso para empezar. El resto se explora bajo demanda (§3).
 | Claude Code | `CLAUDE.md` | `.claude/settings.json` (permisos, hooks) |
 | Codex / genérico | `AGENTS.md` | — (Codex usa `AGENTS.md` de forma nativa) |
 | Gemini CLI  | `GEMINI.md` | `.gemini/settings.json` si aplica |
+| GitHub Copilot | `.github/copilot-instructions.md` + `AGENTS.md` | Configuración de instrucciones y agentes de GitHub |
 
 `continuum doctor` valida que cada entrypoint exista, esté trackeado en git y
 referencie este archivo. Un directorio de proveedor vacío o sin trackear es

@@ -31,7 +31,7 @@ class TestLoadConfig(unittest.TestCase):
             (root / ".ai" / "config.json").unlink()
             cfg = c.load_config(root)
             self.assertEqual(cfg["estado_dev"]["max_index_lines"], 80)
-            self.assertEqual(cfg["providers"], ["claude", "codex", "gemini"])
+            self.assertEqual(cfg["providers"], ["claude", "codex", "gemini", "copilot"])
 
     def test_partial_override_merges_not_replaces(self):
         with temp_project(git_init=False) as root:
@@ -51,7 +51,7 @@ class TestLoadConfig(unittest.TestCase):
         with temp_project(git_init=False) as root:
             (root / ".ai" / "config.json").write_text("{ esto no es json")
             cfg = c.load_config(root)
-            self.assertEqual(cfg["providers"], ["claude", "codex", "gemini"])
+            self.assertEqual(cfg["providers"], ["claude", "codex", "gemini", "copilot"])
 
 
 class TestGitHelpers(unittest.TestCase):

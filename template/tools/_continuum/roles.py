@@ -2,9 +2,8 @@
 
 Un rol es un archivo Markdown corto que una sesión adopta como lente para
 una tarea — no es un agente que corre de forma concurrente ni un proceso
-separado. `sync()` genera, para los proveedores que lo soportan de forma
-nativa (hoy: Claude Code), un subagente real a partir del archivo canónico,
-sin duplicar el contenido a mano.
+separado. `sync()` genera, para los proveedores que lo soportan de forma nativa, un
+subagente real a partir del archivo canónico, sin duplicar el contenido a mano.
 """
 from __future__ import annotations
 
@@ -72,7 +71,7 @@ def list_roles(root: Path) -> int:
 
 
 def sync(root: Path, provider: str = "claude") -> int:
-    if provider != "claude":
+    if provider not in {"claude", "copilot"}:
         c.err(f"Sin soporte de subagentes nativos para '{provider}' todavía "
               f"— el rol sigue siendo una instrucción de texto que el "
               f"entrypoint de ese proveedor referencia, no un archivo generado.")
@@ -84,7 +83,11 @@ def sync(root: Path, provider: str = "claude") -> int:
         c.warn("No hay roles activos que sincronizar.")
         return 0
 
-    agents_dir = root / ".claude" / "agents"
+    agents_dir = (
+        root / ".claude" / "agents"
+        if provider == "claude"
+        else root / ".github" / "agents"
+    )
     agents_dir.mkdir(parents=True, exist_ok=True)
     for role in roles:
         description = role["mandato"] or role["title"]
@@ -96,12 +99,14 @@ def sync(root: Path, provider: str = "claude") -> int:
         )
         body = (
             f"Eres el rol \"{role['title']}\" del catálogo de Continuum "
-            f"(pack: {role['pack']}). Actúa según lo que dice este archivo — "
+            f"(pack: {role['pack']}). Actúa según lo que dice este archivo - "
             f"no te salgas de su mandato ni tomes las decisiones reservadas "
             f"a otros roles.\n\n{role['text']}"
         )
-        c.write_text(agents_dir / f"{role['slug']}.md", frontmatter + body)
+        suffix = ".md" if provider == "claude" else ".agent.md"
+        c.write_text(agents_dir / f"{role['slug']}{suffix}", frontmatter + body)
 
-    c.ok(f"{len(roles)} subagente(s) de Claude Code generados en "
+    provider_name = "Claude Code" if provider == "claude" else "GitHub Copilot"
+    c.ok(f"{len(roles)} subagente(s) de {provider_name} generados en "
          f"{agents_dir.relative_to(root)}/ a partir de {cfg['roles']['dir']}/.")
     return 0

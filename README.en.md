@@ -4,7 +4,7 @@
 
 **Git-backed persistent memory protocol and CLI tools for teams working with multiple AI assistants.**
 
-[![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.4.1-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)

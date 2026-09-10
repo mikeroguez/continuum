@@ -111,6 +111,16 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "fn": lambda: roles.sync(root, provider="copilot"),
             })
 
+    if "gemini" in cfg["providers"]:
+        skills_dir = root / ".gemini" / "skills"
+        if not skills_dir.exists() or not list(skills_dir.glob("*/SKILL.md")):
+            from . import roles
+            actions.append({
+                "id": "sync_gemini_roles",
+                "desc": "Generar skills de Gemini CLI / Antigravity desde el catálogo de roles (.ai/roles/)",
+                "fn": lambda: roles.sync(root, provider="gemini"),
+            })
+
     if not actions:
         c.ok("No se requieren auto-reparaciones seguras. Todo está listo.")
         return 0

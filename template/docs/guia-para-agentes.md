@@ -1,59 +1,62 @@
-# Guía para agentes que trabajan con Continuum
+# Guía para Agentes (Continuum)
 
-`AI_COLLABORATION.md` contiene las reglas obligatorias. Esta guía explica cómo aplicarlas. Si difieren, sigue el archivo canónico.
+> [Read in English](guide-for-agents.md) · [Manual para Personas](como-usar-continuum.md) · [Protocolo Canónico](../AI_COLLABORATION.md)
 
-## Objetivo
+> [!NOTE]
+> `AI_COLLABORATION.md` es la fuente canónica e innegociable de reglas. Esta guía explica la aplicación práctica del protocolo para asistentes de IA.
 
-Deja el repositorio en un estado que otra sesión pueda entender y verificar. No conserves información importante solo en la conversación.
+---
 
-## Arranque mínimo
+## Objetivo Principal
 
-1. Lee `AI_COLLABORATION.md`, `.ai/HANDOFF.md` y `.ai/state/estado-dev.md`.
-2. Si la tarea existe, lee su `task.md` y su plan.
-3. Usa `tools/continuum context --task <slug> --why` para orientar la lectura.
-4. Abre temas, código y documentación adicional solo si responden a una necesidad concreta.
+Dejar el repositorio en un estado totalmente interpretable y verificable para cualquier sesión futura (humana o de IA). **El repositorio es la memoria; la conversación es solo el canal de ejecución.**
 
-No cargues todos los temas ni repitas en el handoff lo que se verifica en el diff o las pruebas.
+---
 
-## Elegir el flujo
+## Arranque Mínimo de Sesión
 
-Un cambio claro y pequeño puede trabajarse sin carpeta de tarea. Si abarca un módulo, varios archivos, riesgo o ambigüedad, crea o retoma una tarea. Para trabajo grande, usa el plan de ejecución como cola persistente de pasos.
+1. Leer [`AI_COLLABORATION.md`](../AI_COLLABORATION.md), [`.ai/HANDOFF.md`](../.ai/HANDOFF.md) y [`.ai/state/estado-dev.md`](../.ai/state/estado-dev.md).
+2. Si la tarea existe, consultar su `task.md` y su plan.
+3. Usar `tools/continuum context` para orientar la lectura inicial.
+4. Consultar código, temas de memoria y documentación técnica **únicamente si responden a una necesidad concreta**.
 
-## Qué registrar
+---
 
-Registra decisiones no inferibles: alternativas descartadas, límites de producto, riesgos, validaciones y siguiente paso. No registres secretos, datos personales, rutas locales, transcripciones de chat, razonamiento interno ni información de terceros sin autorización.
+## Elección de Flujo
 
-Al interrumpirte o terminar:
+- **Cambio pequeño/trivial**: Trabajar directamente sin abrir carpeta de tarea formal.
+- **Cambio medio/complejo**: Crear o retomar una tarea formal (`tools/continuum task start <slug>`).
+- **Cambio de arquitectura**: Usar un plan de ejecución (`execution-plan.md`) como lista persistente de pasos.
 
-- actualiza el handoff general;
-- completa el handoff de una tarea formal antes de cerrarla; y
-- nombra las validaciones ejecutadas y pendientes.
+---
 
-Un handoff breve y exacto es mejor que una crónica larga.
+## Registro de Memoria e Handoffs
 
-## Cómo usar reglas y documentación
+Registrar decisiones no inferibles: alternativas descartadas, límites de producto, riesgos, validaciones y siguiente paso.
 
-- Trata `AI_COLLABORATION.md` como un mapa de reglas no negociables.
-- Trata `estado-dev.md` como índice, no como historial.
-- Trata los temas y `docs/` como fuentes bajo demanda.
-- Si una regla es crítica y repetida, prefiere una prueba, linter, hook o CI antes que añadir texto al protocolo.
+> [!CAUTION]
+> **Privacidad y Seguridad:**
+> Nunca registrar secretos, credenciales, datos personales, rutas absolutas locales, transcripciones brutas de chat ni información confidencial en la memoria versionada.
 
-No inventes reglas para llenar vacíos. Pide dirección antes de cambiar alcance, publicar, borrar, revelar información o ejecutar acciones irreversibles.
+Al interrumpirse o concluir una sesión:
+- Actualizar `.ai/HANDOFF.md`.
+- Completar el handoff de la tarea en `.ai/tasks/<slug>/handoff.md` antes de cerrarla.
+- Listar las pruebas unitarias/integración ejecutadas y pendientes.
 
-## Coordinación y cierre
+---
 
-Declara la tarea y su responsable cuando haya más de una persona o agente. Usa un worktree o rama separada para trabajo concurrente. Un `claim` da visibilidad; no autoriza a sobrescribir trabajo ajeno.
+## Coordinación y Cierre
 
-Un rol es una lente de trabajo, no un subproceso concurrente. Consulta los packs activos con `tools/continuum roles list`; el rol puede registrarse al crear una tarea o handoff. `roles sync` genera artefactos locales para Claude Code y nunca deben editarse manualmente ni confirmarse en Git.
+1. Ejecutar validaciones proporcionales al cambio realizado.
+2. Revisar el diff (`git status`, `git diff`) y limpiar archivos no rastreados o temporales.
+3. Ejecutar `tools/continuum doctor` si se modificó el protocolo, la memoria o la infraestructura `.ai/`.
+4. Registrar resultados y riesgos pendientes en el handoff.
+5. Dejar commits, merges y publicaciones a la persona autorizada (salvo permiso expreso).
 
-Antes de proponer que el trabajo terminó:
+---
 
-1. ejecuta validaciones proporcionales al cambio;
-2. revisa el diff y archivos no rastreados;
-3. ejecuta `tools/continuum doctor` si tocaste protocolo, memoria o tareas;
-4. registra resultado y riesgos pendientes; y
-5. deja commit, publicación, despliegue y acciones externas a quien tenga esa autorización.
+<div align="center">
 
-## Señales para simplificar
+Continuum · [Licencia MIT](../LICENSE)
 
-Simplifica cuando el contexto de arranque crezca, una instrucción replique información del repositorio o una tarea pequeña genere demasiados archivos. Divide la memoria por tema y conserva en el protocolo solo hechos no inferibles y acciones necesarias.
+</div>

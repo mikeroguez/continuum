@@ -1,155 +1,99 @@
-# Guía de contribución
+# Guía de Contribución
 
-> [Read this guide in English](CONTRIBUTING.en.md). La política que define la
-> fuente canónica y el mantenimiento de traducciones está en
-> [`docs/LANGUAGE_POLICY.md`](docs/LANGUAGE_POLICY.md).
+> [Read in English](CONTRIBUTING.en.md) · [Política de Idiomas](docs/LANGUAGE_POLICY.md)
 
-Manual de colaboración de Continuum: cómo proponer cambios, convención de
-ramas y commits, cuándo hace falta un PR, y cómo se versiona y libera. La
-convención de commits detallada y las reglas de trabajo en equipo (incluido
-el uso de `git worktree` para trabajo concurrente) ya están en
-`AI_COLLABORATION.md` §§6-7 — no se duplican aquí, solo se referencian.
+Este manual establece el flujo de trabajo para colaborar en Continuum: convención de ramas, commits, Pull Requests y el proceso de lanzamientos (SemVer).
 
-## Antes de proponer un cambio
+> [!NOTE]
+> Las reglas de trabajo en equipo y convenciones de commits ya están especificadas en [`AI_COLLABORATION.md`](AI_COLLABORATION.md) (§§6-7). Este documento norma específicamente las contribuciones al meta-repositorio de Continuum.
 
-Abre un issue si el cambio es de diseño (afecta `ARCHITECTURE.md`, el
-protocolo en `template/AI_COLLABORATION.md`, o el comportamiento del CLI) —
-así se discute el enfoque antes de escribir código. Para una corrección
-puntual (typo, bug pequeño, ajuste de documentación) se puede ir directo a
-un PR.
+---
 
-## Convención de ramas
+## Antes de Proponer un Cambio
 
-| Prefijo   | Uso                                             |
-|-----------|--------------------------------------------------|
-| `feat/`   | Funcionalidad nueva                              |
-| `fix/`    | Corrección de bugs                               |
-| `docs/`   | Cambios de documentación (sin tocar código)      |
-| `refactor/` | Cambio interno sin alterar comportamiento      |
-| `chore/`  | Mantenimiento (dependencias, CI, housekeeping)   |
-| `test/`   | Solo pruebas                                     |
+- **Cambios de arquitectura o protocolo**: Abre un issue previo para discutir el enfoque antes de escribir código (afecta `ARCHITECTURE.md`, `template/AI_COLLABORATION.md` o el CLI).
+- **Correcciones menores o documentación**: Puedes abrir directamente un Pull Request.
 
-Ejemplo: `fix/memory-split-legacy-overwrite`. Ramas cortas y de un solo
-propósito — igual que el criterio de tarea en `AI_COLLABORATION.md` §2.
+---
 
-`main` es la única rama de desarrollo de larga duración. No hay `develop`
-ni ramas de staging: el proyecto es un CLI más plantillas, no un servicio
-con entornos que desplegar — mantener una sola rama larga es coherente con
-el principio de "ceremonia proporcional al riesgo" (`ARCHITECTURE.md` §2).
+## Convención de Ramas
 
-`export` es una rama especial, generada por `git subtree split
---prefix=template -b export` (ver README.md). Nadie commitea directamente
-ahí: se regenera en cada release (ver más abajo).
+| Prefijo | Propósito | Ejemplo |
+| :--- | :--- | :--- |
+| `feat/` | Funcionalidad nueva | `feat/sync-branch-option` |
+| `fix/` | Corrección de errores | `fix/memory-split-overwrite` |
+| `docs/` | Cambios de documentación exclusivamente | `docs/add-team-use-cases` |
+| `refactor/` | Refactorización interna sin cambio de comportamiento | `refactor/doctor-checks` |
+| `chore/` | Mantenimiento, dependencias y housekeeping | `chore/bump-deps` |
+| `test/` | Pruebas unitarias | `test/session-start` |
 
-## Cuándo hace falta un Pull Request
+### Ramas Principales
 
-- **Contribuciones externas:** siempre vía PR.
-- **Cambios que tocan `template/tools/_continuum/` (el CLI) o el protocolo**
-  (`template/AI_COLLABORATION.md`, `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`):
-  vía PR aunque lo abra quien mantiene el repositorio — el objetivo es que
-  el check de CI (`continuum doctor`, `.github/workflows/continuum-doctor.yml`)
-  corra antes de mergear, porque un bug ahí se propaga a todo proyecto que
-  haga `git subtree pull` después.
-- **Documentación menor o ajustes en `docs/` o en la memoria autoalojada**
-  (`.ai/state/topics/*.md`): commit directo a `main` es aceptable.
+- **`develop`**: Rama de integración y desarrollo activo. Todos los commits de trabajo en progreso se realizan en esta rama.
+- **`main`**: Rama de producción y lanzamientos estables. Solo recibe merges desde `develop` cuando un release es autorizado.
+- **`export`**: Rama distribuida mantenida automáticamente vía `git subtree split --prefix=template -b export`. Ninguna persona realiza commits manuales directos sobre ella.
 
-El PR debe dejar `tools/continuum doctor` en cero problemas críticos antes
-de mergear (el hook de pre-commit y el workflow de CI ya lo verifican).
+---
 
-## Tests
+## Convención de Commits
 
-Suite de tests (`tests/`, stdlib `unittest`, sin dependencias nuevas) contra
-el código fuente en `template/tools/_continuum/` — no contra la copia
-autoalojada en la raíz. Vive solo en este meta-repositorio: no se distribuye
-a los proyectos que incorporan Continuum (`.github/workflows/tests.yml` está
-únicamente en la raíz, no en `template/`).
+Seguimos [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/): tipo en inglés, descripción breve en español.
 
-```bash
-python3 -m unittest discover -s tests -t . -v
+```text
+feat: agrega subcomando de sincronización de plantilla
+fix: corrige colisión de nombres en memory-split-legacy
+docs: actualiza guía de adopción para equipos
 ```
 
-Cualquier cambio en `template/tools/_continuum/` que toque comportamiento
-(no solo texto de ayuda) debería venir acompañado de un test — en particular
-si corrige un bug: dos bugs reales encontrados durante el desarrollo
-(`memory-split-legacy` sobreescribiendo un tema existente, `packetize` con
-rutas relativas) quedaron como pruebas de regresión en `tests/test_memory.py`
-y `tests/test_packets.py`, precisamente para que no vuelvan a aparecer.
+Tipos permitidos: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`.
 
-## Convención de commits
+---
 
-Conventional Commits, tipo en inglés, mensaje en español — igual que
-`AI_COLLABORATION.md` §7: `feat|fix|docs|refactor|test|chore|perf|ci`.
-Ejemplo: `fix: corrige colisión de nombres en memory-split-legacy`.
+## Pruebas Unitarias
 
-## Versionado
+La suite de pruebas (`tests/`) utiliza únicamente la biblioteca estándar `unittest` de Python 3 y prueba el código fuente distribuido en `template/tools/_continuum/`.
 
-Continuum se versiona con [SemVer](https://semver.org/lang/es/)
-(`MAJOR.MINOR.PATCH`), en conjunto para el protocolo y el CLI —vive todo en
-`template/`, así que se libera junto—:
+```bash
+# Ejecutar la suite completa de pruebas
+python3 -m unittest
+```
 
-- **MAJOR:** cambio incompatible en la estructura de `.ai/` que rompería un
-  proyecto ya instalado, o un subcomando de `continuum` removido/renombrado
-  sin alias de compatibilidad.
-- **MINOR:** funcionalidad nueva retrocompatible (subcomando, plantilla).
-- **PATCH:** corrección de bugs o ajustes de documentación dentro de
-  `template/`.
+> [!TIP]
+> Todo cambio en el motor CLI o en el protocolo que altere comportamiento debe incluir su correspondiente prueba unitaria de regresión.
 
-La fuente de verdad de la versión es `template/tools/_continuum/__init__.py`
-(`__version__`), reflejada en un tag de git y en `CHANGELOG.md`.
+---
 
-## Proceso de release
+## Versionado SemVer
 
-1. Mergear a `main` los cambios que forman parte de la versión.
-2. Actualizar `__version__` en `template/tools/_continuum/__init__.py`
-   **y** en la copia autoalojada `tools/_continuum/__init__.py`.
-3. Mover las entradas correspondientes de `CHANGELOG.md`, de `[Unreleased]`
-   a una sección nueva `## [X.Y.Z] - YYYY-MM-DD`.
-4. Regenerar la rama `export`:
+Continuum utiliza [SemVer 2.0.0](https://semver.org/lang/es/):
+
+- **MAJOR** (`X.0.0`): Cambios incompatibles en la estructura de `.ai/` o en el CLI que romperían proyectos ya instalados.
+- **MINOR** (`1.X.0`): Funcionalidad nueva retrocompatible (nuevos subcomandos, plantillas o módulos).
+- **PATCH** (`1.0.X`): Correcciones de errores o mejoras de documentación.
+
+La fuente de verdad de la versión es `__version__` en `template/tools/_continuum/__init__.py`, reflejada en `CHANGELOG.md` y etiquetada en Git (`vX.Y.Z`).
+
+---
+
+## Proceso de Lanzamiento (Release)
+
+1. Mergear los cambios de `develop` a `main`.
+2. Actualizar `__version__` en `tools/_continuum/__init__.py` y `template/tools/_continuum/__init__.py`.
+3. Actualizar `CHANGELOG.md` registrando los cambios bajo `## [X.Y.Z] - YYYY-MM-DD`.
+4. Ejecutar los comandos automatizados del CLI:
    ```bash
-   git branch -D export
-   git subtree split --prefix=template -b export
-   git push origin export --force-with-lease
+   python3 tools/continuum export refresh --no-dry-run
+   python3 tools/continuum release vX.Y.Z --no-dry-run
    ```
-5. Etiquetar y publicar:
+5. Publicar ramas y tags en GitHub:
    ```bash
-   git tag -a vX.Y.Z export -m "vX.Y.Z"
-   git push origin vX.Y.Z
+   git push origin main develop export --tags --force
    ```
-6. Crear el Release en GitHub a partir del tag, con las notas del
-   `CHANGELOG.md`.
 
-**Proyectos que consumen Continuum:** se recomienda fijar `git subtree
-add`/`pull` a un tag (`vX.Y.Z`) en vez de seguir `main` o `export` de forma
-flotante, para decidir de forma explícita cuándo se adopta una versión que
-podría no ser retrocompatible (ver `README.md` § Instalación).
+---
 
-## Protección de rama (configuración en GitHub)
+<div align="center">
 
-Recomendado en Settings -> Branches / Rulesets:
+Continuum está mantenido por [Mike Roguez](https://mikeroguez.me) bajo Licencia [MIT](LICENSE).
 
-### `main`
-
-- Exigir Pull Request antes de mergear.
-- Exigir checks antes de mergear:
-  - `doctor`
-  - `unittest (3.10)`
-  - `unittest (3.12)`
-- No permitir force-push.
-- No permitir borrado de la rama.
-- Requerir que la rama esté actualizada antes de mergear cuando haya más de
-  un mantenedor activo.
-
-### `export`
-
-`export` es una rama generada; nadie commitea directamente ahí.
-
-- No exigir PR: no se desarrolla en esta rama.
-- Permitir actualizaciones mediante `git push origin export --force-with-lease`
-  desde el proceso de release.
-- No permitir borrado accidental.
-- Etiquetar cada release estable (`vX.Y.Z`) apuntando al commit de `export`.
-
-Si GitHub Rulesets no permite expresar "solo force-push controlado durante
-release", deja `export` sin protección estricta y trata los tags como la
-superficie estable de consumo. Los proyectos destino deberían preferir tags
-para instalaciones reproducibles.
+</div>

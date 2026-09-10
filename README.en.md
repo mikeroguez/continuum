@@ -1,120 +1,126 @@
+<div align="center">
+
 # Continuum
 
-> [Leer en español](README.md) · [Language policy](docs/LANGUAGE_POLICY.en.md)
+**Git-backed persistent memory protocol and CLI tools for teams working with multiple AI assistants.**
 
-> **Guides:** [for people](template/docs/using-continuum.md) · [for agents](template/docs/guide-for-agents.md)
+[![Version](https://img.shields.io/badge/version-v1.3.1-blue.svg)](CHANGELOG.md)
+[![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
+[![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
+[![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Source version:** `1dacfc8` (2026-09-09). The Spanish README is the
-canonical source if the two versions differ.
+[Leer en español](README.md) · [Language Policy](docs/LANGUAGE_POLICY.en.md) · [Manual for People](template/docs/using-continuum.md) · [Guide for Agents](template/docs/guide-for-agents.md)
 
-Continuum is a reference template and a small CLI for teams working with
-multiple AI assistants (Claude, Codex, Gemini, and others) in the same Git
-repository. It keeps project context in the repository rather than relying on
-the history of one assistant conversation.
+---
 
-## Why it exists
+</div>
 
-Continuum provides a shared, versioned place for the decisions and handoffs a
-new session needs. Its protocol is designed so that a session can end, a team
-member can take over, or a team can switch tools without rebuilding all context
-from a chat history.
+## What is Continuum?
 
-It provides:
+**Continuum** is a lightweight Git-native framework designed to **persist software project context directly within the repository**, eliminating reliance on volatile AI chat history.
 
-- one protocol and shared memory that compatible assistants can read and
-  update;
-- structured handoffs and task records for continuity between sessions;
-- small, on-demand context files instead of an ever-growing startup prompt;
-- checks for declared provider support, stale state, duplicate files, and
-  context size.
-
-Continuum does **not** automatically assign work to AI providers or promise a
-particular productivity outcome. It is a repository-native protocol and a set
-of lightweight checks; teams decide how to use it.
-
-For the design rationale and scope boundaries, see the canonical Spanish
-[architecture document](ARCHITECTURE.md) and [research review](docs/investigacion-2026.md).
-
-## Repository contents
-
-| Path | Contents |
-| --- | --- |
-| `template/` | Everything installed into a destination project: protocol, task/handoff/ADR templates, the `continuum` CLI, Git hooks, Claude Code configuration, and CI workflow. |
-| `ARCHITECTURE.md` | Design rationale, system layers, and deliberately excluded scope. |
-| `docs/` | Decision log, rollout guide, research and product-planning material. Browse it in English through [the documentation index](docs/en/README.md). |
-| `CONTRIBUTING.md` | Branch, pull-request, versioning, and release guidance. |
-
-## Install with Git subtree
-
-Continuum is distributed from one source repository. A destination project
-imports its `template/` using `git subtree`, rather than copying individual
-files by hand.
-
-Use a released tag when you need a fixed, reproducible version:
-
-```bash
-git remote add continuum <continuum-repository-url>
-git subtree add --prefix=. continuum v1.2.0 --squash -m "chore: install Continuum"
+```mermaid
+flowchart LR
+    A[Developer] -->|Session 1| B(Claude Code)
+    B -->|Persists to| C[(Git Memory / .ai)]
+    C -->|Loads context| D(Codex / Gemini)
+    D -->|Session 2| E[Project Continuity]
 ```
 
-You can instead follow the `export` branch for the latest installable template:
+### Core Principles
+
+- **Universal Interoperability**: Fully compatible with the [`AGENTS.md`](https://agents.md) convention (Claude Code, Codex, Gemini CLI, Cursor) without translation or duplication.
+- **Lossless Continuity**: Work sessions resume seamlessly across token limits, provider rotations, or developer handoffs.
+- **Multi-Agent Collaboration**: Developers and AI assistants collaborate in parallel without overwriting or stepping on code.
+- **Context Cost Optimization**: Startup context remains fixed at **~2.5k tokens** per session instead of tens of thousands of tokens of bloated chat logs.
+
+---
+
+## Quickstart
+
+> [!NOTE]
+> **Recommended distribution via `git subtree`:**
+> Continuum is installed into target repositories using `git subtree` to maintain clean tracking and reproducible updates.
+
+### 1. Install into an existing project
 
 ```bash
-git subtree add --prefix=. continuum export --squash -m "chore: install Continuum"
+# Add the Continuum remote (one-time setup)
+git remote add continuum https://github.com/mikeroguez/continuum.git
+
+# Mount the template at the project root using the export branch
+git subtree add --prefix=. continuum export --squash -m "chore: install Continuum v1.3.1"
 ```
 
-`export` contains the contents of `template/` at the project root. Always use
-`--squash`: it keeps the destination project’s history to one installation or
-update commit rather than importing Continuum’s development history.
-
-After installation, complete the project name, providers, and synchronisation
-settings in `.ai/config.json`, merge `.gitignore-continuum-fragment` into your
-own `.gitignore`, then run:
+### 2. Configure and Initialize
 
 ```bash
+# Configure project metadata in .ai/config.json
+$EDITOR .ai/config.json
+
+# Install local githooks and verify health
 tools/continuum install-hooks
 tools/continuum doctor
 ```
 
-## Update an installed project
+---
 
+## Key Components
+
+| Component | Path | Purpose | When to read |
+| :--- | :--- | :--- | :--- |
+| **Canonical Protocol** | [`AI_COLLABORATION.md`](AI_COLLABORATION.md) | Single authoritative workflow rules | At the start of every session |
+| **Immediate Handoff** | [`.ai/HANDOFF.md`](.ai/HANDOFF.md) | Summary of recent state, tests, and next steps | When starting or resuming work |
+| **Memory Index** | [`.ai/state/estado-dev.md`](.ai/state/estado-dev.md) | Compact project memory map (<80 tokens) | At session startup |
+| **Topic Modules** | `.ai/state/topics/` | Structured breakdowns (architecture, decisions, pending) | On-demand as needed |
+| **CLI Engine** | [`tools/continuum`](tools/continuum) | Diagnostics, tasks, sync, and metrics | Via terminal CLI |
+
+---
+
+## CLI Command Reference (`tools/continuum`)
+
+### Diagnostics and Session
 ```bash
-tools/continuum sync-template
+tools/continuum                        # doctor: Run full diagnostic checks
+tools/continuum session start          # Start session: load handoff, active tasks, and context
+tools/continuum session end --auto     # End session: perform linting and write handoff
+tools/continuum status                 # Display compact status and recommended action
 ```
 
-The command prints the exact `git subtree pull` command using the destination
-project’s configured template remote and prefix.
-
-## Core commands
-
+### Task Management (`task`)
 ```bash
-tools/continuum                                  # concise project health check
-tools/continuum session start                    # suggested context and active work
-tools/continuum session end --message "..."      # write a session handoff
-tools/continuum status                           # state and suggested next action
-tools/continuum doctor --fix --dry-run           # preview safe repairs
-
-tools/continuum context --task <slug> --why      # recommended initial reading
-tools/continuum tokens                           # startup-context token estimate
-tools/continuum task start <slug> --size medium  # record medium/large work
-tools/continuum task claim <slug> <owner>        # make ownership visible
-tools/continuum task close <slug>                # close work with a handoff
-tools/continuum handoff --auto --provider codex  # record continuity
-
-tools/continuum metrics report                   # local measurement report
-tools/continuum metrics export --anonymize       # anonymised local export
-tools/continuum roles list                       # roles in enabled packs
+tools/continuum task start <slug> --size small|medium|large   # Create scoped task
+tools/continuum task claim <slug> <owner>                    # Declare task ownership
+tools/continuum task close <slug>                           # Close and archive task
 ```
 
-Run `tools/continuum --help` for the complete command list. Continuum requires
-only Python 3 and Git; it has no external Python dependencies.
+### Synchronization (`sync`)
+```bash
+tools/continuum sync --apply           # Synchronize template with remote repository
+tools/continuum install-hooks          # Install local pre-commit githook
+```
 
-## Contribute
+---
 
-Read the [English contributing guide](CONTRIBUTING.en.md) before opening a
-pull request. Changes to the distributable template or CLI should be reviewed
-through a pull request; small documentation fixes may go directly to `main`.
+## Git Safety & Integrity
 
-## Licence
+> [!IMPORTANT]
+> **No history pollution:**
+> By using `--squash`, `git subtree` adds **only 1 single commit** to the destination project history. No sprawling commit logs from Continuum are mixed into the main project tree.
 
-[MIT](LICENSE).
+---
+
+## Documentation
+
+- [Manual for People and Teams](template/docs/using-continuum.md) — Adoption guide, team use cases, and prompt templates.
+- [Conduct Guide for AI Agents](template/docs/guide-for-agents.md) — Directives and operational boundaries for assistants.
+- [Architecture Decision Records (ADRs)](docs/decision-log.md) — Continuum technical decision history.
+- [Contributing Guide](CONTRIBUTING.en.md) — Guidelines for commits, Pull Requests, and SemVer releases.
+
+---
+
+<div align="center">
+
+Continuum is maintained by [Mike Roguez](https://mikeroguez.me) under the [MIT License](LICENSE).
+
+</div>

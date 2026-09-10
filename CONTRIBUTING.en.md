@@ -1,101 +1,99 @@
-# Contributing to Continuum
+# Contributing Guide
 
-> [Leer en español](CONTRIBUTING.md) · [Language policy](docs/LANGUAGE_POLICY.en.md)
+> [Leer en español](CONTRIBUTING.md) · [Language Policy](docs/LANGUAGE_POLICY.en.md)
 
-**Source version:** `1dacfc8` (2026-09-09). The Spanish guide is canonical if
-the two versions differ.
+This manual defines the workflow for contributing to Continuum: branching convention, commits, Pull Requests, and the release process (SemVer).
 
-This guide explains how to propose a change, name branches and commits, decide
-when a pull request is required, and prepare a release. The shared working
-protocol lives in `AI_COLLABORATION.md`; this document links to it rather than
-duplicating its task and team-work rules.
+> [!NOTE]
+> Teamwork rules and commit conventions are specified in [`AI_COLLABORATION.md`](AI_COLLABORATION.md) (§§6-7). This document specifically governs contributions to the Continuum meta-repository.
 
-## Before proposing a change
+---
 
-Open an issue first when the proposal changes the design, the template protocol,
-or CLI behaviour. Small fixes—such as a typo, a focused bug fix, or a narrow
-documentation change—can go straight to a pull request.
+## Before Proposing a Change
 
-## Branches
+- **Architecture or protocol changes**: Open an issue first to discuss the approach before writing code (affects `ARCHITECTURE.md`, `template/AI_COLLABORATION.md`, or the CLI).
+- **Minor fixes or documentation**: You can open a Pull Request directly.
 
-Use a short, single-purpose branch with one of these prefixes:
+---
 
-| Prefix | Use |
-| --- | --- |
-| `feat/` | New functionality |
-| `fix/` | Bug fix |
-| `docs/` | Documentation-only change |
-| `refactor/` | Internal behaviour-preserving change |
-| `chore/` | Maintenance |
-| `test/` | Tests only |
+## Branching Convention
 
-`main` is the long-lived development branch. `export` is generated from
-`template/` with `git subtree split`; do not commit to it directly.
+| Prefix | Purpose | Example |
+| :--- | :--- | :--- |
+| `feat/` | New feature | `feat/sync-branch-option` |
+| `fix/` | Bug fix | `fix/memory-split-overwrite` |
+| `docs/` | Documentation changes only | `docs/add-team-use-cases` |
+| `refactor/` | Internal refactoring without behavioral change | `refactor/doctor-checks` |
+| `chore/` | Maintenance, dependencies, and housekeeping | `chore/bump-deps` |
+| `test/` | Unit testing | `test/session-start` |
 
-## Pull requests
+### Primary Branches
 
-External contributions always use a pull request. A pull request is also
-required for changes to `template/tools/_continuum/` or to the shared protocol
-and provider entrypoints, even when made by a maintainer. This protects projects
-that later import the template.
+- **`develop`**: Integration and active development branch. All work-in-progress commits are made here.
+- **`main`**: Production and stable release branch. Only receives merges from `develop` when a release is authorized.
+- **`export`**: Distributed branch maintained automatically via `git subtree split --prefix=template -b export`. No manual commits are made directly on this branch.
 
-Focused documentation changes and updates to self-hosted working memory may be
-committed directly to `main` when appropriate.
+---
 
-Before merging, run:
+## Commit Convention
 
-```bash
-tools/continuum doctor
-python3 -m unittest discover -s tests -t . -v
-```
-
-Changes to CLI behaviour should include a regression test where practical.
-
-## Commits
-
-Use Conventional Commit types in English:
+We follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): type in English, short description in Spanish or English.
 
 ```text
-feat | fix | docs | refactor | test | chore | perf | ci
+feat: add template sync subcommand
+fix: fix name collision in memory-split-legacy
+docs: update adoption guide for teams
 ```
 
-Write the message in the working language of the team. When a task exists,
-prefix the message with its slug so that its history stays searchable.
+Allowed types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `ci`.
 
-## Documentation languages
+---
 
-Spanish is Continuum’s canonical documentation language. English versions are
-maintained for onboarding and contribution. When changing a paired document,
-review its counterpart and follow the [language policy](docs/LANGUAGE_POLICY.en.md)
-instead of silently allowing the two versions to drift.
+## Unit Testing
 
-## Versioning and releases
+The test suite (`tests/`) uses only the Python 3 standard `unittest` library and tests the distributed source code in `template/tools/_continuum/`.
 
-Continuum follows [Semantic Versioning](https://semver.org/):
+```bash
+# Run full test suite
+python3 -m unittest
+```
 
-- **MAJOR** for incompatible changes to `.ai/` structure or removed/renamed
-  CLI commands without a compatibility alias;
-- **MINOR** for backward-compatible functionality;
-- **PATCH** for fixes and documentation changes within `template/`.
+> [!TIP]
+> Any change to the CLI engine or protocol altering behavior should include a corresponding regression test.
 
-The source of truth for the version is
-`template/tools/_continuum/__init__.py`, reflected in a Git tag and the
-changelog. A release updates both the template and the self-hosted CLI copy,
-updates `CHANGELOG.md`, regenerates `export`, pushes its tag, and creates the
-GitHub release.
+---
 
-Destination projects should normally install a released tag rather than follow
-the floating `main` or `export` branches.
+## SemVer Versioning
 
-## Branch protection
+Continuum follows [SemVer 2.0.0](https://semver.org/):
 
-Protect `main` against deletion and force-pushes, and require these checks for
-pull requests when there is more than one active maintainer:
+- **MAJOR** (`X.0.0`): Incompatible changes to `.ai/` structure or CLI breaking existing installations.
+- **MINOR** (`1.X.0`): Backwards-compatible new features (subcommands, templates, modules).
+- **PATCH** (`1.0.X`): Bug fixes or documentation adjustments.
 
-- `doctor`
-- `unittest (3.10)`
-- `unittest (3.12)`
+Version truth lives in `__version__` in `template/tools/_continuum/__init__.py`, mirrored in `CHANGELOG.md` and tagged in Git (`vX.Y.Z`).
 
-`export` is generated only during a release. If branch rules cannot express a
-controlled release-only force push, treat release tags as the stable consumer
-surface instead.
+---
+
+## Release Process
+
+1. Merge changes from `develop` into `main`.
+2. Update `__version__` in `tools/_continuum/__init__.py` and `template/tools/_continuum/__init__.py`.
+3. Update `CHANGELOG.md` recording changes under `## [X.Y.Z] - YYYY-MM-DD`.
+4. Run automated CLI release commands:
+   ```bash
+   python3 tools/continuum export refresh --no-dry-run
+   python3 tools/continuum release vX.Y.Z --no-dry-run
+   ```
+5. Publish branches and tags to GitHub:
+   ```bash
+   git push origin main develop export --tags --force
+   ```
+
+---
+
+<div align="center">
+
+Continuum is maintained by [Mike Roguez](https://mikeroguez.me) under the [MIT License](LICENSE).
+
+</div>

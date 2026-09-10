@@ -8,6 +8,12 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.3.2] - 2026-09-10
+
+### Changed
+
+- Rediseño estético y estandarización visual limpia y minimalista en toda la documentación (`README.md`, `README.en.md`, `CONTRIBUTING.md`, `CONTRIBUTING.en.md`, `guia-para-agentes.md`, `guide-for-agents.md`).
+
 ## [1.3.1] - 2026-09-10
 
 ### Added

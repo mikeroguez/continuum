@@ -148,4 +148,4 @@ the repository and its handoffs are the continuity source.
 
 ## Safety and teamwork
 
-Use branches and Git worktrees for concurrent work. Do not put secrets, personal data, local paths, sensitive prompts, or third-party information into versioned handoffs, tasks, or metrics. If the process becomes ceremonial, reduce task structure but preserve a useful note for the next session.
+Use `continuum task start <slug> --worktree` (or `git worktree` directly) for concurrent work. Never use `git stash` while other worktrees are active: the stash list is shared across worktrees of the same repository. Do not put secrets, personal data, local paths, sensitive prompts, or third-party information into versioned handoffs, tasks, or metrics. If the process becomes ceremonial, reduce task structure but preserve a useful note for the next session.

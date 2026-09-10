@@ -34,7 +34,7 @@ No leas más que eso para empezar. El resto se explora bajo demanda (§3).
 | Proveedor | Entrypoint  | Config propia                    |
 |-----------|-------------|-----------------------------------|
 | Claude Code | `CLAUDE.md` | `.claude/settings.json` (permisos, hooks) |
-| Codex / genérico | `AGENTS.md` | — (Codex usa `AGENTS.md` de forma nativa) |
+| Codex / genérico | `AGENTS.md` | `.agents/skills/` (skills de roles generadas desde `.ai/roles/`) |
 | Gemini CLI  | `GEMINI.md` | `.gemini/settings.json` si aplica |
 | GitHub Copilot | `.github/copilot-instructions.md` + `AGENTS.md` | Configuración de instrucciones y agentes de GitHub |
 
@@ -141,7 +141,8 @@ nativamente Claude Code (`MEMORY.md` + archivos por tema, ver
 - **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto`.
 - **Cierre de tarea en PR**: Antes de hacer merge, la tarea se cierra con `continuum task close <slug>`, lo que traslada la carpeta a `.ai/tasks/_closed/<slug>/` para preservar la evidencia de pruebas en el historial de Git sin colisionar con las tareas activas de otros.
 - **Prefijo de commit**: Usar el slug de la tarea cuando exista: `[pagos-recurrentes] feat: agrega validación de monto mínimo` para facilitar búsquedas con `git log --grep`.
-- **Concurrencia local (`git worktree`)**: Si dos personas o agentes trabajan localmente al mismo tiempo en el mismo repo, usar `git worktree add ../repo-<slug> <branch>` para aislar los directorios de trabajo en disco.
+- **Concurrencia local (`git worktree`)**: Si dos personas o agentes (Claude Code, Codex, Copilot, etc.) trabajan localmente al mismo tiempo en el mismo repo, usa `continuum task start <slug> --worktree` para crear la tarea y aislar el directorio de trabajo en un paso (por debajo corre `git worktree add ../<repo>-<slug> -b task/<slug>`). También puedes correr ese comando de git a mano si prefieres controlar la ruta o el nombre de rama. Regla dura: un agente = un worktree = una tarea — nunca dos procesos de agente escribiendo en el mismo directorio de trabajo a la vez.
+- **Nunca uses `git stash` con otros worktrees activos**: la lista de stash es del repositorio completo, no de cada worktree (`git stash list` es global) — un stash hecho en un worktree puede terminar aplicándose por error en otro. Si necesitas guardar trabajo a medias en un worktree, haz un commit local (p. ej. `wip: ...`) en vez de stash.
 
 ## 7. Convención de commits
 
@@ -168,4 +169,5 @@ tools/continuum roles list                    # roles disponibles en los packs a
 tools/continuum task start <slug> --role backend
 tools/continuum handoff --role backend --provider claude
 tools/continuum roles sync                    # genera subagentes de Claude Code (.claude/agents/)
+tools/continuum roles sync --provider codex   # genera skills de Codex (.agents/skills/)
 ```

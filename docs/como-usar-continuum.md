@@ -154,4 +154,4 @@ continuidad.
 
 ## Seguridad y equipo
 
-Usa ramas y worktrees para trabajo simultáneo. No escribas secretos, datos personales, rutas locales, prompts sensibles ni información de terceros en handoffs, tareas o métricas versionadas. Si el proceso se vuelve ceremonioso, reduce la estructura de la tarea, pero conserva una nota útil para quien la retome.
+Usa `continuum task start <slug> --worktree` (o `git worktree` directamente) para trabajo simultáneo. Nunca uses `git stash` con otros worktrees activos: la lista de stash es compartida entre worktrees del mismo repositorio. No escribas secretos, datos personales, rutas locales, prompts sensibles ni información de terceros en handoffs, tareas o métricas versionadas. Si el proceso se vuelve ceremonioso, reduce la estructura de la tarea, pero conserva una nota útil para quien la retome.

@@ -7,15 +7,7 @@ Este mismo repositorio es a la vez la fuente distribuible (`template/`) y
 una instancia autoalojada de sí mismo (los archivos en la raíz) — ver
 `docs/decision-log.md` ADR-005.
 
-**Estado actual (2026-09-09):** diseño completo, licencia MIT presente,
-remoto `origin` configurado en `git@github.com:mikeroguez/continuum.git` y
-CLI verificado con suite automatizada (`python3 -m unittest discover -s tests
--t . -v`: 53 tests OK). `tools/continuum doctor` pasa sin problemas críticos
-ni advertencias. El proyecto está correctamente adaptado para Codex mediante
-`AGENTS.md` como entrypoint nativo y mantiene entrypoints delgados para
-Claude y Gemini. Pendiente: aplicar el rollout a proyectos reales y completar
-`template_remote` / `template_prefix` si se quiere usar `sync-template` sin
-placeholders.
+**Estado actual (2026-09-10):** versión v1.3.2 publicada oficialmente. Remoto `origin` en `git@github.com:mikeroguez/continuum.git`, suite automatizada de 96 tests unitarios superada sin errores. `continuum doctor` verificado con 0 errores y 0 advertencias. Propagación de v1.3.2 mediante subtree pull a los 4 proyectos dependientes (`seguimiento-talleres`, `seguimiento-deportes`, `seguimiento-clubes`, `SISETAP`) completada con exito.
 
 ## Stack
 

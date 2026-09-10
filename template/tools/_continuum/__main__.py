@@ -31,6 +31,9 @@ def build_parser() -> argparse.ArgumentParser:
     ts.add_argument("--size", choices=["small", "medium", "large"], default="medium")
     ts.add_argument("--owner", default=None)
     ts.add_argument("--role", default=None, help="Slug de un rol de .ai/roles/ (ver `continuum roles list`).")
+    ts.add_argument("--worktree", action="store_true",
+                     help="Crea un git worktree aislado (../<repo>-<slug>) junto con la tarea, "
+                          "para agentes o personas trabajando en paralelo (ver AI_COLLABORATION.md §6).")
 
     tc = tsub.add_parser("claim", help="Marca quién está trabajando la tarea.")
     tc.add_argument("slug")
@@ -83,7 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     rosub = ro.add_subparsers(dest="roles_cmd", required=True)
     rosub.add_parser("list", help="Lista los roles de los packs activos en .ai/config.json.")
     rsy = rosub.add_parser("sync", help="Genera subagentes nativos a partir del catálogo canónico.")
-    rsy.add_argument("--provider", default="claude", choices=["claude", "copilot"])
+    rsy.add_argument("--provider", default="claude", choices=["claude", "codex", "copilot", "gemini"])
 
     met = sub.add_parser("metrics", help="Métricas locales y baseline de Continuum.")
     metsub = met.add_subparsers(dest="metrics_cmd", required=True)
@@ -174,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "task":
         if args.task_cmd == "start":
-            return tasks.start(root, args.slug, args.size, args.owner, args.role)
+            return tasks.start(root, args.slug, args.size, args.owner, args.role, worktree=args.worktree)
         if args.task_cmd == "claim":
             return tasks.claim(root, args.slug, args.owner)
         if args.task_cmd == "close":

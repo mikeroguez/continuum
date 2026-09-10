@@ -4,7 +4,7 @@
 
 **Protocolo y herramientas de memoria persistente para equipos que trabajan con múltiples asistentes de IA sobre el mismo repositorio Git.**
 
-[![Version](https://img.shields.io/badge/version-v1.4.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.4.1-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
@@ -23,13 +23,13 @@
 flowchart LR
     A[Desarrollador] -->|Sesión 1| B(Claude Code)
     B -->|Persiste en| C[(Memoria Git / .ai)]
-    C -->|Carga contexto| D(Codex / Gemini)
+    C -->|Carga contexto| D(Codex / Gemini / Copilot)
     D -->|Sesión 2| E[Continuidad de Proyecto]
 ```
 
 ### Principios Clave
 
-- **Interoperabilidad Universal**: Compatible con la convención [`AGENTS.md`](https://agents.md) (Claude Code, Codex, Gemini CLI, Cursor) sin traducción ni duplicación.
+- **Interoperabilidad Universal**: Compatible con la convención [`AGENTS.md`](https://agents.md) y adaptadores nativos para **Claude Code, Codex, Gemini CLI y GitHub Copilot** (VS Code, Copilot Coding Agent, GitHub.com).
 - **Continuidad sin Pérdidas**: Las sesiones se interrumpen por límite de tokens o cambio de proveedor sin perder el avance ni las decisiones.
 - **Colaboración Multi-Agente**: Desarrolladores y asistentes trabajan en paralelo sobre el mismo repositorio sin sobrescribir ni pisar código.
 - **Optimización de Contexto**: El arranque de cualquier sesión consume solo **~2.5k tokens** fijos frente a historiales inflados de chat.
@@ -49,7 +49,7 @@ flowchart LR
 git remote add continuum https://github.com/mikeroguez/continuum.git
 
 # Montar la plantilla en la raíz usando la rama export
-git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.3.1"
+git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.4.0"
 ```
 
 ### 2. Configurar e Inicializar

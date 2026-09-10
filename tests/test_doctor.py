@@ -4,7 +4,7 @@ import unittest
 
 from .helpers import commit_all, temp_project
 
-from _continuum import doctor  # noqa: E402
+from _continuum import doctor, tasks  # noqa: E402
 
 
 def run_quiet(root):
@@ -102,6 +102,23 @@ class TestDoctorWarnings(unittest.TestCase):
             code, out = run_quiet(root)
             self.assertEqual(code, 0)
             self.assertIn("abandonada", out)
+
+    def test_multiple_active_tasks_without_worktree_warns(self):
+        with temp_project() as root:
+            tasks.start(root, "uno", "small", None)
+            tasks.start(root, "dos", "small", None)
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertIn("un solo worktree de git", out)
+
+    def test_single_active_task_does_not_warn_about_worktree(self):
+        with temp_project() as root:
+            tasks.start(root, "uno", "small", None)
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertNotIn("worktree de git", out)
 
 
 if __name__ == "__main__":

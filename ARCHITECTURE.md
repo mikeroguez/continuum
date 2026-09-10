@@ -151,10 +151,13 @@ sin evidencia de necesidad real. Lo que sí forma parte del diseño:
   propio registro qué proveedor trabajó cada parte, de forma que la
   alternancia manual entre herramientas quede auditable.
 
-Si en el futuro surge una necesidad real de concurrencia entre agentes sobre
-el mismo repositorio, el punto de extensión natural es `continuum task
-claim` (hoy una señal de visibilidad, evolucionable a un mecanismo de
-bloqueo) — pero no se construye por adelantado.
+Esa necesidad real de concurrencia entre agentes en el mismo repositorio
+apareció (varios agentes de IA en una misma máquina) y se resolvió — ver
+ADR-011 — sin convertir `continuum task claim` en un mecanismo de bloqueo:
+la evidencia de industria 2026 confirma que el aislamiento físico por `git
+worktree` (uno por agente/tarea), no un lock, es el patrón vigente.
+`continuum task claim` se mantiene como señal de visibilidad social, tal
+como estaba.
 
 ## 6. Eficiencia de tokens
 
@@ -187,7 +190,8 @@ bloqueo) — pero no se construye por adelantado.
 - Aislamiento de trabajo concurrente mediante `git worktree` por tarea
   activa cuando dos personas o agentes trabajan el mismo repositorio al
   mismo tiempo — complementa a `continuum task claim`, que da visibilidad
-  social pero no aísla archivos en disco.
+  social pero no aísla archivos en disco. `continuum task start <slug>
+  --worktree` automatiza la creación del worktree (ver ADR-011).
 - Sin bloqueos duros ni almacenamiento compartido adicional: git ya resuelve
   conflictos de contenido; este diseño añade únicamente la señal social que
   a git le falta.

@@ -8,6 +8,17 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 Sin cambios todavía.
 
+## [1.1.1] - 2026-09-09
+
+### Fixed
+
+- `continuum status` y `continuum metrics report` ya detectan correctamente
+  el hook de pre-commit cuando fue instalado vía `core.hooksPath` (como hace
+  `continuum install-hooks`), en vez de asumir siempre `.git/hooks/pre-commit`.
+- `continuum packetize` ya no falla con `ValueError` cuando el directorio
+  raíz del proyecto cuelga de un symlink (p. ej. macOS resuelve `/tmp` como
+  `/private/tmp`).
+
 ## [1.1.0] - 2026-09-09
 
 ### Added

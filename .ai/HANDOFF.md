@@ -47,12 +47,14 @@ desactualizadas o divulgación prematura de investigación.
 
 ## Release en curso
 
-- Se prepara `v1.2.0` para distribuir `template_branch` en `continuum sync`.
-- Las 93 pruebas y `continuum doctor` pasaron; falta publicar `export`, el tag
-  y el release desde un árbol limpio para excluir un archivo archivado previo.
+- `v1.2.0` se publicó el 2026-09-10: `main`, la rama generada `export`, el tag
+  y el release de GitHub ya están disponibles.
+- La versión distribuye `template_branch` en `continuum sync`. Se validó con
+  93 pruebas y `continuum doctor` sin problemas ni advertencias.
 
 ## Siguiente paso recomendado
 Revisar y aprobar el diff de documentación; los detalles están en
 `.ai/tasks/_closed/bilingual-documentation/handoff.md`. No traducir material de
 investigación antes de definir su estrategia de publicación. El pendiente de
-symlinks en `packetize` puede cerrarse. Completar el release `v1.2.0`.
+symlinks en `packetize` puede cerrarse. El siguiente trabajo puede partir de
+la versión publicada `v1.2.0`.

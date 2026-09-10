@@ -83,7 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     rosub = ro.add_subparsers(dest="roles_cmd", required=True)
     rosub.add_parser("list", help="Lista los roles de los packs activos en .ai/config.json.")
     rsy = rosub.add_parser("sync", help="Genera subagentes nativos a partir del catálogo canónico.")
-    rsy.add_argument("--provider", default="claude", choices=["claude", "copilot"])
+    rsy.add_argument("--provider", default="claude", choices=["claude", "copilot", "gemini"])
 
     met = sub.add_parser("metrics", help="Métricas locales y baseline de Continuum.")
     metsub = met.add_subparsers(dest="metrics_cmd", required=True)

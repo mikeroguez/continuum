@@ -2,6 +2,8 @@
 
 > [Leer en español](README.md) · [Language policy](docs/LANGUAGE_POLICY.en.md)
 
+> **Guides:** [for people](template/docs/using-continuum.md) · [for agents](template/docs/guide-for-agents.md)
+
 **Source version:** `1dacfc8` (2026-09-09). The Spanish README is the
 canonical source if the two versions differ.
 

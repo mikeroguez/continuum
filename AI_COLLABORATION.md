@@ -7,6 +7,13 @@ que remiten aquí — **si cambia una regla común, edita primero este archivo y
 después los tres entrypoints.** No dupliques reglas: un entrypoint con reglas
 propias divergentes de este documento es un bug de proceso.
 
+Este archivo contiene el mínimo operativo que una sesión debe aplicar. La
+explicación, ejemplos y rutas para personas viven en
+[`template/docs/guia-para-agentes.md`](template/docs/guia-para-agentes.md) y
+[`template/docs/como-usar-continuum.md`](template/docs/como-usar-continuum.md).
+No conviertas este protocolo en una enciclopedia: mueve el detalle estable a
+documentación indexada y léelo bajo demanda.
+
 > Principio rector: **el repositorio es la memoria; la conversación es solo
 > el canal de ejecución.** Cualquier decisión, hallazgo o estado que importe
 > mañana se escribe en un archivo versionado — nunca queda solo en el chat.
@@ -79,16 +86,14 @@ Nunca renumerar ni reutilizar identificadores de requisitos/tareas ya usados
   problema casi siempre es contenido inferible en un entrypoint (§3.1), no
   que "haga falta compactar".
 
-### 3.1 Contenido inferible: prohibido en los entrypoints y en el índice
+### 3.1 Contenido inferible: fuera del arranque
 
-Evidencia de investigación (`docs/investigacion-2026.md`): archivos de
-contexto que repiten lo que ya dice el README, la config de tests o el
-código **bajan la tasa de éxito y suben el costo en tokens** — el agente ya
-puede leer eso solo. Regla: solo entra información que el agente **no
-podría inferir** leyendo el repo — comandos exactos no obvios, versiones
-mínimas, decisiones con alternativa rechazada, "esto ya lo intentamos y no
-funcionó". Si dudas si algo es inferible, no lo escribas; que el agente lo
-descubra leyendo.
+La evidencia sobre archivos de contexto no es concluyente y depende de la
+tarea. Sí coincide en un riesgo: repetir README, configuración o código ocupa
+contexto que el agente puede localizar por sí mismo. En el arranque conserva
+solo información **no inferible** —comandos no obvios, versiones mínimas,
+decisiones con alternativa rechazada o riesgos— y mueve el resto a fuentes
+indexadas bajo demanda. Si dudas, prioriza localizar antes de cargar.
 
 ## 4. Handoff — continuidad entre sesiones, proveedores y personas
 
@@ -153,16 +158,9 @@ si el caso lo amerita.
 
 ## 9. Roles: catálogo de expertos
 
-Un rol es una persona/lente que una sesión adopta para una tarea —
-**no es un agente que corre de forma concurrente ni un proceso separado**
-(ver `docs/decision-log.md` ADR-009). Vive como Markdown corto en
-`.ai/roles/<pack>/<slug>.md`, agrupado en packs por dominio:
-
-- `comun` — orquestador, gestión de proyecto, design thinking, legal, QA,
-  accesibilidad, ISO/calidad de proceso, privacidad de datos, seguridad.
-  Activo por defecto.
-- `software`, `investigacion`, `contenido-educativo` — packs de dominio,
-  opt-in: se activan agregando el pack a `roles.packs` en `.ai/config.json`.
+Un rol es una lente de trabajo, no un agente concurrente. Los roles viven en
+`.ai/roles/<pack>/`, se activan por packs en `.ai/config.json` y se consultan
+bajo demanda; ver la guía para agentes para la explicación completa.
 
 ```bash
 tools/continuum roles list                    # roles disponibles en los packs activos
@@ -170,14 +168,3 @@ tools/continuum task start <slug> --role backend
 tools/continuum handoff --role backend --provider claude
 tools/continuum roles sync                    # genera subagentes de Claude Code (.claude/agents/)
 ```
-
-Si el rol no existe en ningún pack activo, se guarda como texto libre y se
-avisa — un typo no bloquea la tarea. `roles sync` solo tiene soporte real
-hoy para Claude Code (subagentes nativos, generados desde el archivo
-canónico); para otros proveedores el rol sigue siendo una instrucción de
-texto que el entrypoint referencia, no un archivo generado.
-
-`.claude/agents/` es un artefacto generado — está en `.gitignore`, no se
-commitea. Cada quien lo regenera con `continuum roles sync` después de
-clonar o de traer cambios a `.ai/roles/` (nunca edites esos archivos a
-mano: se sobrescriben en la siguiente sincronización).

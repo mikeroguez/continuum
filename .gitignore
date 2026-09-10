@@ -10,6 +10,10 @@ tools/_continuum/**/__pycache__/
 .ai/state/packets/
 .ai/metrics/events.jsonl
 
+# Registros locales del piloto de evaluación: pueden contener metadatos de
+# ejecución y nunca forman parte de una publicación o commit por defecto.
+evaluation/pilot/local-runs/
+
 # Generado por `continuum roles sync` a partir de .ai/roles/ — no se
 # commitea para que nunca pueda divergir del canónico (ver AI_COLLABORATION.md §9).
 .claude/agents/

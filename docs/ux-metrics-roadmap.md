@@ -566,20 +566,19 @@ Entregables:
 - `metrics report`.
 - `metrics export`.
 - `metrics compare --baseline <snapshot>`.
-- Plantilla de protocolo de estudio.
-- `docs/research-protocol.md`.
+- Protocolo de evaluación y plan operativo prerregistrable.
+- `docs/research-protocol.md` y `docs/evaluation-plan.md`.
 
 Criterio de salida:
 
 - Continuum puede producir datos locales suficientes para evaluar hipotesis.
 
-## Hipotesis cientificas iniciales
+## Hipótesis científicas
 
-- H1: Continuum reduce tokens de arranque frente a memoria monolitica.
-- H2: Continuum reduce tiempo de recuperacion entre sesiones.
-- H3: Continuum reduce handoffs incompletos.
-- H4: Continuum reduce duplicacion de trabajo entre agentes/personas.
-- H5: Continuum mejora la proporcion de tareas cerradas con validacion.
+Las hipótesis, comparaciones, métricas y criterios de análisis canónicos viven
+en `docs/research-protocol.md`. Esta hoja de ruta no afirma resultados: las
+métricas de producto son señales operativas y no sustituyen una evaluación
+controlada de continuidad entre sesiones.
 
 ## Metricas norte
 

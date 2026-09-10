@@ -53,6 +53,8 @@ reserved for a future paper or evaluation.
 - Spanish originals keep their existing paths.
 - English root documents use an `.en.md` suffix; specialised English material
   lives in `docs/en/`.
+- Guides distributed in `template/docs/` use explicitly paired Spanish and
+  English titles and are linked from their own index.
 - Each translation begins with a link to its original and a `Source version:`
   line naming the source tag or commit.
 - Anyone changing a paired document reviews its counterpart in the same change.

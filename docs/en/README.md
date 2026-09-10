@@ -23,6 +23,7 @@ short orientation; they are not translations of research claims or results.
 | [Decision log](../decision-log.md) | Architecture decisions and their rationale. |
 | [Research review](../investigacion-2026.md) | Literature and industry review used to challenge the design. |
 | [Research protocol](../research-protocol.md) | A planned evaluation, hypotheses, privacy model, and reproducibility notes. |
+| [Evaluation plan](../evaluation-plan.md) | The preregistration-ready operational plan; it does not report results. |
 | [Rollout guide](../rollout-guide.md) | Steps for adopting the template in an existing project. |
 | [UX and metrics roadmap](../ux-metrics-roadmap.md) | Product and measurement planning; not evidence of outcomes. |
 | [UX and metrics sprints](../ux-metrics-sprints.md) | Delivery-oriented breakdown of that roadmap. |

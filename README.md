@@ -4,6 +4,8 @@
 
 <p align="center"><a href="README.en.md">Read in English</a> · <a href="docs/LANGUAGE_POLICY.md">Política de idiomas</a></p>
 
+> **Guías de uso:** [para personas](template/docs/como-usar-continuum.md) · [para agentes](template/docs/guia-para-agentes.md)
+
 <p align="center">
   <a href="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml"><img alt="continuum doctor" src="https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main"></a>
   <a href="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main"></a>

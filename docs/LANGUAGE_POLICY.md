@@ -51,6 +51,8 @@ ni detalles que el proyecto haya reservado para un paper o evaluación futura.
 - El original en español conserva su ruta actual.
 - Su versión inglesa usa el mismo nombre con sufijo `.en.md` cuando vive en la
   raíz; para documentación especializada se agrupa bajo `docs/en/`.
+- Las guías distribuidas dentro de `template/docs/` usan pares con títulos
+  explícitos en ambos idiomas y se enlazan desde su propio índice.
 - Toda traducción abre con un enlace al original y una línea `Source version:`
   que indique el tag o commit de origen.
 - Quien cambie una pieza bilingüe revisa su equivalente en el mismo cambio. Si

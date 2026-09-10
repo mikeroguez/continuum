@@ -23,13 +23,13 @@
 flowchart LR
     A[Developer] -->|Session 1| B(Claude Code)
     B -->|Persists to| C[(Git Memory / .ai)]
-    C -->|Loads context| D(Codex / Gemini)
+    C -->|Loads context| D(Codex / Gemini / Copilot)
     D -->|Session 2| E[Project Continuity]
 ```
 
 ### Core Principles
 
-- **Universal Interoperability**: Fully compatible with the [`AGENTS.md`](https://agents.md) convention (Claude Code, Codex, Gemini CLI, Cursor) without translation or duplication.
+- **Universal Interoperability**: Fully compatible with the [`AGENTS.md`](https://agents.md) convention and native adapters for **Claude Code, Codex, Gemini CLI, and GitHub Copilot** (VS Code, Copilot Coding Agent, GitHub.com).
 - **Lossless Continuity**: Work sessions resume seamlessly across token limits, provider rotations, or developer handoffs.
 - **Multi-Agent Collaboration**: Developers and AI assistants collaborate in parallel without overwriting or stepping on code.
 - **Context Cost Optimization**: Startup context remains fixed at **~2.5k tokens** per session instead of tens of thousands of tokens of bloated chat logs.
@@ -49,7 +49,7 @@ flowchart LR
 git remote add continuum https://github.com/mikeroguez/continuum.git
 
 # Mount the template at the project root using the export branch
-git subtree add --prefix=. continuum export --squash -m "chore: install Continuum v1.3.1"
+git subtree add --prefix=. continuum export --squash -m "chore: install Continuum v1.4.0"
 ```
 
 ### 2. Configure and Initialize

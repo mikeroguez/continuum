@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Preguntas y discusión general
+    url: https://github.com/mikeroguez/continuum/discussions
+    about: Para dudas de uso, ideas sin forma o discusión abierta, usa Discussions en lugar de un issue.

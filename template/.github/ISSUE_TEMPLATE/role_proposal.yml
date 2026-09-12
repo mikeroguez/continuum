@@ -1,0 +1,56 @@
+name: 🎭 Propuesta de rol o skill
+description: Agregar o modificar un rol en .ai/roles/ y su proyección a los distintos proveedores.
+title: "feat(roles): "
+labels:
+  - roles
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Rol o skill propuesto
+      description: Nombre y mandato del rol (o el cambio a un rol existente).
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pack
+    attributes:
+      label: Pack de roles
+      options:
+        - comun
+        - software
+        - contenido-educativo
+        - investigacion
+        - Nuevo pack
+    validations:
+      required: true
+
+  - type: textarea
+    id: mandate
+    attributes:
+      label: Mandato y límites
+      description: ¿Qué decide o revisa este rol? ¿Qué queda explícitamente fuera de su alcance?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: providers
+    attributes:
+      label: Proveedores donde debe proyectarse
+      multiple: true
+      options:
+        - claude (.claude/agents)
+        - codex (.agents/skills)
+        - gemini (.gemini/skills)
+        - copilot (.github/agents)
+        - Todos
+    validations:
+      required: true
+
+  - type: textarea
+    id: overlap
+    attributes:
+      label: Solapamiento con roles existentes
+      description: ¿Cómo se distingue de los roles ya definidos en `.ai/roles/`?
+    validations:
+      required: false

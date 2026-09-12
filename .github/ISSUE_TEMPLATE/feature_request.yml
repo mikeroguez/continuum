@@ -1,0 +1,51 @@
+name: ✨ Propuesta de funcionalidad
+description: Sugerir una mejora o nueva funcionalidad al protocolo o al CLI de Continuum.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Si el cambio afecta arquitectura o protocolo (`ARCHITECTURE.md`, `AI_COLLABORATION.md`,
+        `template/`), conviene discutirlo aquí antes de abrir un PR (ver `CONTRIBUTING.md`).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o necesidad
+      description: ¿Qué limitación o carencia motiva esta propuesta?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+      description: ¿Cómo debería funcionar? Incluye ejemplos de comandos, config o salida esperada si aplica.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Área afectada
+      multiple: true
+      options:
+        - CLI (tools/_continuum)
+        - Protocolo (AI_COLLABORATION.md / AGENTS.md / CLAUDE.md / GEMINI.md)
+        - Roles y skills (.ai/roles)
+        - Hooks (SessionStart/SessionEnd/PreCompact)
+        - Sincronización de template
+        - Documentación
+        - Otro
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: ¿Existe alguna forma de lograrlo hoy, aunque sea manual? ¿Por qué no es suficiente?
+    validations:
+      required: false

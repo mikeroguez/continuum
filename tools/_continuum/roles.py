@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 from pathlib import Path
 
 from . import common as c
@@ -71,6 +72,39 @@ def list_roles(root: Path) -> int:
     return 0
 
 
+def _prune_orphaned_files(agents_dir: Path, suffix: str, valid_slugs: set[str]) -> list[str]:
+    """Borra archivos que `roles.sync()` generó (huella verificada) para un
+    slug que ya no existe en el catálogo activo — un rol eliminado no debe
+    dejar su subagente huérfano para siempre. Nunca toca un archivo sin la
+    huella de Continuum, sin importar su nombre."""
+    removed = []
+    if not agents_dir.exists():
+        return removed
+    for f in agents_dir.glob(f"*{suffix}"):
+        slug = c.generated_role_slug(c.read_text(f))
+        if slug and slug not in valid_slugs:
+            f.unlink()
+            removed.append(f.name)
+    return removed
+
+
+def _prune_orphaned_skill_dirs(skills_dir: Path, valid_slugs: set[str]) -> list[str]:
+    """Misma poda que `_prune_orphaned_files`, para la convención de
+    directorio-por-skill de Codex/Gemini (`<slug>/SKILL.md`)."""
+    removed = []
+    if not skills_dir.exists():
+        return removed
+    for d in skills_dir.iterdir():
+        skill_md = d / "SKILL.md"
+        if not d.is_dir() or not skill_md.exists():
+            continue
+        slug = c.generated_role_slug(c.read_text(skill_md))
+        if slug and slug not in valid_slugs:
+            shutil.rmtree(d)
+            removed.append(d.name)
+    return removed
+
+
 def sync(root: Path, provider: str = "claude") -> int:
     if provider not in {"claude", "codex", "copilot", "gemini"}:
         c.err(f"Sin soporte de subagentes nativos para '{provider}' todavía "
@@ -108,9 +142,13 @@ def sync(root: Path, provider: str = "claude") -> int:
             role_skill_dir = skills_dir / role["slug"]
             role_skill_dir.mkdir(parents=True, exist_ok=True)
             c.write_text(role_skill_dir / "SKILL.md", frontmatter + body)
+        pruned = _prune_orphaned_skill_dirs(skills_dir, {r["slug"] for r in roles})
         provider_name = "Codex" if provider == "codex" else "Gemini CLI / Antigravity"
         c.ok(f"{len(roles)} skill(s) de {provider_name} generados en "
              f"{skills_dir.relative_to(root)}/ a partir de {cfg['roles']['dir']}/.")
+        if pruned:
+            c.ok(f"{len(pruned)} skill(s) huérfano(s) podado(s) (rol ya no está en el catálogo): "
+                 f"{', '.join(pruned)}.")
         return 0
 
     agents_dir = (
@@ -119,6 +157,7 @@ def sync(root: Path, provider: str = "claude") -> int:
         else root / ".github" / "agents"
     )
     agents_dir.mkdir(parents=True, exist_ok=True)
+    suffix = ".md" if provider == "claude" else ".agent.md"
     for role in roles:
         description = role["mandato"] or role["title"]
         frontmatter = (
@@ -133,10 +172,14 @@ def sync(root: Path, provider: str = "claude") -> int:
             f"no te salgas de su mandato ni tomes las decisiones reservadas "
             f"a otros roles.\n\n{role['text']}"
         )
-        suffix = ".md" if provider == "claude" else ".agent.md"
         c.write_text(agents_dir / f"{role['slug']}{suffix}", frontmatter + body)
+
+    pruned = _prune_orphaned_files(agents_dir, suffix, {r["slug"] for r in roles})
 
     provider_name = "Claude Code" if provider == "claude" else "GitHub Copilot"
     c.ok(f"{len(roles)} subagente(s) de {provider_name} generados en "
          f"{agents_dir.relative_to(root)}/ a partir de {cfg['roles']['dir']}/.")
+    if pruned:
+        c.ok(f"{len(pruned)} subagente(s) huérfano(s) podado(s) (rol ya no está en el catálogo): "
+             f"{', '.join(pruned)}.")
     return 0

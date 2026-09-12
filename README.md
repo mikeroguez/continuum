@@ -83,6 +83,7 @@ tools/continuum doctor
 ### Diagnóstico y Sesión
 ```bash
 tools/continuum                        # doctor: Diagnóstico completo del estado del proyecto
+tools/continuum --version              # Versión instalada (o 'continuum version')
 tools/continuum session start          # Inicio de sesión: lee handoff, tareas y sugiere contexto
 tools/continuum session end --auto     # Cierre de sesión asistido con validación de calidad
 tools/continuum status                 # Estado compacto y siguiente acción recomendada
@@ -100,6 +101,16 @@ tools/continuum task close <slug>                           # Cerrar y archivar 
 tools/continuum sync --apply           # Sincronizar plantilla con el repositorio remoto
 tools/continuum install-hooks          # Instalar pre-commit githook local
 ```
+
+### Desinstalación
+```bash
+tools/continuum uninstall                              # Plan de desinstalación (dry-run, no borra nada)
+tools/continuum uninstall --no-dry-run                  # Retira el CLI, subagentes generados y hooks propios
+tools/continuum uninstall --no-dry-run --yes            # + entrypoints, config y catálogo de roles
+tools/continuum uninstall --no-dry-run --yes --purge-memory  # + .ai/HANDOFF.md, .ai/state/, .ai/tasks/
+```
+Tres niveles de seguridad crecientes — nunca commitea por sí solo, nunca
+toca `docs/architecture/` (ahí viven los ADRs propios del proyecto).
 
 ---
 

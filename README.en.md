@@ -83,6 +83,7 @@ tools/continuum doctor
 ### Diagnostics and Session
 ```bash
 tools/continuum                        # doctor: Run full diagnostic checks
+tools/continuum --version              # Installed version (or 'continuum version')
 tools/continuum session start          # Start session: load handoff, active tasks, and context
 tools/continuum session end --auto     # End session: perform linting and write handoff
 tools/continuum status                 # Display compact status and recommended action
@@ -100,6 +101,16 @@ tools/continuum task close <slug>                           # Close and archive 
 tools/continuum sync --apply           # Synchronize template with remote repository
 tools/continuum install-hooks          # Install local pre-commit githook
 ```
+
+### Uninstall
+```bash
+tools/continuum uninstall                                    # Uninstall plan (dry-run, deletes nothing)
+tools/continuum uninstall --no-dry-run                        # Removes the CLI, generated subagents, and its own hooks
+tools/continuum uninstall --no-dry-run --yes                  # + entrypoints, config, and role catalog
+tools/continuum uninstall --no-dry-run --yes --purge-memory   # + .ai/HANDOFF.md, .ai/state/, .ai/tasks/
+```
+Three increasing safety tiers — never commits on its own, never touches
+`docs/architecture/` (a project's own ADRs live there).
 
 ---
 

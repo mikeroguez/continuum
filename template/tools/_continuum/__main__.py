@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import adr, bootstrap, common as c, context, doctor, github, handoff, memory, metrics, packets, release, roles, session, status, tasks
+from . import adr, bootstrap, common as c, context, doctor, github, handoff, memory, metrics, packets, release, roles, session, status, tasks, uninstall
 
 
 
@@ -15,7 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
         "Framework de memoria de IA transportada por git. "
         "Sin argumentos, corre 'doctor' (foto rápida del estado)."
     ))
+    p.add_argument("--version", action="store_true", help="Muestra la versión instalada y termina.")
     sub = p.add_subparsers(dest="cmd")
+
+    ver = sub.add_parser("version", help="Muestra la versión instalada (equivalente a --version).")
+    ver.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
     d = sub.add_parser("doctor", help="Valida protocolo, frescura, duplicados y costo en tokens.")
     d.add_argument("--quiet", action="store_true")
@@ -74,6 +78,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("install-hooks", help="Instala el git hook local de pre-commit.")
     sub.add_parser("sync-template", help="Muestra los comandos de git subtree para sincronizar la plantilla (alias de continuum sync).")
+
+    un = sub.add_parser("uninstall", help="Retira Continuum del proyecto en 3 niveles de seguridad crecientes.")
+    un.add_argument("--dry-run", action="store_true", default=True, help="Muestra el plan sin borrar nada (por defecto).")
+    un.add_argument("--no-dry-run", action="store_false", dest="dry_run", help="Aplica el nivel 1 (y más, según los flags de abajo).")
+    un.add_argument("--yes", action="store_true", help="Incluye el nivel 2 (protocolo/config: entrypoints, .ai/config.json, .ai/roles/, etc.).")
+    un.add_argument("--purge-memory", action="store_true", help="Incluye el nivel 3 (.ai/HANDOFF.md, .ai/state/, .ai/tasks/) — historia real del proyecto, no solo mecanismo.")
+    un.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
     sy = sub.add_parser("sync", help="Sincronización de la plantilla Continuum en proyectos consumidores.")
     sy.add_argument("--check", action="store_true", help="Audita la configuración y el estado del repositorio.")
@@ -174,6 +185,12 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = c.repo_root()
 
+    if getattr(args, "version", False):
+        return status.cmd_version(root)
+
+    if args.cmd == "version":
+        return status.cmd_version(root, json_output=args.json)
+
     if args.cmd is None or args.cmd == "doctor":
         quiet = getattr(args, "quiet", False)
         fix = getattr(args, "fix", False)
@@ -214,6 +231,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "install-hooks":
         return bootstrap.install_hooks(root)
+
+    if args.cmd == "uninstall":
+        return uninstall.cmd_uninstall(
+            root,
+            dry_run=args.dry_run,
+            yes=args.yes,
+            purge_memory=args.purge_memory,
+            json_output=args.json,
+        )
 
     if args.cmd in ("sync", "sync-template"):
         check_only = getattr(args, "check", False)

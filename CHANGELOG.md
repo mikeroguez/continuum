@@ -31,6 +31,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   documentación mínima); `frontend` además incorpora Diseño Atómico
   (átomos/moléculas/organismos/templates/páginas) para organizar
   componentes. Rol `qa`: "bien" en software ahora incluye esos estándares.
+- `VERSION` en la raíz como fuente única de la versión instalada;
+  `continuum version` / `--version` la reporta, y `continuum release
+  --no-dry-run` la actualiza sola.
+- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de
+  seguridad crecientes (mecanismo / protocolo-config / memoria del
+  proyecto) — nunca commitea por sí solo, nunca toca `docs/architecture/`.
+- `continuum roles sync` poda subagentes generados que ya no corresponden
+  a ningún rol activo del catálogo (detectado por huella de contenido, no
+  por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber
+  qué archivos generó Continuum.
 
 ### Changed
 

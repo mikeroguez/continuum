@@ -1,0 +1,37 @@
+name: 📚 Documentación
+description: Error, ambigüedad o mejora en AGENTS.md, AI_COLLABORATION.md, guías u otra documentación.
+title: "docs: "
+labels:
+  - documentation
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Archivo o sección
+      placeholder: "Ej. AI_COLLABORATION.md §6, README.md, CONTRIBUTING.en.md"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué está mal, falta o es confuso?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Sugerencia de cambio
+      description: Si tienes una redacción propuesta, inclúyela aquí.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: language
+    attributes:
+      label: Idiomas afectados
+      description: Ver docs/LANGUAGE_POLICY.md — los documentos en español e inglés deben mantenerse sincronizados.
+      options:
+        - label: Español
+        - label: English (README.en.md / CONTRIBUTING.en.md)

@@ -14,6 +14,17 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   ADR-011).
 - `continuum doctor` advierte cuando detecta varias tareas activas sin
   evidencia de aislamiento por worktree.
+- `continuum doctor` detecta marcadores de conflicto de git sin resolver
+  en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (en
+  `docs/decision-log.md` y en `docs/architecture/ADR-*.md`) — ver ADR-012.
+- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente
+  número libre, en la convención que el proyecto ya use.
+- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 que
+  `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md`
+  (ADR-010) cuando queda desactualizada, sin tocar su prosa curada.
+- `docs/metodologia-medicion.md`: protocolo de medición antes/después de
+  consumo real de tokens/tool-calls en sesiones de agente (opt-in, no
+  paso obligatorio de ningún flujo).
 
 ### Changed
 
@@ -23,6 +34,10 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - `.claude/settings.json` agrega un hook `SessionStart` que corre
   `continuum context` al arrancar o resumir una sesión de Claude Code,
   simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
+- `continuum context` (hook `SessionStart`) vuelca el contenido completo de
+  `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado —
+  los entrypoints por proveedor quedan fuera porque el cliente ya los
+  carga de forma nativa (ver ADR-012).
 
 ## [1.4.1] - 2026-09-10
 

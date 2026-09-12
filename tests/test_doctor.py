@@ -66,6 +66,56 @@ class TestDoctorCriticalProblems(unittest.TestCase):
             self.assertEqual(code, 1)
             self.assertIn("está desactualizado", out)
 
+    def test_handoff_with_unresolved_conflict_markers_is_critical(self):
+        """ADR-012, punto 2: un handoff con marcadores de conflicto de git
+        sin resolver no sirve como contrato de continuidad — reemplaza la
+        idea descartada de `.gitattributes merge=ours` (ver
+        docs/investigacion-2026.md §10)."""
+        with temp_project() as root:
+            handoff = root / ".ai" / "HANDOFF.md"
+            handoff.write_text(
+                "# Handoff\n"
+                "<<<<<<< HEAD\n"
+                "Objetivo de la rama principal.\n"
+                "=======\n"
+                "Objetivo de la rama entrante.\n"
+                ">>>>>>> feature/otra-tarea\n"
+            )
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 1)
+            self.assertIn("marcadores de conflicto de git sin", out)
+
+    def test_adr_duplicate_number_is_critical(self):
+        with temp_project() as root:
+            decision_log = root / "docs" / "decision-log.md"
+            decision_log.parent.mkdir(parents=True, exist_ok=True)
+            decision_log.write_text(
+                "# Bitácora\n\n"
+                "## ADR-001 — Primero\n\nContenido.\n\n"
+                "## ADR-002 — Segundo\n\nContenido.\n\n"
+                "## ADR-001 — Reutilizado por error\n\nContenido.\n"
+            )
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 1)
+            self.assertIn("Número(s) de ADR reutilizado(s): ADR-001", out)
+
+    def test_adr_duplicate_number_across_file_convention_is_critical(self):
+        """La convención de archivo por ADR (`docs/architecture/ADR-###-*.md`,
+        la que recomienda AI_COLLABORATION.md §5 a un proyecto que instala la
+        plantilla) también se verifica, no solo el log único de este
+        repositorio autoalojado."""
+        with temp_project() as root:
+            arch_dir = root / "docs" / "architecture"
+            arch_dir.mkdir(parents=True, exist_ok=True)
+            (arch_dir / "ADR-0001-primero.md").write_text("# ADR-0001: Primero\n")
+            (arch_dir / "ADR-0001-reutilizado.md").write_text("# ADR-0001: Reutilizado por error\n")
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 1)
+            self.assertIn("Número(s) de ADR reutilizado(s): ADR-001", out)
+
 
 class TestDoctorWarnings(unittest.TestCase):
     def test_duplicate_files_warn_but_not_critical(self):
@@ -119,6 +169,35 @@ class TestDoctorWarnings(unittest.TestCase):
             code, out = run_quiet(root)
             self.assertEqual(code, 0)
             self.assertNotIn("worktree de git", out)
+
+    def test_adr_gap_warns_but_not_critical(self):
+        with temp_project() as root:
+            decision_log = root / "docs" / "decision-log.md"
+            decision_log.parent.mkdir(parents=True, exist_ok=True)
+            decision_log.write_text(
+                "# Bitácora\n\n"
+                "## ADR-001 — Primero\n\nContenido.\n\n"
+                "## ADR-003 — Tercero (el 002 se reservó y no se usó)\n\nContenido.\n"
+            )
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertIn("Hueco en la numeración de ADRs: falta(n) ADR-002", out)
+
+    def test_adr_consecutive_numbering_does_not_warn(self):
+        with temp_project() as root:
+            decision_log = root / "docs" / "decision-log.md"
+            decision_log.parent.mkdir(parents=True, exist_ok=True)
+            decision_log.write_text(
+                "# Bitácora\n\n"
+                "## ADR-001 — Primero\n\nContenido.\n\n"
+                "## ADR-002 — Segundo\n\nContenido.\n"
+            )
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertNotIn("Hueco en la numeración", out)
+            self.assertNotIn("reutiliza número(s)", out)
 
 
 if __name__ == "__main__":

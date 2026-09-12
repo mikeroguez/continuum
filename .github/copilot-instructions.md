@@ -67,4 +67,4 @@ python3 tools/continuum handoff --auto --provider <proveedor>
 Haz cambios quirúrgicos, ejecuta las validaciones disponibles y deja claros
 los riesgos o pasos pendientes en el handoff.
 
-<!-- Continuum source: AI_COLLABORATION.md sha256:5556a51103a3d98a1a7af30141c0e7330460dda19bd1ef59b1967477d30d4569 -->
+<!-- Continuum source: AI_COLLABORATION.md sha256:1f064b5bf1c1f901992534b9aadca49eef21f2806cf7959ba4736657f17f57f4 -->

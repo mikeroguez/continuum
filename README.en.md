@@ -32,7 +32,8 @@ flowchart LR
 - **Universal Interoperability**: Fully compatible with the [`AGENTS.md`](https://agents.md) convention and native adapters for **Claude Code, Codex, Gemini CLI, and GitHub Copilot** (VS Code, Copilot Coding Agent, GitHub.com).
 - **Lossless Continuity**: Work sessions resume seamlessly across token limits, provider rotations, or developer handoffs.
 - **Multi-Agent Collaboration**: Developers and AI assistants collaborate in parallel without overwriting or stepping on code.
-- **Context Cost Optimization**: Startup context remains fixed at **~2.5k tokens** per session instead of tens of thousands of tokens of bloated chat logs.
+- **Context Cost Optimization**: Startup context stays in the low thousands of tokens per session instead of tens of thousands of tokens of bloated chat logs — an exact, verifiable figure for your own project via `continuum doctor`, never a marketing estimate.
+- **100% local, no dependencies**: the CLI is pure Python (standard library only), makes no calls to any external service, and collects no telemetry — your code and decisions never leave the repository.
 
 ---
 

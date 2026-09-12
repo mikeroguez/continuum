@@ -11,7 +11,19 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
     cfg = c.load_config(root)
     items: list[dict] = []
 
-    # 1. Mandatory items
+    # 1. Mandatory items.
+    #
+    # Los entrypoints por proveedor (CLAUDE.md, AGENTS.md, GEMINI.md,
+    # .github/copilot-instructions.md) NO se vuelcan aquí: por diseño, el
+    # cliente correspondiente ya los descubre y carga de forma nativa (por
+    # eso existen con ese nombre y en esa ruta exacta) — incluir su
+    # contenido otra vez sería duplicarlo, no complementarlo (ver
+    # `docs/investigacion-2026.md` §10, ADR-012 punto 1). El canónico
+    # (`AI_COLLABORATION.md`) y la memoria viva (`estado-dev.md`,
+    # `HANDOFF.md`) sí se vuelcan completos: ningún cliente los descubre por
+    # sí solo, y depender de que el agente decida abrirlos es exactamente el
+    # patrón de falla que `ARCHITECTURE.md` §1 documenta como el más
+    # frecuente.
     canonical = root / c.CANONICAL_FILE
     if canonical.exists():
         text = c.read_text(canonical)
@@ -20,6 +32,8 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
             "category": "mandatory",
             "tokens": c.estimate_tokens(text),
             "reason": "Fuente única de verdad del protocolo de colaboración.",
+            "inline": True,
+            "content": text,
         })
 
     for p in cfg["providers"]:
@@ -33,6 +47,7 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
                     "category": "mandatory",
                     "tokens": c.estimate_tokens(text),
                     "reason": f"Entrypoint para proveedor '{p}'.",
+                    "inline": False,
                 })
 
     handoff_rel = cfg["handoff"]["path"]
@@ -44,6 +59,8 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
             "category": "mandatory",
             "tokens": c.estimate_tokens(text),
             "reason": "Buzón de continuidad y estado de la sesión previa.",
+            "inline": True,
+            "content": text,
         })
 
     estado_rel = cfg["estado_dev"]["path"]
@@ -55,6 +72,8 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
             "category": "mandatory",
             "tokens": c.estimate_tokens(text),
             "reason": "Índice de memoria viva.",
+            "inline": True,
+            "content": text,
         })
 
     # 2. Recommended items (if task_slug provided)
@@ -129,10 +148,17 @@ def format_human_context(data: dict, show_why: bool = False) -> str:
             continue
         lines.append(f"[{cat_title}]")
         for it in cat_items:
-            line = f"  - {it['path']} (~{it['tokens']} tokens)"
+            if it.get("inline") is False:
+                line = f"  - {it['path']} (~{it['tokens']} tokens, cargado nativamente por el cliente)"
+            else:
+                line = f"  - {it['path']} (~{it['tokens']} tokens)"
             if show_why:
                 line += f"\n    ↳ Razón: {it['reason']}"
             lines.append(line)
+            if it.get("inline") and it.get("content"):
+                lines.append(f"--- {it['path']} (contenido completo) ---")
+                lines.append(it["content"].rstrip("\n"))
+                lines.append(f"--- fin {it['path']} ---")
         lines.append("")
 
     return "\n".join(lines).rstrip()

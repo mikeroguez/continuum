@@ -36,6 +36,63 @@ class TestContext(unittest.TestCase):
             with self.assertRaises(ValueError):
                 context.build_context(tmp, task_slug="no-existe")
 
+    def test_canonical_and_memory_files_are_inlined(self):
+        """AI_COLLABORATION.md, estado-dev.md y HANDOFF.md se vuelcan
+        completos porque ningún cliente los carga de forma nativa (ADR-012,
+        punto 1)."""
+        with temp_project() as tmp:
+            ctx = context.build_context(tmp)
+            by_path = {it["path"]: it for it in ctx["items"]}
+
+            canonical = by_path["AI_COLLABORATION.md"]
+            self.assertTrue(canonical["inline"])
+            self.assertIn("Protocolo de colaboración", canonical["content"])
+
+            estado = by_path[".ai/state/estado-dev.md"]
+            self.assertTrue(estado["inline"])
+            self.assertIn("content", estado)
+
+            handoff = by_path[".ai/HANDOFF.md"]
+            self.assertTrue(handoff["inline"])
+            self.assertIn("content", handoff)
+
+    def test_provider_entrypoints_are_not_inlined(self):
+        """CLAUDE.md/AGENTS.md/GEMINI.md/copilot-instructions.md no se
+        duplican: el cliente correspondiente ya los descubre nativamente."""
+        with temp_project() as tmp:
+            ctx = context.build_context(tmp)
+            provider_items = [
+                it for it in ctx["items"]
+                if it["path"] in ("CLAUDE.md", "AGENTS.md", "GEMINI.md", ".github/copilot-instructions.md")
+            ]
+            self.assertGreater(len(provider_items), 0)
+            for it in provider_items:
+                self.assertFalse(it["inline"])
+                self.assertNotIn("content", it)
+
+    def test_format_human_context_inlines_canonical_content(self):
+        with temp_project() as tmp:
+            ctx = context.build_context(tmp)
+            text = context.format_human_context(ctx)
+            self.assertIn("--- AI_COLLABORATION.md (contenido completo) ---", text)
+            self.assertIn("--- fin AI_COLLABORATION.md ---", text)
+            self.assertIn("Protocolo de colaboración", text)
+
+    def test_format_human_context_marks_provider_files_as_native(self):
+        with temp_project() as tmp:
+            ctx = context.build_context(tmp)
+            text = context.format_human_context(ctx)
+            self.assertIn("CLAUDE.md (~", text)
+            self.assertIn("cargado nativamente por el cliente", text)
+            # Los temas "bajo demanda" no llevan esa nota: nunca la tuvieron.
+            on_demand_lines = [
+                line for line in text.splitlines()
+                if ".ai/state/topics/" in line
+            ]
+            self.assertTrue(on_demand_lines)
+            for line in on_demand_lines:
+                self.assertNotIn("cargado nativamente", line)
+
     def test_cmd_context_human_and_why(self):
         with temp_project() as tmp:
             out = io.StringIO()

@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import bootstrap, common as c, context, doctor, github, handoff, memory, metrics, packets, release, roles, session, status, tasks
+from . import adr, bootstrap, common as c, context, doctor, github, handoff, memory, metrics, packets, release, roles, session, status, tasks
 
 
 
@@ -81,6 +81,14 @@ def build_parser() -> argparse.ArgumentParser:
     sy.add_argument("--apply", action="store_true", help="Ejecuta git subtree pull en un working tree limpio.")
     sy.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
+
+    adrp = sub.add_parser("adr", help="Gestión de ADRs (ver AI_COLLABORATION.md §5).")
+    adrsub = adrp.add_subparsers(dest="adr_cmd", required=True)
+    adrn = adrsub.add_parser("new", help="Crea un ADR con el siguiente número libre (ADR-012, punto 3).")
+    adrn.add_argument("title", help="Título de la decisión, p. ej. \"No usar orquestación entre agentes\".")
+    adrn.add_argument("--slug", default=None,
+                       help="Slug de archivo si el proyecto usa la convención docs/architecture/ADR-*.md "
+                            "(por defecto, se deriva del título). Sin efecto si el proyecto usa docs/decision-log.md.")
 
     ro = sub.add_parser("roles", help="Catálogo de roles/personas (ver AI_COLLABORATION.md §9).")
     rosub = ro.add_subparsers(dest="roles_cmd", required=True)
@@ -213,6 +221,10 @@ def main(argv: list[str] | None = None) -> int:
         json_output = getattr(args, "json", False)
         return bootstrap.cmd_sync(root, check_only=check_only, apply=apply, json_output=json_output)
 
+
+    if args.cmd == "adr":
+        if args.adr_cmd == "new":
+            return adr.new(root, args.title, slug=args.slug)
 
     if args.cmd == "roles":
         if args.roles_cmd == "list":

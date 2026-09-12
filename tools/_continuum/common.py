@@ -2,10 +2,15 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
+
+ADR_HEADER_RE = re.compile(r"^##\s+ADR-(\d+)\b")
+ADR_FILENAME_RE = re.compile(r"^ADR-(\d+)")
 
 CANONICAL_FILE = "AI_COLLABORATION.md"
 PROVIDER_FILES = {
@@ -152,3 +157,57 @@ def err(msg: str) -> None:
 
 def ok(msg: str) -> None:
     print(f"✓ {msg}")
+
+
+def slugify(text: str) -> str:
+    """Reduce un título libre a un slug de archivo: minúsculas, sin acentos,
+    solo [a-z0-9-]. Usado por `continuum adr new` para nombrar el archivo
+    cuando no se pasa `--slug` explícito."""
+    normalized = unicodedata.normalize("NFKD", text)
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_text.lower()).strip("-")
+    return slug or "sin-titulo"
+
+
+def collect_adr_numbers(root: Path) -> list[int]:
+    """Junta números de ADR de las dos convenciones que este protocolo
+    admite: un log único (`docs/decision-log.md`, con encabezados
+    `## ADR-###` — la que usa este mismo repositorio autoalojado) y archivos
+    sueltos (`docs/architecture/ADR-###-*.md`, la que recomienda
+    `AI_COLLABORATION.md` §5 a un proyecto que instala la plantilla). Un
+    proyecto real solo usa una de las dos, pero nada impide verificar o
+    numerar contra ambas fuentes a la vez (ver `docs/decision-log.md`
+    ADR-012)."""
+    numbers: list[int] = []
+
+    decision_log = root / "docs" / "decision-log.md"
+    if decision_log.exists():
+        for line in read_text(decision_log).splitlines():
+            m = ADR_HEADER_RE.match(line)
+            if m:
+                numbers.append(int(m.group(1)))
+
+    arch_dir = root / "docs" / "architecture"
+    if arch_dir.exists():
+        for f in arch_dir.glob("ADR-*.md"):
+            m = ADR_FILENAME_RE.match(f.name)
+            if m:
+                numbers.append(int(m.group(1)))
+
+    return numbers
+
+
+def adr_numbering_issues(numbers: list[int]) -> tuple[list[int], list[int]]:
+    """Devuelve (duplicados, huecos) a partir de una lista de números de ADR
+    — ADR-012, punto 3: la numeración depende hoy de que quien escribe un
+    ADR recuerde revisar a mano lo que ya existe."""
+    if not numbers:
+        return [], []
+    seen: set[int] = set()
+    duplicates: list[int] = []
+    for n in numbers:
+        if n in seen:
+            duplicates.append(n)
+        seen.add(n)
+    gaps = [n for n in range(min(numbers), max(numbers) + 1) if n not in seen]
+    return duplicates, gaps

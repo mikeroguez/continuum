@@ -12,6 +12,15 @@ from pathlib import Path
 ADR_HEADER_RE = re.compile(r"^##\s+ADR-(\d+)\b")
 ADR_FILENAME_RE = re.compile(r"^ADR-(\d+)")
 
+# Huella que `roles.sync()` escribe en el preámbulo de todo subagente
+# generado (ver roles.py) — permite reconocer con certeza qué archivos
+# generó Continuum sin depender del nombre de archivo, para poder podar los
+# huérfanos (rol eliminado del catálogo) o borrarlos de raíz en
+# `continuum uninstall` sin arriesgar tocar algo que la persona escribió a
+# mano.
+GENERATED_ROLE_MARKER = "del catálogo de Continuum"
+ROLE_NAME_RE = re.compile(r"^name:\s*(\S+)\s*$", re.MULTILINE)
+
 CANONICAL_FILE = "AI_COLLABORATION.md"
 PROVIDER_FILES = {
     "claude": "CLAUDE.md",
@@ -64,6 +73,14 @@ def stamp() -> str:
 
 def date_str() -> str:
     return now_utc().strftime("%Y-%m-%d")
+
+
+def read_version(root: Path) -> str | None:
+    """Lee `VERSION` en la raíz — fuente única de la versión instalada,
+    actualizada por `continuum release --no-dry-run`. None si el proyecto
+    instaló Continuum antes de que este archivo existiera."""
+    text = read_text(root / "VERSION").strip()
+    return text or None
 
 
 def repo_root() -> Path:
@@ -211,3 +228,15 @@ def adr_numbering_issues(numbers: list[int]) -> tuple[list[int], list[int]]:
         seen.add(n)
     gaps = [n for n in range(min(numbers), max(numbers) + 1) if n not in seen]
     return duplicates, gaps
+
+
+def generated_role_slug(text: str) -> str | None:
+    """Si `text` es un subagente generado por `continuum roles sync` (lleva
+    la huella de preámbulo `GENERATED_ROLE_MARKER`), devuelve el slug que
+    declara en su frontmatter `name:`. None si no lleva la huella — nunca
+    se trata como "generado por Continuum" un archivo que no se puede
+    probar que lo sea, sin importar cómo se llame o dónde esté."""
+    if GENERATED_ROLE_MARKER not in text:
+        return None
+    m = ROLE_NAME_RE.search(text)
+    return m.group(1) if m else None

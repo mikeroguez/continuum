@@ -190,7 +190,17 @@ requieren criterio humano (crear directorios/handoff faltantes, sincronizar
 subagentes de roles, y desde ADR-012 también recalcular la huella sha256
 que `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md` —
 ADR-010 — sin tocar su prosa curada). Sin `--no-dry-run` solo muestra el
-plan.
+plan. `continuum roles sync` también poda subagentes generados que ya no
+corresponden a ningún rol activo del catálogo, detectados por huella de
+contenido, nunca por nombre de archivo.
+
+`tools/continuum --version` (o `continuum version`) reporta la versión
+instalada desde `VERSION` en la raíz — se actualiza sola con `continuum
+release --no-dry-run`, nunca a mano. Si el proyecto necesita desinstalar
+Continuum por completo, `tools/continuum uninstall` (ver `README.md`) lo
+hace en tres niveles de seguridad crecientes, nunca commitea por sí solo y
+nunca toca `docs/architecture/` ni `.ai/state`/`.ai/tasks`/`HANDOFF.md`
+salvo que se pida explícitamente.
 
 ## 9. Roles: catálogo de expertos
 

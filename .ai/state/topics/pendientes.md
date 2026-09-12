@@ -33,3 +33,15 @@
   mantenimiento de la doble copia raíz/`template/` que ya existía para todo
   lo demás (`arquitectura.md`), no un caso nuevo. Un proyecto que solo
   consume la plantilla (sin la doble copia) no tiene esta limitación.
+- Extender el refuerzo de "Estándares de código por defecto" (tarea
+  `afinar-roles-software`, 2026-09-12) a los roles de `producto-jtbd`/
+  `ux-research`/`ux-ui` y al resto de `comun` — deliberadamente fuera de
+  esa tarea porque no producen código, y el criterio de concisión para
+  documentos de investigación/producto es distinto al de código. Solo
+  vale la pena si el owner observa el mismo problema (entregables
+  verbosos/genéricos) en esos roles.
+- Correr `docs/metodologia-medicion.md` comparando la calidad/concisión del
+  código que producen `backend`/`frontend` antes y después del refuerzo de
+  `afinar-roles-software` — el cambio de texto está verificado (se propaga
+  al subagente), pero su efecto real en el comportamiento del agente no se
+  midió todavía.

@@ -15,3 +15,8 @@ auditable — eso es `iso-calidad`.
 
 **Se distingue de:** `iso-calidad` (proceso/trazabilidad, no el entregable
 en sí).
+
+**En software**, "bien" no es solo que las pruebas pasen: incluye los
+estándares de código por defecto de `backend`/`frontend`/
+`devops-infraestructura` (sin abstracciones sin uso real, sin comentarios
+que expliquen qué en vez de por qué, documentación mínima).

@@ -25,6 +25,12 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - `docs/metodologia-medicion.md`: protocolo de medición antes/después de
   consumo real de tokens/tool-calls en sesiones de agente (opt-in, no
   paso obligatorio de ningún flujo).
+- Roles `backend`/`frontend`/`devops-infraestructura`: sección "Estándares
+  de código por defecto" con guías concretas y específicas del dominio
+  (evitar N+1, abstraer solo con evidencia, disciplina de comentarios,
+  documentación mínima); `frontend` además incorpora Diseño Atómico
+  (átomos/moléculas/organismos/templates/páginas) para organizar
+  componentes. Rol `qa`: "bien" en software ahora incluye esos estándares.
 
 ### Changed
 

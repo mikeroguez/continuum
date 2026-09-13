@@ -16,6 +16,33 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   ADR-011).
 - `continuum doctor` advierte cuando detecta varias tareas activas sin
   evidencia de aislamiento por worktree.
+- `continuum doctor` detecta marcadores de conflicto de git sin resolver
+  en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (en
+  `docs/decision-log.md` y en `docs/architecture/ADR-*.md`) — ver ADR-012.
+- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente
+  número libre, en la convención que el proyecto ya use.
+- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 que
+  `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md`
+  (ADR-010) cuando queda desactualizada, sin tocar su prosa curada.
+- `docs/metodologia-medicion.md`: protocolo de medición antes/después de
+  consumo real de tokens/tool-calls en sesiones de agente (opt-in, no
+  paso obligatorio de ningún flujo).
+- Roles `backend`/`frontend`/`devops-infraestructura`: sección "Estándares
+  de código por defecto" con guías concretas y específicas del dominio
+  (evitar N+1, abstraer solo con evidencia, disciplina de comentarios,
+  documentación mínima); `frontend` además incorpora Diseño Atómico
+  (átomos/moléculas/organismos/templates/páginas) para organizar
+  componentes. Rol `qa`: "bien" en software ahora incluye esos estándares.
+- `VERSION` en la raíz como fuente única de la versión instalada;
+  `continuum version` / `--version` la reporta, y `continuum release
+  --no-dry-run` la actualiza sola.
+- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de
+  seguridad crecientes (mecanismo / protocolo-config / memoria del
+  proyecto) — nunca commitea por sí solo, nunca toca `docs/architecture/`.
+- `continuum roles sync` poda subagentes generados que ya no corresponden
+  a ningún rol activo del catálogo (detectado por huella de contenido, no
+  por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber
+  qué archivos generó Continuum.
 - Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría
   WCAG 2.2.
 - Plantillas de issues y Pull Requests para propuestas de funcionalidades,
@@ -30,6 +57,10 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - `.claude/settings.json` agrega un hook `SessionStart` que corre
   `continuum context` al arrancar o resumir una sesión de Claude Code,
   simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
+- `continuum context` (hook `SessionStart`) vuelca el contenido completo de
+  `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado —
+  los entrypoints por proveedor quedan fuera porque el cliente ya los
+  carga de forma nativa (ver ADR-012).
 - La configuración de colaboración de GitHub exige Pull Requests, revisiones
   de propietarios y checks automatizados antes de integrar cambios en `main`.
 

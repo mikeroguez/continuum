@@ -173,6 +173,10 @@ def cmd_report(root: Path, json_output: bool = False) -> int:
         "## Indicadores de Eficiencia",
         f"- Presupuesto de arranque acotado (<= 3500 tokens): {'✓ CUMPLIDO' if snap['startup_tokens'] <= 3500 else '⚠️ EXCEDE TECHO RECOMENDADO'}",
         f"- Memoria viva modularizada en temas: {'✓ CUMPLIDO' if snap['memory']['topics_count'] > 0 else '⚠️ MEMORIA MONOLÍTICA'}",
+        "",
+        "_Nota: lo de arriba es un snapshot estático del repositorio, no el "
+        "consumo real de tokens/tool-calls de una sesión de agente. Para "
+        "medir eso con rigor, ver `docs/metodologia-medicion.md`._",
     ]
     print("\n".join(lines))
     return 0

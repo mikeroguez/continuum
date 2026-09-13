@@ -29,6 +29,15 @@ En este orden, y nada más hasta no tener claro el alcance de la tarea:
 
 No leas más que eso para empezar. El resto se explora bajo demanda (§3).
 
+En clientes con el hook `SessionStart` instalado (ver `.claude/settings.json`
+de ejemplo), `tools/continuum context` ya empuja el contenido completo de
+este archivo, de `estado-dev.md` y de `HANDOFF.md` al arranque — no depende
+de que decidas abrirlos tú. Los entrypoints por proveedor (`CLAUDE.md`,
+`AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`) no se
+duplican ahí porque el cliente correspondiente ya los carga de forma nativa
+(ver ADR-012). En un cliente sin ese hook, la lista de arriba sigue siendo
+el orden manual de lectura.
+
 ## 1. Compatibilidad multi-proveedor
 
 | Proveedor | Entrypoint  | Config propia                    |
@@ -86,6 +95,11 @@ Nunca renumerar ni reutilizar identificadores de requisitos/tareas ya usados
   cargan bajo demanda). Si supera ~8k tokens con el índice acotado, el
   problema casi siempre es contenido inferible en un entrypoint (§3.1), no
   que "haga falta compactar".
+- El volcado automático de `continuum context` (§0) no es costo nuevo: ese
+  contenido ya se leía, el cambio es que ahora es el hook quien lo entrega en
+  vez de depender de un `Read` posterior del agente — por eso queda fuera del
+  volcado el contenido de los entrypoints por proveedor, que el cliente ya
+  carga nativamente por su cuenta (ADR-012).
 
 ### 3.1 Contenido inferible: fuera del arranque
 
@@ -132,13 +146,25 @@ nativamente Claude Code (`MEMORY.md` + archivos por tema, ver
   `tools/continuum memory-split-legacy` y revisa el resultado a mano.
 - Decisiones de arquitectura con peso propio van a un ADR en
   `docs/architecture/ADR-XXXX-*.md` (plantilla en `.ai/templates/ADR.md`),
-  no a un tema.
+  no a un tema. **Nunca reutilices ni renumeres un identificador de ADR ya
+  usado**, aunque esté cerrado o descartado (mismo principio que §2 para
+  slugs de tarea) — `tools/continuum doctor` detecta números duplicados o
+  con huecos, tanto en esta convención de archivo por ADR como en un log
+  único (`docs/decision-log.md`, la que usa el propio repositorio de
+  Continuum), pero la detección es *a posteriori*: sigue siendo tu
+  responsabilidad revisar antes de asignar un número. `tools/continuum adr
+  new "Título de la decisión"` evita ese cálculo manual: usa el siguiente
+  número libre (contando ambas convenciones a la vez) y crea la entrada en
+  la que ya esté usando el proyecto — `docs/decision-log.md` si existe, o
+  un archivo nuevo en `docs/architecture/` si no (con `--slug` opcional
+  para el nombre de archivo). Completa después Contexto/Decisión/
+  Consecuencias a mano; el comando solo resuelve la numeración.
 
 ## 6. Trabajo en equipo (múltiples personas)
 
 - **Aislamiento por tarea**: Cada desarrollador o sesión trabaja en su subcarpeta `.ai/tasks/<slug>/`. Al estar aisladas por slug, los merges entre ramas de Git no producen conflictos en los archivos de tarea.
 - **Visibilidad y ownership**: `continuum task claim <slug> <owner>` marca quién está trabajando en una tarea para dar visibilidad al resto del equipo en `continuum status` o `continuum task list`.
-- **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto`.
+- **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto` — nunca dejar marcadores de conflicto sin resolver commiteados; `tools/continuum doctor` lo trata como problema crítico si se te escapa (ver `docs/investigacion-2026.md` §10: se evaluó y descartó resolver esto con una estrategia de merge automática, porque descartaría contenido en silencio sin que nadie lo note).
 - **Cierre de tarea en PR**: Antes de hacer merge, la tarea se cierra con `continuum task close <slug>`, lo que traslada la carpeta a `.ai/tasks/_closed/<slug>/` para preservar la evidencia de pruebas en el historial de Git sin colisionar con las tareas activas de otros.
 - **Prefijo de commit**: Usar el slug de la tarea cuando exista: `[pagos-recurrentes] feat: agrega validación de monto mínimo` para facilitar búsquedas con `git log --grep`.
 - **Concurrencia local (`git worktree`)**: Si dos personas o agentes (Claude Code, Codex, Copilot, etc.) trabajan localmente al mismo tiempo en el mismo repo, usa `continuum task start <slug> --worktree` para crear la tarea y aislar el directorio de trabajo en un paso (por debajo corre `git worktree add ../<repo>-<slug> -b task/<slug>`). También puedes correr ese comando de git a mano si prefieres controlar la ruta o el nombre de rama. Regla dura: un agente = un worktree = una tarea — nunca dos procesos de agente escribiendo en el mismo directorio de trabajo a la vez.
@@ -154,9 +180,27 @@ mensaje en el idioma del equipo. Ejemplo: `feat: add recurring payment validatio
 `tools/continuum doctor` corre como git hook de pre-commit (instalado con
 `tools/continuum install-hooks`) y valida: archivo canónico presente, entrypoints
 consistentes, sin duplicados divergentes, tamaño y frescura del índice y de
-cada tema, tareas abandonadas, y costo en tokens del arranque. Es una
-advertencia, no un bloqueo duro — usa `git commit --no-verify` conscientemente
-si el caso lo amerita.
+cada tema, tareas abandonadas, marcadores de conflicto de git sin resolver en
+`HANDOFF.md`, numeración de ADRs sin duplicados ni huecos, y costo en tokens
+del arranque. Es una advertencia, no un bloqueo duro — usa `git commit
+--no-verify` conscientemente si el caso lo amerita.
+
+`tools/continuum doctor --fix --no-dry-run` aplica auto-reparaciones que no
+requieren criterio humano (crear directorios/handoff faltantes, sincronizar
+subagentes de roles, y desde ADR-012 también recalcular la huella sha256
+que `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md` —
+ADR-010 — sin tocar su prosa curada). Sin `--no-dry-run` solo muestra el
+plan. `continuum roles sync` también poda subagentes generados que ya no
+corresponden a ningún rol activo del catálogo, detectados por huella de
+contenido, nunca por nombre de archivo.
+
+`tools/continuum --version` (o `continuum version`) reporta la versión
+instalada desde `VERSION` en la raíz — se actualiza sola con `continuum
+release --no-dry-run`, nunca a mano. Si el proyecto necesita desinstalar
+Continuum por completo, `tools/continuum uninstall` (ver `README.md`) lo
+hace en tres niveles de seguridad crecientes, nunca commitea por sí solo y
+nunca toca `docs/architecture/` ni `.ai/state`/`.ai/tasks`/`HANDOFF.md`
+salvo que se pida explícitamente.
 
 ## 9. Roles: catálogo de expertos
 

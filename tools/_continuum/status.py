@@ -93,3 +93,16 @@ def cmd_status(root: Path, json_output: bool = False) -> int:
     else:
         print(format_human_status(status_data))
     return 0
+
+
+def cmd_version(root: Path, json_output: bool = False) -> int:
+    version = c.read_version(root)
+    if json_output:
+        print(json.dumps({"version": version}, indent=2))
+        return 0
+    if version:
+        print(f"continuum {version}")
+    else:
+        c.warn("Sin archivo VERSION — instalación anterior a su introducción. "
+               "Corre 'continuum sync --apply' para traer la versión actual.")
+    return 0

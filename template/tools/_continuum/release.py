@@ -89,6 +89,19 @@ def cmd_export_refresh(
         return res.returncode
 
 
+def _write_version(root: Path, clean_version: str) -> None:
+    """El VERSION de `template/` es el que un proyecto consumidor hereda al
+    instalar/actualizar (git subtree trae el contenido de `template/`) — se
+    actualiza junto con el de la raíz para que nunca queden
+    desincronizados, mismo motivo que ADR-012 mecanizó la huella sha256 de
+    `copilot-instructions.md` en vez de dejarla a mano. Solo escribe
+    `template/VERSION` si ese directorio existe — un proyecto consumidor de
+    Continuum no tiene uno propio y no debería terminar con esa carpeta."""
+    c.write_text(root / "VERSION", f"{clean_version}\n")
+    if (root / "template").is_dir():
+        c.write_text(root / "template" / "VERSION", f"{clean_version}\n")
+
+
 def cmd_release(
     root: Path,
     version: str,
@@ -171,6 +184,13 @@ def cmd_release(
     if tag_exists:
         c.info(f"El tag '{tag_name}' ya está creado e idempotente.")
         return 0
+
+    # El VERSION de template/ es el que un proyecto consumidor hereda al
+    # instalar/actualizar (git subtree trae el contenido de template/) — se
+    # actualiza junto con el de la raíz para que nunca queden
+    # desincronizados, mismo motivo que ADR-012 mecanizó la huella sha256 de
+    # copilot-instructions.md en vez de dejarla a mano.
+    _write_version(root, clean_version)
 
     refresh_res = cmd_export_refresh(root, dry_run=False)
     if refresh_res != 0:

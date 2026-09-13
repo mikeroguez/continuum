@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import unittest
@@ -62,6 +63,37 @@ class TestStatusFix(unittest.TestCase):
                 res2 = doctor.run_fix(tmp, dry_run=False)
             self.assertEqual(res2, 0)
             self.assertIn("No se requieren auto-reparaciones seguras", out2.getvalue())
+
+    def test_doctor_fix_refreshes_stale_copilot_fingerprint_without_touching_prose(self):
+        """ADR-012: la huella sha256 que .github/copilot-instructions.md
+        guarda de AI_COLLABORATION.md (ADR-010) se venía recalculando a mano
+        cada vez que el canónico cambiaba — `doctor --fix` ahora lo hace
+        solo, sin tocar la prosa curada de la proyección."""
+        with temp_project() as tmp:
+            canonical = tmp / "AI_COLLABORATION.md"
+            canonical.write_text(canonical.read_text() + "\nCambio de protocolo.\n")
+
+            instr_path = tmp / ".github" / "copilot-instructions.md"
+            prose_before = instr_path.read_text().split("<!-- Continuum source:")[0]
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = doctor.run_fix(tmp, dry_run=False)
+            self.assertEqual(res, 0)
+            self.assertIn("Actualizar la huella sha256", out.getvalue())
+
+            content_after = instr_path.read_text()
+            prose_after = content_after.split("<!-- Continuum source:")[0]
+            self.assertEqual(prose_before, prose_after, "no debe tocar la prosa curada")
+
+            expected_digest = hashlib.sha256(canonical.read_bytes()).hexdigest()
+            self.assertIn(expected_digest, content_after)
+
+            # Idempotente: correr de nuevo no debe volver a proponer el fix.
+            out2 = io.StringIO()
+            with contextlib.redirect_stdout(out2):
+                doctor.run_fix(tmp, dry_run=False)
+            self.assertNotIn("Actualizar la huella sha256", out2.getvalue())
 
 
 if __name__ == "__main__":

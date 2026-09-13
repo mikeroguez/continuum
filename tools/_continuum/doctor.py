@@ -18,6 +18,15 @@ COPILOT_SOURCE_RE = re.compile(
     r"<!-- Continuum source: AI_COLLABORATION\.md sha256:([0-9a-f]{64}) -->"
 )
 
+CONFLICT_MARKER_RE = re.compile(r"^(<{7}|={7}|>{7})(\s|$)")
+
+
+def _handoff_conflict_markers(text: str) -> list[str]:
+    """Marcadores de conflicto de git (`<<<<<<<`, `=======`, `>>>>>>>`) que
+    quedaron sin resolver en un handoff — ADR-012, punto 2: un handoff con
+    marcadores sin resolver no sirve como contrato de continuidad (§2.6)."""
+    return [line for line in text.splitlines() if CONFLICT_MARKER_RE.match(line)]
+
 
 def _copilot_instruction_warnings(root: Path, instruction_path: Path) -> list[str]:
     source = root / c.CANONICAL_FILE
@@ -39,6 +48,34 @@ def _copilot_instruction_warnings(root: Path, instruction_path: Path) -> list[st
             "respecto de AI_COLLABORATION.md"
         ]
     return []
+
+
+def _copilot_fingerprint_is_stale(root: Path, instruction_path: Path) -> bool:
+    """True solo cuando la huella YA existe pero quedó vieja — el caso que
+    `doctor --fix` puede corregir sin criterio humano de por medio. Si la
+    huella falta por completo, alguien tiene que decidir dónde ponerla la
+    primera vez; eso no se auto-repara."""
+    source = root / c.CANONICAL_FILE
+    if not source.exists() or not instruction_path.exists():
+        return False
+    match = COPILOT_SOURCE_RE.search(c.read_text(instruction_path))
+    if not match:
+        return False
+    return match.group(1) != hashlib.sha256(source.read_bytes()).hexdigest()
+
+
+def _refresh_copilot_fingerprint(root: Path, instruction_path: Path) -> None:
+    """Recalcula y reemplaza solo la huella sha256 (ADR-010) — nunca toca la
+    prosa curada a mano de la proyección. Ver `.ai/state/topics/pendientes.md`
+    (2026-09-12): esto se venía haciendo a mano cada vez que cambiaba
+    `AI_COLLABORATION.md`, dos veces en la tarea `adopcion-ideas-cbm`."""
+    source = root / c.CANONICAL_FILE
+    digest = hashlib.sha256(source.read_bytes()).hexdigest()
+    content = c.read_text(instruction_path)
+    new_content = COPILOT_SOURCE_RE.sub(
+        f"<!-- Continuum source: AI_COLLABORATION.md sha256:{digest} -->", content
+    )
+    c.write_text(instruction_path, new_content)
 
 
 def run_fix(root: Path, dry_run: bool = True) -> int:
@@ -109,6 +146,16 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "id": "sync_copilot_roles",
                 "desc": "Generar agentes de GitHub Copilot desde el catálogo de roles (.ai/roles/)",
                 "fn": lambda: roles.sync(root, provider="copilot"),
+            })
+
+        instr_path = root / c.PROVIDER_FILES["copilot"]
+        if _copilot_fingerprint_is_stale(root, instr_path):
+            actions.append({
+                "id": "refresh_copilot_fingerprint",
+                "desc": f"Actualizar la huella sha256 de {c.CANONICAL_FILE} en "
+                        f"{instr_path.relative_to(root)} (ADR-010) — no toca la prosa, "
+                        f"solo el comentario de huella",
+                "fn": lambda: _refresh_copilot_fingerprint(root, instr_path),
             })
 
     if "codex" in cfg["providers"]:
@@ -323,14 +370,46 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
                f"Es el primer archivo que debe leer cualquier sesión nueva.")
         warnings += 1
     else:
-        age_h = (time.time() - handoff_path.stat().st_mtime) / 3600
-        dirty = c.git("status", "--porcelain").stdout.strip() != ""
-        if dirty and age_h > cfg["handoff"]["stale_after_hours"]:
-            c.warn(f"Hay cambios sin commitear y el handoff tiene {age_h:.0f}h de antigüedad. "
-                   f"Si vas a cortar la sesión, actualiza {cfg['handoff']['path']} antes.")
-            warnings += 1
+        handoff_text = c.read_text(handoff_path)
+        conflict_lines = _handoff_conflict_markers(handoff_text)
+        if conflict_lines:
+            c.err(f"{cfg['handoff']['path']} tiene marcadores de conflicto de git sin "
+                  f"resolver ({', '.join(conflict_lines[:3])}{'…' if len(conflict_lines) > 3 else ''}). "
+                  f"No sirve como contrato de continuidad hasta que se resuelva a mano o se "
+                  f"regenere con `continuum handoff --auto` (ver AI_COLLABORATION.md §6).")
+            problems += 1
         else:
-            ok(f"Handoff con {age_h:.0f}h de antigüedad.")
+            age_h = (time.time() - handoff_path.stat().st_mtime) / 3600
+            dirty = c.git("status", "--porcelain").stdout.strip() != ""
+            if dirty and age_h > cfg["handoff"]["stale_after_hours"]:
+                c.warn(f"Hay cambios sin commitear y el handoff tiene {age_h:.0f}h de antigüedad. "
+                       f"Si vas a cortar la sesión, actualiza {cfg['handoff']['path']} antes.")
+                warnings += 1
+            else:
+                ok(f"Handoff con {age_h:.0f}h de antigüedad.")
+
+    # 7.1 Numeración de ADRs
+    section("ADRs")
+    adr_numbers = c.collect_adr_numbers(root)
+    if not adr_numbers:
+        ok("Sin ADRs todavía (ni docs/decision-log.md ni docs/architecture/ADR-*.md) — nada que verificar.")
+    else:
+        duplicates, gaps = c.adr_numbering_issues(adr_numbers)
+        if duplicates:
+            dup_fmt = ", ".join(f"ADR-{n:03d}" for n in sorted(set(duplicates)))
+            c.err(f"Número(s) de ADR reutilizado(s): {dup_fmt} (en docs/decision-log.md "
+                  f"y/o docs/architecture/ADR-*.md). "
+                  f"AI_COLLABORATION.md §2 prohíbe renumerar o reutilizar identificadores ya usados, "
+                  f"aunque el ADR se haya cerrado o descartado.")
+            problems += 1
+        if gaps:
+            gap_fmt = ", ".join(f"ADR-{n:03d}" for n in gaps)
+            c.warn(f"Hueco en la numeración de ADRs: falta(n) {gap_fmt}. Puede ser intencional "
+                   f"(un número reservado y luego descartado) — si no lo es, revisa si el ADR "
+                   f"correspondiente se perdió.")
+            warnings += 1
+        if not duplicates and not gaps:
+            ok("Numeración de ADRs consecutiva y sin duplicados.")
 
     # 8. Tamaño en tokens de los archivos "siempre cargados"
     section("Costo de contexto (archivos que toda sesión nueva debería leer)")

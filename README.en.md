@@ -32,7 +32,8 @@ flowchart LR
 - **Universal Interoperability**: Fully compatible with the [`AGENTS.md`](https://agents.md) convention and native adapters for **Claude Code, Codex, Gemini CLI, and GitHub Copilot** (VS Code, Copilot Coding Agent, GitHub.com).
 - **Lossless Continuity**: Work sessions resume seamlessly across token limits, provider rotations, or developer handoffs.
 - **Multi-Agent Collaboration**: Developers and AI assistants collaborate in parallel without overwriting or stepping on code.
-- **Context Cost Optimization**: Startup context remains fixed at **~2.5k tokens** per session instead of tens of thousands of tokens of bloated chat logs.
+- **Context Cost Optimization**: Startup context stays in the low thousands of tokens per session instead of tens of thousands of tokens of bloated chat logs — an exact, verifiable figure for your own project via `continuum doctor`, never a marketing estimate.
+- **100% local, no dependencies**: the CLI is pure Python (standard library only), makes no calls to any external service, and collects no telemetry — your code and decisions never leave the repository.
 
 ---
 
@@ -82,6 +83,7 @@ tools/continuum doctor
 ### Diagnostics and Session
 ```bash
 tools/continuum                        # doctor: Run full diagnostic checks
+tools/continuum --version              # Installed version (or 'continuum version')
 tools/continuum session start          # Start session: load handoff, active tasks, and context
 tools/continuum session end --auto     # End session: perform linting and write handoff
 tools/continuum status                 # Display compact status and recommended action
@@ -99,6 +101,16 @@ tools/continuum task close <slug>                           # Close and archive 
 tools/continuum sync --apply           # Synchronize template with remote repository
 tools/continuum install-hooks          # Install local pre-commit githook
 ```
+
+### Uninstall
+```bash
+tools/continuum uninstall                                    # Uninstall plan (dry-run, deletes nothing)
+tools/continuum uninstall --no-dry-run                        # Removes the CLI, generated subagents, and its own hooks
+tools/continuum uninstall --no-dry-run --yes                  # + entrypoints, config, and role catalog
+tools/continuum uninstall --no-dry-run --yes --purge-memory   # + .ai/HANDOFF.md, .ai/state/, .ai/tasks/
+```
+Three increasing safety tiers — never commits on its own, never touches
+`docs/architecture/` (a project's own ADRs live there).
 
 ---
 

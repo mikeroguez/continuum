@@ -319,3 +319,86 @@ fallo de `git worktree add` (ruta ocupada, no hay repo git) es una
 precondición de entorno, no de contenido — los archivos de la tarea, que
 son el entregable principal de `task start`, ya se escribieron. Se reporta
 con `c.warn`, igual que el resto de `doctor`, en vez de abortar.
+
+## ADR-012 — Adopciones acotadas desde `codebase-memory-mcp`
+
+**Contexto.** Revisión comparativa con
+[`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp)
+(CBM, DeusData, arXiv:2603.27277), un motor de grafo de conocimiento de
+código para agentes de IA vía MCP — dominio distinto al de Continuum, pero
+que ataca la misma faceta de un problema compartido: que un agente arranque
+con el contexto correcto sin depender de que decida buscarlo. Detalle
+completo de la evidencia revisada, con el razonamiento de cada verdicto, en
+`docs/investigacion-2026.md` §10.
+
+**Evidencia revisada.** Documentación pública de CBM (`README.md`,
+`docs/MEASURING_SAVINGS.md`, `docs/CONFIGURATION.md`) más los principios
+propios de `ARCHITECTURE.md` §2 usados como criterio de admisión: nada se
+adopta solo porque le funcione a CBM en su dominio (grafo de código,
+indexado con tree-sitter, daemon de coordinación de sesiones) — cada idea se
+evaluó contra el job central de Continuum (continuidad de sesión/proveedor/
+persona, ceremonia proporcional al tamaño del cambio) y contra el riesgo de
+importar una solución sin el problema que la justifica en CBM.
+
+**Decisión — se adopta:**
+
+1. `continuum context` (hook `SessionStart`) pasa a incluir el contenido
+   completo de los archivos del nivel OBLIGATORIOS, no solo su listado con
+   tokens estimados — mecaniza lo que hoy depende de que el agente decida
+   leerlos.
+2. `continuum doctor` detecta marcadores de conflicto de git (`<<<<<<<`) sin
+   resolver dentro de `.ai/HANDOFF.md`.
+3. `continuum doctor` detecta números de ADR duplicados o no consecutivos en
+   `docs/decision-log.md`. Un comando `continuum adr new <slug>` que
+   scaffoldee la entrada queda como extensión opcional del mismo trabajo, no
+   como su núcleo.
+4. Documento nuevo `docs/metodologia-medicion.md` (distribuido vía
+   `template/docs/`): protocolo de medición antes/después de consumo real de
+   tokens/tool-calls en sesiones de agente, que hoy `continuum metrics` no
+   cubre (solo mide estado estático del repositorio). Opt-in, no un paso
+   obligatorio de ningún flujo.
+5. Frase de postura de confianza en `README.md` (100% local, sin
+   dependencias externas, sin telemetría) — comunicación de algo que ya era
+   cierto, no una decisión de arquitectura nueva.
+
+**Decisión — se descarta, no se adopta ni se difiere:**
+
+- **`merge=ours` en `.ai/HANDOFF.md`** (equivalente al artefacto
+  `.codebase-memory/graph.db.zst` de CBM). Ese patrón es seguro en CBM
+  porque el artefacto es un índice derivado y regenerable del código fuente
+  — perder una versión cuesta un reindexado, no un dato. `.ai/HANDOFF.md` es
+  la narrativa de continuidad, irremplazable; `merge=ours` descartaría en
+  silencio la versión entrante completa, sin marcador de conflicto,
+  contradiciendo directamente que "el repositorio es la memoria" (§2.1) y
+  que el handoff "no tiene excepciones... deja constancia de qué se hizo"
+  (§2.6). La detección de conflictos sin resolver (punto 2 de arriba) es el
+  reemplazo real de esta idea: mecaniza la alerta sin el riesgo de pérdida
+  silenciosa.
+- **Contrato de evidencia por tamaño de tarea** al estilo Scout/Verify/
+  Auditor de CBM. CBM puede exigirlo porque tiene `check_index_coverage`,
+  una herramienta mecánica capaz de distinguir "no se encontró" de "no se
+  buscó". Sin un mecanismo equivalente, sería una norma sin verificación
+  mecánica — el patrón de falla ya documentado en el Proyecto B (§2.3) — y
+  no ataca ningún job real de Continuum, que no indexa código.
+- **`continuum init --detect`** (auto-detección de proveedores de IA
+  instalados, inspirado en el instalador de 45 clientes de CBM). Se
+  descarta por completo, no se deja como pendiente futuro: la complejidad
+  que resuelve en CBM existe porque sus clientes viven en rutas de
+  configuración distintas *fuera* del repositorio y activar la integración
+  equivocada tiene costo real. Los entrypoints de Continuum son archivos
+  versionados *dentro* del repositorio, sin combinación insegura que
+  detectar, con un costo marginal (~100-150 tokens estimados cada uno)
+  cuando un proveedor no se usa. No hay problema real que resolver.
+
+**Fuera del baseline.** No se construye ningún índice de código, embeddings,
+búsqueda semántica ni daemon de coordinación entre sesiones concurrentes —
+ver ADR-011 y `ARCHITECTURE.md` §8, decisiones que esta revisión confirma en
+vez de reabrir.
+
+**Consecuencias.** El presupuesto de tokens de arranque que reporta
+`continuum doctor` sube (punto 1) porque ahora refleja contenido que antes
+se leía igual pero fuera de esa medición — no es una regresión de
+eficiencia, es que la métrica pasa a ser exacta. Los puntos 2 y 3 son
+verificaciones nuevas en `doctor`, consistentes con el principio de
+mecanizar en vez de confiar en la memoria humana (§2.3). El punto 4 no
+cambia el flujo de ninguna sesión existente.

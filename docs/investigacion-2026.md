@@ -193,10 +193,124 @@ lectura por rango y búsqueda por patrones nativas — el caso de los clientes
 agénticos considerados en este diseño. La guía se corrigió para reflejar
 esto.
 
+## 10. `codebase-memory-mcp`: qué aplica de un motor de intelligence de código y qué no (actualización 2026-09-12)
+
+Revisión adicional, no programada en la primera pasada de esta
+investigación: comparación con
+[`codebase-memory-mcp`](https://github.com/DeusData/codebase-memory-mcp)
+(CBM, DeusData, arXiv:2603.27277), un motor de grafo de conocimiento de
+código para agentes de IA vía MCP (tree-sitter, embeddings, LSP híbrido,
+daemon de indexado). Dominio distinto al de Continuum — CBM indexa código,
+Continuum persiste decisiones y estado de sesión en Markdown — pero resuelve
+una faceta del mismo problema: que un agente arranque con el contexto
+correcto sin depender de que decida buscarlo por su cuenta. Cada idea
+candidata se evaluó contra los principios de `ARCHITECTURE.md` §2 y el job
+central de Continuum (recuperar el contexto correcto al cambiar de
+sesión/proveedor/persona, con ceremonia proporcional al tamaño real del
+cambio) — no se adopta nada solo porque le funcione a CBM en su propio
+dominio.
+
+**Implementar sin ajustes — `continuum context` debe empujar el contenido de
+los archivos obligatorios en `SessionStart`, no solo su lista.** Hoy el hook
+imprime nombre y tokens estimados de cada archivo obligatorio (~3.280 tokens
+en este mismo repositorio) y confía en que el agente decida abrir cada uno
+— exactamente el patrón de falla más frecuente de la auditoría original:
+"ninguna automatización real: el cumplimiento depende de que alguien
+recuerde seguir el protocolo" (`ARCHITECTURE.md` §1). CBM resuelve el mismo
+problema entregando contenido directamente como `additionalContext` en vez
+de solo indicar dónde buscarlo. El costo en tokens no cambia — ese contenido
+ya se leía, solo cambia quién lo entrega — y no compromete el caching de
+prompt porque ocurre una sola vez al inicio de sesión, no a mitad de turno
+(`ARCHITECTURE.md` §6).
+
+**No implementar — sincronizar la estrategia de merge de `.ai/HANDOFF.md` a
+`merge=ours`**, el patrón que usa CBM para su artefacto
+`.codebase-memory/graph.db.zst`. Descartado tras revisar el mecanismo, no
+solo por analogía superficial: `merge=ours` no fusiona contenido — ante un
+conflicto descarta en silencio la versión entrante completa, sin marcador ni
+aviso. Para CBM eso es seguro porque ese archivo es un índice derivado y
+regenerable desde el código fuente: perder una versión cuesta un
+reindexado, no un dato. `.ai/HANDOFF.md` es lo opuesto — es la narrativa de
+continuidad, irremplazable, y el principio raíz del diseño es justamente que
+"el repositorio es la memoria" (`ARCHITECTURE.md` §2.1) y que el handoff "no
+tiene excepciones... deja constancia de qué se hizo" (§2.6). Aplicar
+`merge=ours` aquí arriesgaría perder handoffs sin que nadie lo note — peor
+que el conflicto manual que hoy resuelve `AI_COLLABORATION.md` §6, porque un
+conflicto de git al menos obliga a alguien a mirar. Ajuste real que sí se
+adopta, de alcance menor: que `continuum doctor` detecte marcadores de
+conflicto de git (`<<<<<<<`) sin resolver dentro de `.ai/HANDOFF.md` —
+mecaniza la alerta (principio 3) sin el riesgo de pérdida silenciosa.
+
+**No implementar — contrato de evidencia por tamaño de tarea al estilo
+Scout/Verify/Auditor de CBM** (qué tan exhaustiva debe ser una búsqueda
+antes de una afirmación negativa tipo "esto no se usa en ningún lado"). CBM
+puede exigir ese contrato porque tiene una herramienta mecánica de
+verificación (`check_index_coverage`) capaz de probar la diferencia entre
+"no se encontró" y "no se buscó". Continuum no tiene, ni debería construir,
+un equivalente: no indexa código, y una norma de cuánto buscar antes de
+afirmar algo, sin ninguna forma de verificarla mecánicamente, es exactamente
+el patrón que ya fracasó en el Proyecto B ("una regla de proceso sin
+verificación mecánica deja de cumplirse en semanas", §2.3). Tampoco ataca el
+job central de Continuum — es un problema de otro dominio. Se descarta.
+
+**Implementar, con la prioridad invertida respecto a la propuesta original —
+verificación de numeración de ADRs antes que un comando de generación.**
+`AGENTS.md` ya prohíbe "renumerar ni reutilizar identificadores... aunque se
+hayan cerrado o descartado", pero esa regla depende hoy al cien por ciento
+de que la persona la recuerde al escribir un ADR a mano — el mismo patrón de
+falla del principio 3. CBM expone esto como una tool (`manage_adr`); la
+adaptación de mayor valor por menor esfuerzo no es un comando de generación
+de contenido (ceremonia adicional, principio 2) sino que `continuum doctor`
+detecte números de ADR duplicados o no consecutivos en
+`docs/decision-log.md` — mecaniza la verificación del riesgo real sin
+agregar un paso nuevo al flujo de trabajo. Un comando `continuum adr new`
+que además scaffoldee la entrada queda como extensión opcional, no como el
+núcleo de esta adopción.
+
+**Implementar, con alcance solo documental — metodología de medición
+antes/después inspirada en `docs/MEASURING_SAVINGS.md` de CBM.** `continuum
+metrics` (`tools/_continuum/metrics.py`) hoy mide exclusivamente estado
+estático del repositorio — tokens estimados de archivos, conteo de
+tareas/temas — nunca el consumo real de tokens o tool-calls de una sesión de
+agente real. Es un vacío genuino, no una duplicación de algo que ya existe.
+Se adopta como documento nuevo (`docs/metodologia-medicion.md`), no como
+paso obligatorio de ningún flujo (principio 2): un protocolo opt-in para
+quien quiera cuantificar la adopción con rigor — commit congelado,
+condiciones aisladas, calidad reportada aparte de eficiencia, sin
+extrapolar de un solo repositorio. Los proyectos que ya usan Continuum en
+producción son el terreno natural para la primera aplicación piloto, fuera
+del alcance de esta ronda de cambios.
+
+**No implementar ni dejar como pendiente — auto-detección de proveedores
+instalados (`continuum init --detect`, inspirado en el instalador de 45
+clientes de CBM).** Evaluado a fondo, no solo diferido: se descarta por
+completo. La complejidad que CBM resuelve con detección existe porque cada
+uno de sus 45 clientes vive en una ruta de configuración distinta *fuera*
+del repositorio (`~/.claude.json`, `$CODEX_HOME/config.toml`, etc.), y
+activar la integración equivocada tiene costo real (archivos huérfanos,
+flags experimentales). Los entrypoints de Continuum (`AGENTS.md`,
+`CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`) son archivos
+versionados *dentro* del propio repositorio, sin ninguna combinación
+insegura que activar, y su costo cuando un proveedor no se usa es marginal
+(~100-150 tokens estimados cada uno, según la propia salida de `continuum
+doctor`). No hay problema real, en la arquitectura actual de Continuum, que
+este mecanismo resuelva.
+
+**Sin cambio de diseño, solo redacción — postura de confianza explícita.**
+Continuum ya cumple lo que CBM declara como diferenciador (100% local, sin
+dependencias externas más allá de la librería estándar de Python, sin
+telemetría) — confirmado en `.ai/state/topics/resumen.md`. Se añade como
+frase explícita al README de cara a adopción externa; no es una decisión de
+arquitectura, es comunicación de algo que ya era cierto.
+
+Ver `docs/decision-log.md`, ADR-012, para el detalle de cada cambio adoptado
+y el razonamiento completo de lo descartado.
+
 ## Cambios aplicados a la plantilla
 
-Ver `docs/decision-log.md`, ADR-004, para el detalle de cada cambio aplicado
-a `template/` a partir de esta revisión, con su justificación.
+Ver `docs/decision-log.md`, ADR-004 y ADR-012, para el detalle de cada
+cambio aplicado a `template/` a partir de esta revisión, con su
+justificación.
 
 ## Fuentes
 
@@ -222,3 +336,5 @@ a `template/` a partir de esta revisión, con su justificación.
 - [Claude Code Hooks: Complete 2026 Production Reference — The Prompt Shelf](https://thepromptshelf.dev/blog/claude-code-hooks-complete-reference-2026/)
 - [SKILL.md vs CLAUDE.md vs AGENTS.md Compared — Termdock](https://www.termdock.com/blog/skill-md-vs-claude-md-vs-agents-md)
 - [CrewAI vs LangGraph vs AutoGen — DataCamp](https://www.datacamp.com/tutorial/crewai-vs-langgraph-vs-autogen)
+- [`codebase-memory-mcp` — repositorio (DeusData)](https://github.com/DeusData/codebase-memory-mcp)
+- [Codebase-Memory: Tree-Sitter-Based Knowledge Graphs for LLM Code Exploration via MCP (arXiv:2603.27277)](https://arxiv.org/abs/2603.27277)

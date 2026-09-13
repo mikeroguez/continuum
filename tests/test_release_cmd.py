@@ -53,6 +53,27 @@ class TestReleaseCmd(unittest.TestCase):
             self.assertTrue(data["valid_semver"])
             self.assertEqual(data["version"], "v1.0.0")
 
+    def test_write_version_updates_root_always(self):
+        with temp_project() as tmp:
+            release._write_version(tmp, "2.0.0")
+            self.assertEqual((tmp / "VERSION").read_text(encoding="utf-8"), "2.0.0\n")
+
+    def test_write_version_skips_template_when_absent(self):
+        """Un proyecto consumidor de Continuum no tiene su propia carpeta
+        `template/` — `_write_version` no debe crearla."""
+        with temp_project() as tmp:
+            self.assertFalse((tmp / "template").exists())
+            release._write_version(tmp, "2.0.0")
+            self.assertFalse((tmp / "template").exists())
+
+    def test_write_version_updates_template_when_present(self):
+        with temp_project() as tmp:
+            (tmp / "template").mkdir()
+            release._write_version(tmp, "2.0.0")
+            self.assertEqual(
+                (tmp / "template" / "VERSION").read_text(encoding="utf-8"), "2.0.0\n"
+            )
+
 
 
 if __name__ == "__main__":

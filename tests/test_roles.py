@@ -141,5 +141,43 @@ class TestSync(unittest.TestCase):
             self.assertFalse((root / ".claude" / "agents").exists())
 
 
+class TestPruneOrphaned(unittest.TestCase):
+    def test_claude_prunes_subagent_of_deactivated_role(self):
+        with temp_project() as root:
+            _activate_packs(root, ["comun", "software"])
+            roles.sync(root, provider="claude")
+            frontend_agent = root / ".claude" / "agents" / "frontend.md"
+            self.assertTrue(frontend_agent.exists())
+
+            _activate_packs(root, ["comun"])  # "software" ya no está activo
+            roles.sync(root, provider="claude")
+            self.assertFalse(frontend_agent.exists())
+
+    def test_gemini_prunes_skill_dir_of_deactivated_role(self):
+        with temp_project() as root:
+            _activate_packs(root, ["comun", "software"])
+            roles.sync(root, provider="gemini")
+            frontend_dir = root / ".gemini" / "skills" / "frontend"
+            self.assertTrue(frontend_dir.exists())
+
+            _activate_packs(root, ["comun"])
+            roles.sync(root, provider="gemini")
+            self.assertFalse(frontend_dir.exists())
+
+    def test_never_prunes_a_file_without_the_continuum_marker(self):
+        """Un archivo que una persona escribió a mano en la misma carpeta,
+        sin la huella de `roles.sync()`, sobrevive aunque su nombre no
+        corresponda a ningún rol del catálogo."""
+        with temp_project() as root:
+            roles.sync(root, provider="claude")
+            agents_dir = root / ".claude" / "agents"
+            hand_written = agents_dir / "mi-agente-propio.md"
+            hand_written.write_text("---\nname: mi-agente-propio\n---\n\nContenido propio, no generado.\n")
+
+            roles.sync(root, provider="claude")
+            self.assertTrue(hand_written.exists())
+            self.assertEqual(hand_written.read_text(), "---\nname: mi-agente-propio\n---\n\nContenido propio, no generado.\n")
+
+
 if __name__ == "__main__":
     unittest.main()

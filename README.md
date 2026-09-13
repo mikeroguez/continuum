@@ -4,7 +4,7 @@
 
 **Protocolo y herramientas de memoria persistente para equipos que trabajan con múltiples asistentes de IA sobre el mismo repositorio Git.**
 
-[![Version](https://img.shields.io/badge/version-v1.4.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.5.0-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
@@ -32,7 +32,8 @@ flowchart LR
 - **Interoperabilidad Universal**: Compatible con la convención [`AGENTS.md`](https://agents.md) y adaptadores nativos para **Claude Code, Codex, Gemini CLI y GitHub Copilot** (VS Code, Copilot Coding Agent, GitHub.com).
 - **Continuidad sin Pérdidas**: Las sesiones se interrumpen por límite de tokens o cambio de proveedor sin perder el avance ni las decisiones.
 - **Colaboración Multi-Agente**: Desarrolladores y asistentes trabajan en paralelo sobre el mismo repositorio sin sobrescribir ni pisar código.
-- **Optimización de Contexto**: El arranque de cualquier sesión consume solo **~2.5k tokens** fijos frente a historiales inflados de chat.
+- **Optimización de Contexto**: El arranque de cualquier sesión consume solo unos pocos miles de tokens fijos frente a historiales inflados de chat — cifra exacta y verificable en tu propio proyecto con `continuum doctor`, nunca un estimado de marketing.
+- **100% local, sin dependencias**: el CLI es Python puro (solo librería estándar), no llama a ningún servicio externo y no recolecta telemetría — tu código y tus decisiones nunca salen del repositorio.
 
 ---
 
@@ -49,7 +50,7 @@ flowchart LR
 git remote add continuum https://github.com/mikeroguez/continuum.git
 
 # Montar la plantilla en la raíz usando la rama export
-git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.4.0"
+git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.5.0"
 ```
 
 ### 2. Configurar e Inicializar
@@ -82,6 +83,7 @@ tools/continuum doctor
 ### Diagnóstico y Sesión
 ```bash
 tools/continuum                        # doctor: Diagnóstico completo del estado del proyecto
+tools/continuum --version              # Versión instalada (o 'continuum version')
 tools/continuum session start          # Inicio de sesión: lee handoff, tareas y sugiere contexto
 tools/continuum session end --auto     # Cierre de sesión asistido con validación de calidad
 tools/continuum status                 # Estado compacto y siguiente acción recomendada
@@ -99,6 +101,16 @@ tools/continuum task close <slug>                           # Cerrar y archivar 
 tools/continuum sync --apply           # Sincronizar plantilla con el repositorio remoto
 tools/continuum install-hooks          # Instalar pre-commit githook local
 ```
+
+### Desinstalación
+```bash
+tools/continuum uninstall                              # Plan de desinstalación (dry-run, no borra nada)
+tools/continuum uninstall --no-dry-run                  # Retira el CLI, subagentes generados y hooks propios
+tools/continuum uninstall --no-dry-run --yes            # + entrypoints, config y catálogo de roles
+tools/continuum uninstall --no-dry-run --yes --purge-memory  # + .ai/HANDOFF.md, .ai/state/, .ai/tasks/
+```
+Tres niveles de seguridad crecientes — nunca commitea por sí solo, nunca
+toca `docs/architecture/` (ahí viven los ADRs propios del proyecto).
 
 ---
 

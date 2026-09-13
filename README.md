@@ -4,7 +4,7 @@
 
 **Protocolo y herramientas de memoria persistente para equipos que trabajan con múltiples asistentes de IA sobre el mismo repositorio Git.**
 
-[![Version](https://img.shields.io/badge/version-v1.4.1-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-v1.5.0-blue.svg)](CHANGELOG.md)
 [![continuum doctor](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/continuum-doctor.yml)
 [![tests](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/mikeroguez/continuum/actions/workflows/tests.yml)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-green.svg)](LICENSE)
@@ -49,7 +49,7 @@ flowchart LR
 git remote add continuum https://github.com/mikeroguez/continuum.git
 
 # Montar la plantilla en la raíz usando la rama export
-git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.4.0"
+git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.5.0"
 ```
 
 ### 2. Configurar e Inicializar

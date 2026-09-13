@@ -33,6 +33,25 @@ Este manual establece el flujo de trabajo para colaborar en Continuum: convenci�
 - **`main`**: Rama de producción y lanzamientos estables. Solo recibe merges desde `develop` cuando un release es autorizado.
 - **`export`**: Rama distribuida mantenida automáticamente vía `git subtree split --prefix=template -b export`. Ninguna persona realiza commits manuales directos sobre ella.
 
+## Votación y Protección de `main`
+
+`main` es la rama de producción y no acepta pushes directos. Cada cambio debe
+entrar mediante Pull Request con los checks de CI en verde, conversaciones
+resueltas y revisión de CODEOWNERS.
+
+La decisión de integrar se toma entre **mikeroguez** y **wada8a**:
+
+- Quien abre el PR no cuenta su propio voto.
+- Se requiere la aprobación del otro propietario; si ambos revisan, el
+  resultado debe ser 2 votos favorables.
+- Un voto en contra mantiene el PR abierto hasta que se atiendan las
+  objeciones y se vuelva a revisar.
+- En caso de desacuerdo persistente, el PR no se integra y se abre una
+  Discussion o issue para registrar la decisión.
+
+La configuración técnica vive en `.github/CODEOWNERS` y en la protección
+remota de la rama `main`; ambas deben mantenerse alineadas con esta política.
+
 ---
 
 ## Convención de Commits
@@ -77,7 +96,7 @@ La fuente de verdad de la versión es `__version__` en `template/tools/_continuu
 
 ## Proceso de Lanzamiento (Release)
 
-1. Mergear los cambios de `develop` a `main`.
+1. Abrir un Pull Request hacia `main` y obtener la aprobación requerida.
 2. Actualizar `__version__` en `tools/_continuum/__init__.py` y `template/tools/_continuum/__init__.py`.
 3. Actualizar `CHANGELOG.md` registrando los cambios bajo `## [X.Y.Z] - YYYY-MM-DD`.
 4. Ejecutar los comandos automatizados del CLI:
@@ -87,7 +106,7 @@ La fuente de verdad de la versión es `__version__` en `template/tools/_continuu
    ```
 5. Publicar ramas y tags en GitHub:
    ```bash
-   git push origin main develop export --tags --force
+   git push origin main develop export --tags
    ```
 
 ---

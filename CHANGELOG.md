@@ -6,6 +6,8 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-12
+
 ### Added
 
 - `continuum task start <slug> --worktree` crea la tarea y aísla el
@@ -14,6 +16,11 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   ADR-011).
 - `continuum doctor` advierte cuando detecta varias tareas activas sin
   evidencia de aislamiento por worktree.
+- Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría
+  WCAG 2.2.
+- Plantillas de issues y Pull Requests para propuestas de funcionalidades,
+  documentación, correcciones, refactorizaciones, roles y tareas de
+  mantenimiento.
 
 ### Changed
 
@@ -23,6 +30,8 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - `.claude/settings.json` agrega un hook `SessionStart` que corre
   `continuum context` al arrancar o resumir una sesión de Claude Code,
   simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
+- La configuración de colaboración de GitHub exige Pull Requests, revisiones
+  de propietarios y checks automatizados antes de integrar cambios en `main`.
 
 ## [1.4.1] - 2026-09-10
 

@@ -33,6 +33,25 @@ This manual defines the workflow for contributing to Continuum: branching conven
 - **`main`**: Production and stable release branch. Only receives merges from `develop` when a release is authorized.
 - **`export`**: Distributed branch maintained automatically via `git subtree split --prefix=template -b export`. No manual commits are made directly on this branch.
 
+## Voting and `main` Protection
+
+`main` is the production branch and does not accept direct pushes. Every
+change must enter through a Pull Request with green CI checks, resolved
+conversations, and CODEOWNERS review.
+
+Integration decisions are made between **mikeroguez** and **wada8a**:
+
+- The PR author does not count their own vote.
+- The other owner must approve; when both owners review, the result must be
+  two affirmative votes.
+- A rejection keeps the PR open until the objections are addressed and it is
+  reviewed again.
+- If disagreement persists, keep the PR unmerged and open a Discussion or
+  issue to record the decision.
+
+The technical configuration lives in `.github/CODEOWNERS` and in the remote
+branch protection for `main`; both must remain aligned with this policy.
+
 ---
 
 ## Commit Convention
@@ -77,7 +96,7 @@ Version truth lives in `__version__` in `template/tools/_continuum/__init__.py`,
 
 ## Release Process
 
-1. Merge changes from `develop` into `main`.
+1. Open a Pull Request into `main` and obtain the required approval.
 2. Update `__version__` in `tools/_continuum/__init__.py` and `template/tools/_continuum/__init__.py`.
 3. Update `CHANGELOG.md` recording changes under `## [X.Y.Z] - YYYY-MM-DD`.
 4. Run automated CLI release commands:
@@ -87,7 +106,7 @@ Version truth lives in `__version__` in `template/tools/_continuum/__init__.py`,
    ```
 5. Publish branches and tags to GitHub:
    ```bash
-   git push origin main develop export --tags --force
+   git push origin main develop export --tags
    ```
 
 ---

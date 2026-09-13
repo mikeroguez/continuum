@@ -128,8 +128,7 @@ porcentajes, no solo el porcentaje.
 Los proyectos que ya tienen Continuum en uso activo en producción son el
 terreno natural para la primera aplicación real de esta metodología — miden
 adopción real, no un escenario sintético construido para la ocasión. Para
-este repositorio en concreto, los candidatos son los 4 proyectos
-dependientes ya en producción: `seguimiento-talleres`,
-`seguimiento-deportes`, `seguimiento-clubes` y `SISETAP` (ver
-`.ai/state/topics/resumen.md`). La aplicación piloto en sí queda fuera del
-alcance de `docs/decision-log.md` ADR-012 — es trabajo de seguimiento.
+este repositorio en concreto, hay 4 proyectos dependientes ya en producción
+candidatos (nombres omitidos por privacidad — ver el registro interno del
+equipo). La aplicación piloto en sí queda fuera del alcance de
+`docs/decision-log.md` ADR-012 — es trabajo de seguimiento.

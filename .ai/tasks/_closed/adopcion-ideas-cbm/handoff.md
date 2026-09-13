@@ -67,9 +67,8 @@ completo. Más dos extensiones agregadas después, a pedido del owner:
 
 ## Suposiciones vigentes
 - La aplicación piloto de `docs/metodologia-medicion.md` sobre uno de los 4
-  proyectos reales (`seguimiento-talleres`, `seguimiento-deportes`,
-  `seguimiento-clubes`, `SISETAP`) no se ejecutó — es trabajo de seguimiento
-  explícitamente fuera de esta tarea.
+  proyectos reales dependientes (nombres omitidos por privacidad) no se
+  ejecutó — es trabajo de seguimiento explícitamente fuera de esta tarea.
 - El auto-fix de la huella sha256 solo alcanza a la copia de la raíz de
   este repositorio: `template/.github/copilot-instructions.md` sigue
   necesitando el ajuste a mano al sincronizar `template/AI_COLLABORATION.md`

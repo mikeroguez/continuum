@@ -277,10 +277,9 @@ Se adopta como documento nuevo (`docs/metodologia-medicion.md`), no como
 paso obligatorio de ningún flujo (principio 2): un protocolo opt-in para
 quien quiera cuantificar la adopción con rigor — commit congelado,
 condiciones aisladas, calidad reportada aparte de eficiencia, sin
-extrapolar de un solo repositorio. Los 4 proyectos que ya usan Continuum en
-producción (`seguimiento-talleres`, `seguimiento-deportes`,
-`seguimiento-clubes`, `SISETAP`) son el terreno natural para la primera
-aplicación piloto, fuera del alcance de esta ronda de cambios.
+extrapolar de un solo repositorio. Los proyectos que ya usan Continuum en
+producción son el terreno natural para la primera aplicación piloto, fuera
+del alcance de esta ronda de cambios.
 
 **No implementar ni dejar como pendiente — auto-detección de proveedores
 instalados (`continuum init --detect`, inspirado en el instalador de 45

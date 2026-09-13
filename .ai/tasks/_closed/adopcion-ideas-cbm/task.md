@@ -23,11 +23,10 @@ original sin filtrar.
 
 ## Incluido en el alcance
 - **[hecho]** Reconciliar el estado de `pendientes.md` sobre el rollout:
-  confirmado por el owner que Continuum ya está en uso activo en los 4
-  proyectos dependientes (`seguimiento-talleres`, `seguimiento-deportes`,
-  `seguimiento-clubes`, `SISETAP`); distinguido de "aplicar
-  `docs/rollout-guide.md` formalmente", que sigue pendiente y es un ítem
-  aparte.
+  confirmado por el owner que Continuum ya está en uso activo en 4
+  proyectos dependientes (nombres omitidos por privacidad); distinguido de
+  "aplicar `docs/rollout-guide.md` formalmente", que sigue pendiente y es
+  un ítem aparte.
 - **[hecho]** ADR-012 en `docs/decision-log.md` documentando qué se adopta,
   qué se ajusta y qué se descarta de CBM, con el razonamiento completo.
 - **[hecho]** Sección 10 en `docs/investigacion-2026.md` analizando cada

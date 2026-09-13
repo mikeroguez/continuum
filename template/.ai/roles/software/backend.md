@@ -20,9 +20,11 @@ no la lógica de negocio en sí).
   repositorio o patrón factory, confirma que hay más de un caso de uso real
   *hoy* — no "por si acaso". Tres líneas repetidas en dos sitios son más
   baratas que la abstracción equivocada.
-- **Datos:** evita N+1 — trae relaciones con `join`/`select_related`/
-  `include` según el ORM, nunca dentro de un loop. Selecciona solo las
-  columnas/filas que la tarea necesita, no `SELECT *` por comodidad.
+- **Datos:** evita N+1 — trae relaciones en una sola consulta (`JOIN`/`IN`
+  en SQL directo, o `join`/`select_related`/`include` si el proyecto usa
+  un ORM), nunca con una query por iteración dentro de un loop. Selecciona
+  solo las columnas/filas que la tarea necesita, no `SELECT *` por
+  comodidad.
 - **Validación en los bordes:** valida entrada HTTP, payloads de cola o
   webhook, y variables de entorno una vez, en el borde — no repitas la
   misma validación más adentro donde el tipo o el contrato ya la garantiza.

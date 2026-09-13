@@ -7,9 +7,8 @@
   de memoria legado, cierre de tareas históricas) a los proyectos reales que
   motivaron este diseño — no se ha aplicado ese procedimiento específico
   todavía. Distinto de la propagación de versión: Continuum ya está en uso
-  activo en los 4 proyectos dependientes (`seguimiento-talleres`,
-  `seguimiento-deportes`, `seguimiento-clubes`, `SISETAP`), confirmado
-  2026-09-12 — ver `resumen.md`.
+  activo en 4 proyectos dependientes (nombres omitidos por privacidad —
+  ver el registro interno del equipo), confirmado 2026-09-12.
 - Completar `template_remote` y `template_prefix` en `.ai/config.json` si este
   repositorio debe sincronizarse con otra plantilla mediante
   `tools/continuum sync-template`; hoy el comando funciona, pero imprime

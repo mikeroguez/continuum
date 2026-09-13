@@ -1,45 +1,35 @@
-# Handoff (auto-generado)
+# Handoff
 
-**Fecha:** 2026-09-10 · **Proveedor:** codex · **Rol:** desconocido · **Branch:** develop
+**Fecha:** 2026-09-12 · **Proveedor:** copilot · **Rol:** devops-infraestructura
+**Branch:** mikeroguez-release-1-5-0
 
-> Este borrador se generó automáticamente al cortar la sesión (hook SessionEnd/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
+## Objetivo
 
-## Último commit
-`06583b8 feat(gemini): integra proyección nativa de roles a .gemini/skills/ y directivas de persistencia`
+Preparar la versión 1.5.0 con los cambios posteriores a v1.4.1, documentar la
+publicación y proteger `main` para la colaboración entre mikeroguez y wada8a.
 
-## Cambios sin commitear
-```
-M AGENTS.md
-M AI_COLLABORATION.md
-M tools/_continuum/{__main__.py,doctor.py,roles.py}
-M tests/test_roles.py
-M template/AGENTS.md
-M template/AI_COLLABORATION.md
-M template/tools/_continuum/{__main__.py,doctor.py,roles.py}
-M .github/copilot-instructions.md
-M template/.github/copilot-instructions.md
-M .claude/agents/*.md
-M .gemini/skills/*/SKILL.md
-M .github/agents/*.agent.md
-M template/.github/agents/*.agent.md
-?? .agents/skills/*/SKILL.md
-?? template/.agents/skills/*/SKILL.md
-?? .ai/state/archive/handoffs/2026-09-10T194557Z.md
-```
+## Cambios realizados
 
-## Resumen de diff vs HEAD
-Continuum ahora soporta `tools/continuum roles sync --provider codex` y genera
-skills nativas de Codex en `.agents/skills/<slug>/SKILL.md`. `doctor --fix`
-también puede auto-generarlas cuando `codex` está activo en `.ai/config.json`.
-El generador ahora escribe `description` como cadena YAML quoted para evitar
-frontmatter inválido cuando un mandato contiene `:`.
+- Versiones raíz y plantilla actualizadas a `1.5.0`.
+- CHANGELOG, READMEs y guías de contribución actualizados.
+- Añadido `.github/CODEOWNERS` con `mikeroguez` y `wada8a`.
+- PR abierto: https://github.com/mikeroguez/continuum/pull/6.
+- Protección remota de `main` aplicada con PR obligatorio, CODEOWNERS, una
+  aprobación externa, checks de CI, conversaciones resueltas y sin force-push.
 
-## Objetivo de esta sesión
-Mejorar la configuración de Continuum para aprovechar mejor Codex, alineando
-los roles de `.ai/roles/` con la ubicación oficial de skills de repo que Codex
-carga (`.agents/skills`).
+## Validación
 
-## Siguiente paso recomendado
-Revisar el diff, confirmar que se quieren versionar las nuevas skills generadas
-en `.agents/skills/` y `template/.agents/skills/`, y commitear si el cambio se
-aprueba.
+- `python3 -m unittest discover -s tests -t .` — OK, 113 tests.
+- `python3 tools/continuum doctor` — OK.
+- `python3 tools/continuum release v1.5.0 --dry-run` — OK.
+- `git diff --check` — OK.
+- Checks del PR: `doctor` OK; las dos matrices de unittest estaban en curso al
+  redactar este handoff.
+
+## Pendiente
+
+- Obtener el voto/aprobación de wada8a y resolver cualquier comentario del PR.
+- Tras el merge, ejecutar `continuum export refresh --no-dry-run`,
+  `continuum release v1.5.0 --no-dry-run`, publicar `main`, `export` y el tag,
+  y crear la release de GitHub.
+- Cerrar la tarea `release-1-5-0` después de publicar.

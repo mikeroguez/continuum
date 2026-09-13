@@ -16,9 +16,10 @@ protegida la colaboración sobre `main`.
 - `python3 tools/continuum doctor` — OK.
 - `python3 tools/continuum release v1.5.0 --dry-run` — OK.
 - `git diff --check` — OK.
+- PR abierto: https://github.com/mikeroguez/continuum/pull/6.
+- Protección de `main` aplicada con checks, CODEOWNERS, revisión externa y
+  resolución obligatoria de conversaciones.
 
 ## Pendiente
-- Commit, push de la rama, apertura del PR contra `main`.
-- Aplicar protección remota de `main` después de verificar los nombres de
-  checks de CI.
+- Obtener la aprobación de wada8a y completar el merge protegido.
 - Crear el tag y la publicación GitHub tras la aprobación y merge del PR.

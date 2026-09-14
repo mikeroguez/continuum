@@ -69,6 +69,16 @@ DEFAULT_CONFIG = {
         "archive_dir": ".ai/state/archive/handoffs",
         "stale_after_hours": 24,
     },
+    "doctor": {
+        # Rutas (relativas a la raíz) donde `doctor` nunca busca duplicados
+        # de estado-dev.md/CHANGELOG.md/etc. Los nombres estándar (vendor/,
+        # node_modules/, .git/...) ya se excluyen siempre y no hace falta
+        # listarlos aquí — esto es para vendor con nombre no convencional
+        # (p. ej. un micro-framework que lo llama App/Core/ en vez de
+        # vendor/), donde N CHANGELOG.md de librerías de terceros es
+        # esperado, no un riesgo de divergencia.
+        "ignore_paths": [],
+    },
     "template_remote": "",
     "template_prefix": "",
     "template_branch": "export",

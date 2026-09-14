@@ -36,14 +36,24 @@ def _parse_role(path: Path, pack: str) -> dict:
 
 def discover_roles(root: Path, cfg: dict | None = None) -> list[dict]:
     cfg = cfg or c.load_config(root)
-    roles_dir = root / cfg["roles"]["dir"]
     found = []
+    seen_slugs = set()
+
+    project_roles_dir = root / cfg["roles"]["dir"]
+    cdir = c.continuum_dir(root)
+    continuum_roles_dirs = [cdir / ".ai" / "roles", cdir / "roles"] if cdir != root else []
+    candidate_dirs = [project_roles_dir] + continuum_roles_dirs
+
     for pack in cfg["roles"]["packs"]:
-        pack_dir = roles_dir / pack
-        if not pack_dir.is_dir():
-            continue
-        for role_path in sorted(pack_dir.glob("*.md")):
-            found.append(_parse_role(role_path, pack))
+        for r_dir in candidate_dirs:
+            pack_dir = r_dir / pack
+            if not pack_dir.is_dir():
+                continue
+            for role_path in sorted(pack_dir.glob("*.md")):
+                slug = role_path.stem
+                if slug not in seen_slugs:
+                    seen_slugs.add(slug)
+                    found.append(_parse_role(role_path, pack))
     return found
 
 

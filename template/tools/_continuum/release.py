@@ -79,11 +79,17 @@ def cmd_export_refresh(
         c.err("No se puede ejecutar 'export refresh' con un working tree sucio. Haz commit de tus cambios primero.")
         return 1
 
-    c.info(f"Ejecutando: {cmd_str}")
-    res = c.git("subtree", "split", "--prefix=template", "-b", "export")
+    c.info("Ejecutando: git subtree split --prefix=template")
+    res = c.git("subtree", "split", "--prefix=template")
     if res.returncode == 0:
-        c.ok("Rama 'export' actualizada con éxito a partir de template/.")
-        return 0
+        split_sha = res.stdout.strip().splitlines()[-1].strip()
+        r_br = c.git("branch", "-f", "export", split_sha)
+        if r_br.returncode == 0:
+            c.ok(f"Rama 'export' actualizada con éxito a partir de template/ ({split_sha[:7]}).")
+            return 0
+        else:
+            c.err(f"Error al apuntar la rama export a {split_sha[:7]}:\n{r_br.stderr}")
+            return r_br.returncode
     else:
         c.err(f"Error al actualizar la rama export:\n{res.stderr}")
         return res.returncode

@@ -265,7 +265,8 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
         matches = [p for p in root.rglob(name)
                    if ".git" not in p.parts and "_closed" not in p.parts
                    and "archive" not in p.parts and "node_modules" not in p.parts
-                   and "vendor" not in p.parts and "template" not in p.parts]
+                   and "vendor" not in p.parts and "template" not in p.parts
+                   and ".continuum" not in p.parts]
         if len(matches) > 1:
             rels = ", ".join(str(m.relative_to(root)) for m in matches)
             c.warn(f"{name} aparece {len(matches)} veces: {rels} "

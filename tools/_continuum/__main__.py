@@ -92,7 +92,10 @@ def build_parser() -> argparse.ArgumentParser:
     sy = sub.add_parser("sync", help="Sincronización de la plantilla Continuum en proyectos consumidores.")
     sy.add_argument("--check", action="store_true", help="Audita la configuración y el estado del repositorio.")
     sy.add_argument("--dry-run", action="store_true", default=False, help="Muestra el plan de sincronización.")
-    sy.add_argument("--apply", action="store_true", help="Ejecuta git subtree pull en un working tree limpio.")
+    sy.add_argument("--apply", action="store_true", help="Aplica la actualización de Continuum.")
+    sy.add_argument("--channel", default="", choices=["stable", "dev", "develop"], help="Canal de sincronización (stable -> export, dev -> export-develop).")
+    sy.add_argument("--version", default="", help="Versión o tag específico a sincronizar (ej. v1.5.0).")
+    sy.add_argument("--mode", default="", choices=["vendoring", "subtree"], help="Modo de sincronización (vendoring lineal por defecto, o subtree tradicional).")
     sy.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
 
@@ -129,6 +132,7 @@ def build_parser() -> argparse.ArgumentParser:
     mcmp.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
 
+
     ctx = sub.add_parser("context", help="Muestra el contexto de lectura recomendado para iniciar la sesión.")
     ctx.add_argument("--task", default=None, help="Slug de una tarea para incorporar su contexto específico.")
     ctx.add_argument("--why", action="store_true", help="Muestra la razón de clasificación de cada archivo.")
@@ -157,9 +161,13 @@ def build_parser() -> argparse.ArgumentParser:
     expsub = exp.add_subparsers(dest="export_cmd", required=True)
 
     exp_st = expsub.add_parser("status", help="Muestra la sincronía de la rama export vs template/.")
+    exp_st.add_argument("--target", default="", help="Rama de exportación a inspeccionar (export o export-develop).")
+    exp_st.add_argument("--channel", default="", choices=["stable", "dev", "develop"], help="Canal de exportación.")
     exp_st.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
     exp_rf = expsub.add_parser("refresh", help="Regenera la rama export usando git subtree split.")
+    exp_rf.add_argument("--target", default="", help="Rama de exportación a actualizar (export o export-develop).")
+    exp_rf.add_argument("--channel", default="", choices=["stable", "dev", "develop"], help="Canal de exportación (stable -> export, dev -> export-develop).")
     exp_rf.add_argument("--dry-run", action="store_true", default=True, help="Muestra el plan de regeneración (por defecto).")
     exp_rf.add_argument("--no-dry-run", action="store_false", dest="dry_run", help="Ejecuta git subtree split.")
     exp_rf.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
@@ -250,8 +258,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd in ("sync", "sync-template"):
         check_only = getattr(args, "check", False)
         apply = getattr(args, "apply", False)
+        channel = getattr(args, "channel", "")
+        version = getattr(args, "version", "")
+        mode = getattr(args, "mode", "")
         json_output = getattr(args, "json", False)
-        return bootstrap.cmd_sync(root, check_only=check_only, apply=apply, json_output=json_output)
+        return bootstrap.cmd_sync(
+            root,
+            check_only=check_only,
+            apply=apply,
+            channel=channel,
+            version=version,
+            mode=mode,
+            json_output=json_output,
+        )
 
 
     if args.cmd == "adr":
@@ -296,9 +315,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "export":
         if args.export_cmd == "status":
-            return release.cmd_export_status(root, json_output=args.json)
+            return release.cmd_export_status(
+                root,
+                target=getattr(args, "target", ""),
+                channel=getattr(args, "channel", ""),
+                json_output=args.json,
+            )
         if args.export_cmd == "refresh":
-            return release.cmd_export_refresh(root, dry_run=args.dry_run, json_output=args.json)
+            return release.cmd_export_refresh(
+                root,
+                target=getattr(args, "target", ""),
+                channel=getattr(args, "channel", ""),
+                dry_run=args.dry_run,
+                json_output=args.json,
+            )
 
     if args.cmd == "release":
         return release.cmd_release(root, version=args.version, dry_run=args.dry_run, json_output=args.json)

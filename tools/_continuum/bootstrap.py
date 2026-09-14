@@ -143,17 +143,35 @@ def cmd_sync(
     root: Path,
     check_only: bool = False,
     apply: bool = False,
+    channel: str = "",
+    version: str = "",
+    mode: str = "",
     json_output: bool = False,
 ) -> int:
+    import io
     import json
+    import shutil
+    import subprocess
+    import tarfile
 
     cfg = c.load_config(root)
     remote = cfg.get("template_remote") or ""
     prefix = cfg.get("template_prefix") or ""
-    branch = cfg.get("template_branch") or "export"
+    sync_mode = mode or cfg.get("template_sync_mode") or "vendoring"
 
     if not prefix and (root / ".continuum").is_dir():
         prefix = ".continuum"
+
+    target_branch = cfg.get("template_branch") or "export"
+    if channel in ("dev", "develop"):
+        target_branch = "export-develop"
+    elif channel in ("stable", "main", "release"):
+        target_branch = "export"
+
+    if version:
+        target_ref = version
+    else:
+        target_ref = target_branch
 
     has_remote = bool(remote and not remote.startswith("<"))
     has_prefix = bool(prefix and not prefix.startswith("<"))
@@ -174,9 +192,8 @@ def cmd_sync(
     if not is_clean:
         warnings.append("El working tree de git tiene cambios sin commitear.")
 
-    pull_cmd = f"git subtree pull --prefix={display_prefix} {display_remote} {branch} --squash"
-    push_cmd = f"git subtree push --prefix={display_prefix} {display_remote} {branch}"
-
+    pull_cmd = f"git subtree pull --prefix={display_prefix} {display_remote} {target_ref} --squash"
+    push_cmd = f"git subtree push --prefix={display_prefix} {display_remote} {target_ref}"
 
     if json_output:
         res = {
@@ -184,7 +201,9 @@ def cmd_sync(
             "working_tree_clean": is_clean,
             "remote": remote if has_remote else None,
             "prefix": prefix if has_prefix else None,
-            "branch": branch,
+            "branch": target_branch,
+            "target_ref": target_ref,
+            "sync_mode": sync_mode,
             "pull_command": pull_cmd,
             "push_command": push_cmd,
             "errors": errors,
@@ -197,6 +216,8 @@ def cmd_sync(
         lines = ["== Diagnóstico de Sincronización de Continuum =="]
         lines.append(f"Configuración: {'✓ OK' if len(errors) == 0 else '✗ INCOMPLETA'}")
         lines.append(f"Working Tree: {'✓ Limpio' if is_clean else '⚠️ Cambios pendientes'}")
+        lines.append(f"Modo preferido: {sync_mode}")
+        lines.append(f"Objetivo: {target_ref} en {display_remote}")
         if errors:
             lines.append("\n[Errores]")
             for err_msg in errors:
@@ -218,34 +239,105 @@ def cmd_sync(
             c.err("No se puede aplicar 'sync' con cambios sin commitear. Limpia o haz commit de tus cambios antes de actualizar.")
             return 1
 
-        c.info(f"Ejecutando: {pull_cmd}")
-        res_pull = c.git("subtree", "pull", f"--prefix={prefix}", remote, branch, "--squash")
-        if res_pull.returncode == 0:
-            c.ok("Sincronización completada con éxito.")
-            from . import roles
-            roles.sync(root)
-            return 0
+        if sync_mode == "subtree":
+            c.info(f"Ejecutando (modo subtree): {pull_cmd}")
+            res_pull = c.git("subtree", "pull", f"--prefix={prefix}", remote, target_ref, "--squash")
+            if res_pull.returncode == 0:
+                c.ok("Sincronización completada con éxito.")
+                from . import roles
+                roles.sync(root)
+                return 0
+            else:
+                c.err(f"Error al ejecutar git subtree pull:\n{res_pull.stderr}")
+                return res_pull.returncode
+
+        # Modo vendoring lineal (por defecto)
+        c.info(f"Obteniendo actualización limpia desde {remote} ({target_ref})...")
+        res_fetch = c.git("fetch", remote, target_ref)
+        if res_fetch.returncode != 0:
+            c.err(f"Error al obtener actualización desde el remoto:\n{res_fetch.stderr}")
+            return res_fetch.returncode
+
+        proc = subprocess.Popen(
+            ["git", "archive", "FETCH_HEAD"],
+            cwd=str(root),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        archive_bytes, err = proc.communicate()
+        if proc.returncode != 0:
+            c.err(f"Error al generar archivo desde FETCH_HEAD:\n{err.decode('utf-8', errors='replace')}")
+            return proc.returncode
+
+        dest_dir = root / prefix
+        if dest_dir.is_dir():
+            for child in dest_dir.iterdir():
+                if child.is_dir():
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
         else:
-            c.err(f"Error al ejecutar git subtree pull:\n{res_pull.stderr}")
-            return res_pull.returncode
+            dest_dir.mkdir(parents=True, exist_ok=True)
+
+        with tarfile.open(fileobj=io.BytesIO(archive_bytes)) as tar:
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(path=dest_dir, filter="data")
+            else:
+                tar.extractall(path=dest_dir)
+
+        shim = dest_dir / "tools" / "continuum"
+        if shim.exists():
+            try:
+                shim.chmod(0o755)
+            except OSError:
+                pass
+
+        detected_version = ""
+        ver_file = dest_dir / "VERSION"
+        if ver_file.exists():
+            detected_version = ver_file.read_text(encoding="utf-8").strip()
+
+        cfg["template_remote"] = remote
+        cfg["template_prefix"] = prefix
+        cfg["template_branch"] = target_branch
+        if version:
+            cfg["template_version"] = version
+        elif detected_version:
+            cfg["template_version"] = detected_version
+        cfg["template_sync_mode"] = "vendoring"
+        c.save_config(root, cfg)
+
+        from . import roles
+        roles.sync(root)
+
+        c.ok(f"Sincronización completada con éxito ({prefix}/ actualizado a {detected_version or target_ref}).")
+        c.ok("Historial de git preservado: sin merge commits artificiales ni ramas huérfanas.")
+        c.info("\nSiguiente paso: Revisa 'git status' / 'git diff' y commitea normalmente:")
+        c.info(f"  git add {prefix} .ai/config.json && git commit -m 'chore(continuum): actualiza a {detected_version or target_ref}'")
+        return 0
 
     lines = [
         "== Sincronización de Plantilla Continuum (modo lectura / plan) ==",
         f"Remoto: {remote or '(sin configurar)'}",
-        f"Carpeta prefix: {prefix or '(sin configurar)'}",
+        f"Carpeta destino: {prefix or '(sin configurar)'}",
+        f"Modo: {sync_mode} (lineal, sin merge commits)",
+        f"Canal / Ref: {target_ref}",
         f"Working Tree: {'Limpio' if is_clean else 'Cambios sin commitear'}",
         "",
-        "Para traer actualizaciones:",
-        f"  {pull_cmd}",
+        "Para actualizar limpiamente:",
+        "  continuum sync --apply",
         "",
-        "Para aportar un cambio de vuelta:",
-        f"  {push_cmd}",
+        "Opciones disponibles:",
+        "  continuum sync --channel dev --apply       # Cambia a canal de desarrollo (export-develop)",
+        "  continuum sync --version v1.5.0 --apply    # Fija una versión específica por tag",
+        "",
+        "Alternativa tradicional (git subtree):",
+        f"  {pull_cmd}",
     ]
     if errors:
         lines.append("\n⚠️ Configuración incompleta en .ai/config.json. Completa 'template_remote' y 'template_prefix'.")
-    if not apply:
+    else:
         lines.append("\nUsa 'continuum sync --apply' para ejecutar la actualización directamente si el árbol está limpio.")
 
     print("\n".join(lines))
     return 0
-

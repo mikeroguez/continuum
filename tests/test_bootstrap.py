@@ -89,6 +89,7 @@ class TestInit(unittest.TestCase):
             self.assertTrue((root / "AGENTS.md").exists())
             self.assertTrue((root / "CLAUDE.md").exists())
             self.assertTrue((root / "GEMINI.md").exists())
+            self.assertTrue((root / ".claude" / "settings.json").exists())
             self.assertTrue((root / ".ai" / "config.json").exists())
             self.assertTrue((root / ".ai" / "HANDOFF.md").exists())
             self.assertTrue((root / ".ai" / "state" / "estado-dev.md").exists())

@@ -6,6 +6,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+### Fixed
+
+- `continuum init`: `.claude/settings.json` (hooks `SessionEnd`/`PreCompact` que
+  escriben `.ai/HANDOFF.md` automáticamente, documentados desde v1.x en
+  `AI_COLLABORATION.md` §4) faltaba en `files_to_copy` — se documentaba pero
+  nunca se instalaba en el proyecto consumidor.
+- `continuum doctor --fix --no-dry-run`: repara proyectos ya inicializados
+  antes de este fix instalando `.claude/settings.json` si falta y hay una
+  fuente disponible (`.continuum/.claude/settings.json` o `template/.claude/settings.json`).
+
 ## [1.6.0] - 2026-09-14
 
 ### Added

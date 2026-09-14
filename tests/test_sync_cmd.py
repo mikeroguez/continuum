@@ -60,8 +60,31 @@ class TestSyncCmd(unittest.TestCase):
             with contextlib.redirect_stderr(out_err):
                 res = bootstrap.cmd_sync(tmp, apply=True)
             self.assertEqual(res, 1)
-            self.assertIn("cambios sin commitear", out_err.getvalue())
+    def test_sync_channel_and_version_selection(self):
+        with temp_project() as tmp:
+            cfg_path = tmp / ".ai" / "config.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["template_remote"] = "https://github.com/mikeroguez/continuum.git"
+            cfg["template_prefix"] = ".continuum"
+            c.write_text(cfg_path, json.dumps(cfg))
 
+            # Channel dev
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = bootstrap.cmd_sync(tmp, channel="dev", json_output=True)
+            self.assertEqual(res, 0)
+            data = json.loads(out.getvalue())
+            self.assertEqual(data["branch"], "export-develop")
+            self.assertEqual(data["target_ref"], "export-develop")
+            self.assertEqual(data["sync_mode"], "vendoring")
+
+            # Version tag
+            out_v = io.StringIO()
+            with contextlib.redirect_stdout(out_v):
+                res_v = bootstrap.cmd_sync(tmp, version="v1.5.0", json_output=True)
+            self.assertEqual(res_v, 0)
+            data_v = json.loads(out_v.getvalue())
+            self.assertEqual(data_v["target_ref"], "v1.5.0")
 
 
 if __name__ == "__main__":

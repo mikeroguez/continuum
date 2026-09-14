@@ -39,22 +39,26 @@ flowchart LR
 
 ## Inicio Rápido
 
-> [!NOTE]
-> **Distribución recomendada vía `git subtree`:**
-> Se incorpora como plantilla base utilizando `git subtree` para mantener el proyecto limpio y sincronizable de forma permanente.
+> [!TIP]
+> **Distribución limpia (Vendoring Lineal):**
+> Continuum se instala en `.continuum/` manteniendo el historial de Git 100% limpio y lineal (sin merge commits artificiales ni ramas huérfanas).
 
 ### 1. Instalar en un proyecto existente
 
 ```bash
-# Agregar el remoto de Continuum (una sola vez)
-git remote add continuum https://github.com/mikeroguez/continuum.git
-
-# Montar el motor en .continuum/ usando la rama export
-git subtree add --prefix=.continuum continuum export --squash -m "chore: instala Continuum"
+# Descargar Continuum en .continuum/ vía vendoring limpio (recomendado)
+mkdir -p .continuum
+git fetch https://github.com/mikeroguez/continuum.git export
+git archive FETCH_HEAD | tar -x -C .continuum/
 
 # Inicializar configuración, entrypoints y githooks
 python3 .continuum/tools/continuum init
+
+# Confirmar en tu repositorio (1 commit normal y limpio)
+git add -A && git commit -m "chore: instala Continuum"
 ```
+
+*(Opcional: Si prefieres `git subtree`: `git subtree add --prefix=.continuum https://github.com/mikeroguez/continuum.git export --squash` y luego `python3 .continuum/tools/continuum init`)*
 
 ### 2. Verificar estado
 
@@ -94,10 +98,13 @@ tools/continuum task claim <slug> <responsable>              # Declarar ownershi
 tools/continuum task close <slug>                           # Cerrar y archivar tarea
 ```
 
-### Sincronización y Actualizaciones (`sync`)
+### Sincronización y Canales (`sync`)
 ```bash
-tools/continuum sync --apply           # Sincronizar plantilla con el repositorio remoto
-tools/continuum install-hooks          # Instalar pre-commit githook local
+tools/continuum sync                       # Diagnóstico y plan de actualización
+tools/continuum sync --apply               # Actualiza .continuum/ limpiamente (modo vendoring)
+tools/continuum sync --channel dev --apply # Cambia al canal de desarrollo (export-develop)
+tools/continuum sync --version v1.5.0      # Fija una versión específica por tag
+tools/continuum install-hooks              # Instalar pre-commit githook local
 ```
 
 ### Desinstalación
@@ -116,7 +123,7 @@ toca `docs/architecture/` (ahí viven los ADRs propios del proyecto).
 
 > [!IMPORTANT]
 > **Sin contaminación del historial:**
-> Al usar `--squash`, `git subtree` añade **únicamente 1 commit** al historial del proyecto destino. Ningún historial extenso ni commits individuales de Continuum se mezclan en el árbol principal.
+> Con el modo por defecto de **Vendoring Lineal**, las actualizaciones a `.continuum/` no generan ramas huérfanas ni merge commits artificiales. Tu historial de Git permanece 100% limpio y profesional.
 
 ---
 

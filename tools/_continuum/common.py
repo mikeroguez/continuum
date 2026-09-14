@@ -71,6 +71,9 @@ DEFAULT_CONFIG = {
     },
     "template_remote": "",
     "template_prefix": "",
+    "template_branch": "export",
+    "template_version": "",
+    "template_sync_mode": "vendoring",
 }
 
 
@@ -175,6 +178,11 @@ def load_config(root: Path) -> dict:
         except json.JSONDecodeError as e:
             warn(f"No se pudo leer {cfg_path}: {e}. Usando configuración por defecto.")
     return cfg
+
+
+def save_config(root: Path, cfg: dict) -> None:
+    cfg_path = root / ".ai" / "config.json"
+    write_text(cfg_path, json.dumps(cfg, indent=2) + "\n")
 
 
 def _deep_merge(base: dict, override: dict) -> None:

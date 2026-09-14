@@ -137,6 +137,7 @@ def build_parser() -> argparse.ArgumentParser:
     ctx.add_argument("--task", default=None, help="Slug de una tarea para incorporar su contexto específico.")
     ctx.add_argument("--why", action="store_true", help="Muestra la razón de clasificación de cada archivo.")
     ctx.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
+    ctx.add_argument("--hook", action="store_true", help="Formato para el hook SessionStart de Claude Code: antepone una nota explícita de que este contenido ya se inyectó y no hace falta releerlo con Read.")
 
     tok = sub.add_parser("tokens", help="Muestra el presupuesto estimado de tokens de arranque y memoria.")
     tok.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
@@ -295,7 +296,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
     if args.cmd == "context":
-        return context.cmd_context(root, task_slug=args.task, show_why=args.why, json_output=args.json)
+        return context.cmd_context(root, task_slug=args.task, show_why=args.why, json_output=args.json, hook=args.hook)
 
     if args.cmd == "tokens":
         return context.cmd_tokens(root, json_output=args.json)

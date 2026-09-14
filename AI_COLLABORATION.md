@@ -30,7 +30,7 @@ En este orden, y nada más hasta no tener claro el alcance de la tarea:
 No leas más que eso para empezar. El resto se explora bajo demanda (§3).
 
 En clientes con el hook `SessionStart` instalado (ver `.claude/settings.json`
-de ejemplo), `tools/continuum context` ya empuja el contenido completo de
+de ejemplo), `tools/continuum context --hook` ya empuja el contenido completo de
 este archivo, de `estado-dev.md` y de `HANDOFF.md` al arranque — no depende
 de que decidas abrirlos tú. Los entrypoints por proveedor (`CLAUDE.md`,
 `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`) no se

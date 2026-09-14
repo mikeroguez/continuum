@@ -92,9 +92,10 @@ Nunca renumerar ni reutilizar identificadores de requisitos/tareas ya usados
   comandos) al final.
 - `tools/continuum doctor` reporta el costo estimado en tokens del "paquete de
   arranque" (entrypoints + índice + handoff — los temas NO cuentan porque se
-  cargan bajo demanda). Si supera ~8k tokens con el índice acotado, el
-  problema casi siempre es contenido inferible en un entrypoint (§3.1), no
-  que "haga falta compactar".
+  cargan bajo demanda) contra `STARTUP_TOKENS_LIMIT` (`common.py`, ~3500
+  tokens). Si lo supera con el índice acotado, el problema casi siempre es
+  contenido inferible en un entrypoint (§3.1) — empezando por este mismo
+  archivo, que es el que más pesa —, no que "haga falta compactar".
 - El volcado automático de `continuum context` (§0) no es costo nuevo: ese
   contenido ya se leía, el cambio es que ahora es el hook quien lo entrega en
   vez de depender de un `Read` posterior del agente — por eso queda fuera del

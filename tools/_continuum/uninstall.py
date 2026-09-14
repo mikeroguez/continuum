@@ -99,6 +99,8 @@ def _generated_role_paths(root: Path) -> list[Path]:
 
 def _tier1_paths(root: Path) -> list[Path]:
     paths: list[Path] = []
+    if (root / ".continuum").exists():
+        paths.append(root / ".continuum")
     if (root / "tools" / "continuum").exists():
         paths.append(root / "tools" / "continuum")
     if (root / "tools" / "_continuum").exists():

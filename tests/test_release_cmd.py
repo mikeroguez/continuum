@@ -34,6 +34,22 @@ class TestReleaseCmd(unittest.TestCase):
             self.assertEqual(res, 0)
             self.assertIn("Plan de Actualización de Rama Export", out.getvalue())
 
+    def test_export_target_and_channel_selection(self):
+        with temp_project() as tmp:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = release.cmd_export_refresh(tmp, channel="dev", dry_run=True, json_output=True)
+            self.assertEqual(res, 0)
+            data = json.loads(out.getvalue())
+            self.assertEqual(data["target_branch"], "export-develop")
+
+            out_st = io.StringIO()
+            with contextlib.redirect_stdout(out_st):
+                res_st = release.cmd_export_refresh(tmp, target="export-custom", dry_run=True, json_output=True)
+            self.assertEqual(res_st, 0)
+            data_st = json.loads(out_st.getvalue())
+            self.assertEqual(data_st["target_branch"], "export-custom")
+
     def test_release_validation_and_dry_run(self):
         with temp_project() as tmp:
             # Invalid SemVer

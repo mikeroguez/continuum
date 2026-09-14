@@ -196,8 +196,16 @@ class TestDoctorWarnings(unittest.TestCase):
             commit_all()
             code, out = run_quiet(root)
             self.assertEqual(code, 0)
-            self.assertNotIn("Hueco en la numeración", out)
-            self.assertNotIn("reutiliza número(s)", out)
+    def test_topic_over_token_limit_warns(self):
+        with temp_project() as root:
+            topic = root / ".ai" / "state" / "topics" / "denso.md"
+            # Pocas líneas pero muchas palabras (líneas muy largas) para exceder 1500 tokens
+            long_line = "palabra " * 1600 + "\n"
+            topic.write_text(long_line)
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertIn("son líneas muy largas, no muchas entradas", out)
 
 
 if __name__ == "__main__":

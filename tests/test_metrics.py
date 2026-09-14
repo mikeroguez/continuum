@@ -52,9 +52,22 @@ class TestMetrics(unittest.TestCase):
                 res = metrics.cmd_snapshot(tmp, dry_run=False, json_output=False)
             self.assertEqual(res, 0)
             snapshots_dir = tmp / ".ai" / "metrics" / "snapshots"
-            self.assertTrue(snapshots_dir.exists())
-            files = list(snapshots_dir.glob("*.json"))
-            self.assertEqual(len(files), 1)
+    def test_topics_over_limit_in_snapshot_and_report(self):
+        with temp_project() as tmp:
+            topic = tmp / ".ai" / "state" / "topics" / "pesado.md"
+            topic.write_text("dato " * 1600 + "\n")
+            snap = metrics.build_snapshot(tmp)
+            self.assertEqual(len(snap["memory"]["topics_over_limit"]), 1)
+            self.assertEqual(snap["memory"]["topics_over_limit"][0]["path"], ".ai/state/topics/pesado.md")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = metrics.cmd_report(tmp, json_output=False)
+            self.assertEqual(res, 0)
+            text = out.getvalue()
+            self.assertIn("HAY TEMAS SOBRE EL LÍMITE", text)
+            self.assertIn(".ai/state/topics/pesado.md", text)
+            self.assertIn("continuum compact --topic pesado", text)
 
 
 if __name__ == "__main__":

@@ -8,8 +8,28 @@ from pathlib import Path
 from . import common as c, doctor
 
 
-def cmd_export_status(root: Path, json_output: bool = False) -> int:
-    res_branch = c.git("branch", "--list", "export")
+def _detect_export_target(root: Path, target: str = "", channel: str = "") -> str:
+    if target:
+        return target
+    if channel in ("dev", "develop"):
+        return "export-develop"
+    if channel in ("stable", "main", "release"):
+        return "export"
+    res = c.git("rev-parse", "--abbrev-ref", "HEAD")
+    current_branch = res.stdout.strip()
+    if current_branch == "main":
+        return "export"
+    return "export-develop"
+
+
+def cmd_export_status(
+    root: Path,
+    target: str = "",
+    channel: str = "",
+    json_output: bool = False,
+) -> int:
+    target_branch = _detect_export_target(root, target, channel)
+    res_branch = c.git("branch", "--list", target_branch)
     has_export_branch = bool(res_branch.stdout.strip())
 
     status_str = c.git("status", "--porcelain").stdout.strip()
@@ -17,11 +37,12 @@ def cmd_export_status(root: Path, json_output: bool = False) -> int:
 
     in_sync = False
     if has_export_branch:
-        tree_export = c.git("rev-parse", "export^{tree}").stdout.strip()
+        tree_export = c.git("rev-parse", f"{target_branch}^{{tree}}").stdout.strip()
         tree_template = c.git("rev-parse", "HEAD:template").stdout.strip()
         in_sync = bool(tree_export and tree_template and tree_export == tree_template)
 
     data = {
+        "target_branch": target_branch,
         "export_branch_exists": has_export_branch,
         "working_tree_clean": is_clean,
         "in_sync_with_template": in_sync,
@@ -31,13 +52,13 @@ def cmd_export_status(root: Path, json_output: bool = False) -> int:
         print(json.dumps(data, indent=2))
         return 0 if (has_export_branch and in_sync) else 1
 
-    lines = ["== Estado de Rama Export (meta-Continuum) =="]
-    lines.append(f"Rama 'export': {'✓ Presente' if has_export_branch else '✗ Ausente'}")
+    lines = [f"== Estado de Rama Export ({target_branch}) =="]
+    lines.append(f"Rama '{target_branch}': {'✓ Presente' if has_export_branch else '✗ Ausente'}")
     lines.append(f"Sincronía con template/: {'✓ En sincronía' if in_sync else '⚠️ Requiere refresh'}")
     lines.append(f"Working Tree: {'✓ Limpio' if is_clean else '⚠️ Cambios pendientes'}")
 
     if not has_export_branch or not in_sync:
-        lines.append("\nSiguiente acción: Ejecuta 'continuum export refresh' para actualizar la rama export.")
+        lines.append(f"\nSiguiente acción: Ejecuta 'continuum export refresh --target {target_branch}' para actualizarla.")
 
     print("\n".join(lines))
     return 0 if (has_export_branch and in_sync) else 1
@@ -45,16 +66,20 @@ def cmd_export_status(root: Path, json_output: bool = False) -> int:
 
 def cmd_export_refresh(
     root: Path,
+    target: str = "",
+    channel: str = "",
     dry_run: bool = True,
     json_output: bool = False,
 ) -> int:
-    cmd_str = "git subtree split --prefix=template -b export"
+    target_branch = _detect_export_target(root, target, channel)
+    cmd_str = f"git subtree split --prefix=template -b {target_branch}"
 
     status_str = c.git("status", "--porcelain").stdout.strip()
     is_clean = (status_str == "")
 
     if json_output:
         res = {
+            "target_branch": target_branch,
             "dry_run": dry_run,
             "working_tree_clean": is_clean,
             "command": cmd_str,
@@ -64,13 +89,14 @@ def cmd_export_refresh(
 
     if dry_run:
         lines = [
-            "== Plan de Actualización de Rama Export (modo dry-run) ==",
+            f"== Plan de Actualización de Rama Export '{target_branch}' (modo dry-run) ==",
             f"Working Tree: {'Limpio' if is_clean else 'Cambios pendientes'}",
+            f"Destino: Rama '{target_branch}'",
             "",
             "Comando a ejecutar:",
             f"  {cmd_str}",
             "",
-            "Usa 'continuum export refresh --no-dry-run' para ejecutar la regeneración de la rama export.",
+            f"Usa 'continuum export refresh --target {target_branch} --no-dry-run' para ejecutar la regeneración.",
         ]
         print("\n".join(lines))
         return 0
@@ -79,13 +105,19 @@ def cmd_export_refresh(
         c.err("No se puede ejecutar 'export refresh' con un working tree sucio. Haz commit de tus cambios primero.")
         return 1
 
-    c.info(f"Ejecutando: {cmd_str}")
-    res = c.git("subtree", "split", "--prefix=template", "-b", "export")
+    c.info(f"Ejecutando: git subtree split --prefix=template (hacia {target_branch})")
+    res = c.git("subtree", "split", "--prefix=template")
     if res.returncode == 0:
-        c.ok("Rama 'export' actualizada con éxito a partir de template/.")
-        return 0
+        split_sha = res.stdout.strip().splitlines()[-1].strip()
+        r_br = c.git("branch", "-f", target_branch, split_sha)
+        if r_br.returncode == 0:
+            c.ok(f"Rama '{target_branch}' actualizada con éxito a partir de template/ ({split_sha[:7]}).")
+            return 0
+        else:
+            c.err(f"Error al apuntar la rama {target_branch} a {split_sha[:7]}:\n{r_br.stderr}")
+            return r_br.returncode
     else:
-        c.err(f"Error al actualizar la rama export:\n{res.stderr}")
+        c.err(f"Error al actualizar la rama {target_branch}:\n{res.stderr}")
         return res.returncode
 
 

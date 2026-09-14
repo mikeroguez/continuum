@@ -6,39 +6,31 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
-## [1.5.0] - 2026-09-12
+## [1.5.0] - 2026-09-14
 
 ### Added
 
-- `continuum task start <slug> --worktree` crea la tarea y aísla el
-  directorio de trabajo en un `git worktree` propio, para agentes o
-  personas trabajando en paralelo sobre el mismo repositorio (ver
-  ADR-011).
-- `continuum doctor` advierte cuando detecta varias tareas activas sin
-  evidencia de aislamiento por worktree.
-- `continuum doctor` detecta marcadores de conflicto de git sin resolver
-  en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (en
-  `docs/decision-log.md` y en `docs/architecture/ADR-*.md`) — ver ADR-012.
-- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente
-  número libre, en la convención que el proyecto ya use.
-- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 que
-  `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md`
-  (ADR-010) cuando queda desactualizada, sin tocar su prosa curada.
-- `docs/metodologia-medicion.md`: protocolo de medición antes/después de
-  consumo real de tokens/tool-calls en sesiones de agente (opt-in, no
-  paso obligatorio de ningún flujo).
-- Roles `backend`/`frontend`/`devops-infraestructura`: sección "Estándares
-  de código por defecto" con guías concretas y específicas del dominio
-  (evitar N+1, abstraer solo con evidencia, disciplina de comentarios,
-  documentación mínima); `frontend` además incorpora Diseño Atómico
-  (átomos/moléculas/organismos/templates/páginas) para organizar
-  componentes. Rol `qa`: "bien" en software ahora incluye esos estándares.
-- `VERSION` en la raíz como fuente única de la versión instalada;
-  `continuum version` / `--version` la reporta, y `continuum release
-  --no-dry-run` la actualiza sola.
-- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de
-  seguridad crecientes (mecanismo / protocolo-config / memoria del
-  proyecto) — nunca commitea por sí solo, nunca toca `docs/architecture/`.
+- `ADR-013`: Distribución oficial en subcarpeta (`.continuum/`) desacoplando el motor/catálogo de la memoria viva del proyecto.
+- `ADR-014`: Vendoring Lineal como modo de distribución por defecto, canales `export`/`export-develop` y selección de versiones por tag.
+- `continuum init`: comando para inicializar el launcher shim (`tools/continuum`), entrypoints de IA, memoria inicial (`.ai/`) y githooks.
+- `tools/_continuum/common.py`: constante `STARTUP_TOKENS_LIMIT = 3500` y límite `max_topic_tokens = 1500` en `DEFAULT_CONFIG["estado_dev"]`.
+- `doctor.py`: verificación independiente de líneas Y tokens por tema de memoria, advirtiendo sobre párrafos densos o líneas largas.
+- `metrics.py`: nuevo indicador de eficiencia `topics_within_budget` y reporte de temas que exceden el límite de tokens recomendando compactación.
+- Soporte en `roles.py` y `doctor.py` para descubrir tanto roles upstream en `.continuum/` como roles personalizados del proyecto en `.ai/roles/`.
+- `continuum task start <slug> --worktree` crea la tarea y aísla el directorio de trabajo en un `git worktree` propio (ADR-011).
+- `continuum doctor` advierte cuando detecta varias tareas activas sin aislamiento por worktree.
+- `continuum doctor` detecta marcadores de conflicto de git sin resolver en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (ADR-012).
+- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente número libre.
+- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 de `.github/copilot-instructions.md`.
+- `docs/metodologia-medicion.md`: protocolo de medición antes/después de consumo real de tokens/tool-calls en sesiones de agente.
+- Roles `backend`/`frontend`/`devops-infraestructura`: estándares de código por defecto y Diseño Atómico.
+- `VERSION` en la raíz como fuente única de la versión instalada; `continuum version` / `--version` la reporta.
+- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de seguridad crecientes.
+
+### Changed
+
+- `README.md` y `README.en.md`: instrucciones de instalación y sincronización actualizadas con vendoring lineal y canales `export`/`export-develop`.
+- `continuum sync`: vendoring lineal por defecto con extracción limpia vía `git archive` sin merge commits en el proyecto anfitrión, soporte para `--channel` y `--version`, y fallback a subtree.
 - `continuum roles sync` poda subagentes generados que ya no corresponden
   a ningún rol activo del catálogo (detectado por huella de contenido, no
   por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber

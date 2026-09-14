@@ -265,7 +265,8 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
         matches = [p for p in root.rglob(name)
                    if ".git" not in p.parts and "_closed" not in p.parts
                    and "archive" not in p.parts and "node_modules" not in p.parts
-                   and "vendor" not in p.parts and "template" not in p.parts]
+                   and "vendor" not in p.parts and "template" not in p.parts
+                   and ".continuum" not in p.parts]
         if len(matches) > 1:
             rels = ", ".join(str(m.relative_to(root)) for m in matches)
             c.warn(f"{name} aparece {len(matches)} veces: {rels} "
@@ -334,15 +335,23 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
     # 5. Roles activos
     section("Roles")
     roles_dir = root / cfg["roles"]["dir"]
+    cdir = c.continuum_dir(root)
+    continuum_roles_dirs = [cdir / ".ai" / "roles", cdir / "roles"] if cdir != root else []
+    candidate_dirs = [roles_dir] + continuum_roles_dirs
+
     for pack in cfg["roles"]["packs"]:
-        pack_dir = roles_dir / pack
-        if not pack_dir.is_dir() or not any(pack_dir.glob("*.md")):
+        pack_roles = []
+        for r_dir in candidate_dirs:
+            p_dir = r_dir / pack
+            if p_dir.is_dir():
+                pack_roles.extend(list(p_dir.glob("*.md")))
+        if not pack_roles:
             c.warn(f"Pack de roles '{pack}' declarado en .ai/config.json pero "
                    f"no existe o está vacío en {roles_dir.relative_to(root)}/.")
             warnings += 1
         else:
-            n = len(list(pack_dir.glob("*.md")))
-            ok(f"Pack '{pack}': {n} rol(es).")
+            unique_roles = {p.stem for p in pack_roles}
+            ok(f"Pack '{pack}': {len(unique_roles)} rol(es).")
 
     # 6. Tareas abandonadas
     section("Tareas activas")

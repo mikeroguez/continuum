@@ -71,6 +71,9 @@ DEFAULT_CONFIG = {
     },
     "template_remote": "",
     "template_prefix": "",
+    "template_branch": "export",
+    "template_version": "",
+    "template_sync_mode": "vendoring",
 }
 
 
@@ -87,11 +90,41 @@ def date_str() -> str:
 
 
 def read_version(root: Path) -> str | None:
-    """Lee `VERSION` en la raíz — fuente única de la versión instalada,
-    actualizada por `continuum release --no-dry-run`. None si el proyecto
-    instaló Continuum antes de que este archivo existiera."""
-    text = read_text(root / "VERSION").strip()
+    """Lee `VERSION` en la raíz o en `.continuum/VERSION`."""
+    p = root / "VERSION"
+    if not p.exists():
+        p = root / ".continuum" / "VERSION"
+    text = read_text(p).strip()
     return text or None
+
+
+def continuum_dir(root: Path) -> Path:
+    """Devuelve el directorio base donde vive el código/catálogo de Continuum.
+
+    Si el proyecto instaló Continuum mediante git subtree en `.continuum/`,
+    devuelve `root / ".continuum"`. Si es un repositorio autoalojado o
+    instalación en raíz, devuelve `root`.
+    """
+    c_dir = root / ".continuum"
+    if c_dir.is_dir():
+        return c_dir
+    return root
+
+
+def templates_dir(root: Path) -> Path:
+    """Ruta del directorio de plantillas (.ai/templates/).
+
+    Respeta plantillas locales del proyecto en `.ai/templates/`. Si no existen,
+    recurre a las plantillas del catálogo de Continuum en `.continuum/`.
+    """
+    local_tpl = root / ".ai" / "templates"
+    if local_tpl.is_dir():
+        return local_tpl
+    cdir = continuum_dir(root)
+    for sub in [cdir / ".ai" / "templates", cdir / "templates"]:
+        if sub.is_dir():
+            return sub
+    return local_tpl
 
 
 def repo_root() -> Path:
@@ -145,6 +178,11 @@ def load_config(root: Path) -> dict:
         except json.JSONDecodeError as e:
             warn(f"No se pudo leer {cfg_path}: {e}. Usando configuración por defecto.")
     return cfg
+
+
+def save_config(root: Path, cfg: dict) -> None:
+    cfg_path = root / ".ai" / "config.json"
+    write_text(cfg_path, json.dumps(cfg, indent=2) + "\n")
 
 
 def _deep_merge(base: dict, override: dict) -> None:

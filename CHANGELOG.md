@@ -37,6 +37,21 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   arranque en todo proyecto que usa Continuum — el ahorro aplica a cada
   sesión de cada proyecto, no solo a este repositorio.
 
+### Added
+
+- `continuum context --hook`: nuevo flag para el hook `SessionStart` de
+  Claude Code — antepone una nota explícita de que el contenido ya se
+  inyectó al arranque, para que el agente no vuelva a leer
+  `AI_COLLABORATION.md`/`HANDOFF.md`/`estado-dev.md` con `Read`.
+  `template/.claude/settings.json` (lo que se distribuye a proyectos
+  consumidores) nunca había tenido el hook `SessionStart` conectado pese a
+  que `AI_COLLABORATION.md` §0 lo documenta desde hace versiones — sí
+  existía en la copia autoalojada de este mismo repositorio
+  (`.claude/settings.json`, sin el flag `--hook`), pero nunca se
+  sincronizó al `template/`. `CLAUDE.md` actualizado en ambas copias para
+  indicar explícitamente que no hace falta releer con `Read` lo que el
+  hook ya inyectó.
+
 ## [1.6.0] - 2026-09-14
 
 ### Added

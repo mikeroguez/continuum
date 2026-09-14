@@ -126,7 +126,16 @@ def build_context(root: Path, task_slug: str | None = None) -> dict:
     }
 
 
-def format_human_context(data: dict, show_why: bool = False) -> str:
+HOOK_PREAMBLE = (
+    "Inyectado automáticamente por el hook SessionStart. Esto YA es tu\n"
+    "contexto de arranque — no necesitas leer AI_COLLABORATION.md,\n"
+    ".ai/HANDOFF.md ni .ai/state/estado-dev.md con Read/cat, ya están\n"
+    "completos abajo. Si alguno cambia a media sesión y necesitas releerlo,\n"
+    "sí usa Read en ese momento — esta inyección es solo del arranque."
+)
+
+
+def format_human_context(data: dict, show_why: bool = False, hook: bool = False) -> str:
     categories = {
         "mandatory": "OBLIGATORIOS (Cargar siempre al inicio)",
         "recommended": "RECOMENDADOS (Relevantes para la tarea)",
@@ -138,6 +147,8 @@ def format_human_context(data: dict, show_why: bool = False) -> str:
         grouped.setdefault(item["category"], []).append(item)
 
     lines = ["== Contexto Sugerido de Continuum =="]
+    if hook:
+        lines.append(HOOK_PREAMBLE)
     if data.get("task"):
         lines.append(f"Tarea activa: {data['task']}")
     lines.append(f"Presupuesto inicial estimado: ~{data['startup_tokens']} tokens\n")
@@ -222,7 +233,7 @@ def format_human_tokens(report: dict) -> str:
     return "\n".join(lines)
 
 
-def cmd_context(root: Path, task_slug: str | None = None, show_why: bool = False, json_output: bool = False) -> int:
+def cmd_context(root: Path, task_slug: str | None = None, show_why: bool = False, json_output: bool = False, hook: bool = False) -> int:
     try:
         data = build_context(root, task_slug=task_slug)
     except ValueError as e:
@@ -232,7 +243,7 @@ def cmd_context(root: Path, task_slug: str | None = None, show_why: bool = False
     if json_output:
         print(json.dumps(data, indent=2))
     else:
-        print(format_human_context(data, show_why=show_why))
+        print(format_human_context(data, show_why=show_why, hook=hook))
 
     return 0
 

@@ -99,5 +99,40 @@ class TestInit(unittest.TestCase):
             self.assertEqual(cfg["template_prefix"], ".continuum")
 
 
+class TestClaudeSettingsShape(unittest.TestCase):
+    """`.claude/settings.json` no tiene tests unitarios de comportamiento
+    (Claude Code interpreta el JSON, no este repo) — esto solo valida que
+    el archivo distribuido sea JSON válido y tenga los 3 hooks esperados
+    con el comando correcto, para no depender solo de probarlo a mano
+    contra un proyecto real cada vez que alguien lo edite."""
+
+    def _load(self):
+        return json.loads((TEMPLATE_DIR / ".claude" / "settings.json").read_text(encoding="utf-8"))
+
+    def _hook_command(self, settings: dict, event: str) -> str:
+        return settings["hooks"][event][0]["hooks"][0]["command"]
+
+    def test_is_valid_json_with_expected_hook_events(self):
+        settings = self._load()
+        self.assertIn("SessionStart", settings["hooks"])
+        self.assertIn("SessionEnd", settings["hooks"])
+        self.assertIn("PreCompact", settings["hooks"])
+        # Nunca "Stop": dispara en cada turno, no solo al cerrar sesión.
+        self.assertNotIn("Stop", settings["hooks"])
+
+    def test_session_start_calls_context_hook_flag(self):
+        settings = self._load()
+        cmd = self._hook_command(settings, "SessionStart")
+        self.assertIn("tools/continuum", cmd)
+        self.assertIn("context", cmd)
+        self.assertIn("--hook", cmd)
+
+    def test_session_end_and_precompact_call_handoff_auto(self):
+        settings = self._load()
+        for event in ("SessionEnd", "PreCompact"):
+            cmd = self._hook_command(settings, event)
+            self.assertIn("handoff --auto", cmd)
+
+
 if __name__ == "__main__":
     unittest.main()

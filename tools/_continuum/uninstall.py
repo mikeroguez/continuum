@@ -55,6 +55,7 @@ TIER2_PROTOCOL_PATHS = [
     "docs/guia-para-agentes.md",
     "docs/guide-for-agents.md",
     "docs/metodologia-medicion.md",
+    "docs/trabajo-en-equipo.md",
     "docs/using-continuum.md",
     "VERSION",
 ]

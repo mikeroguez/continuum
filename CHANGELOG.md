@@ -26,6 +26,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   disparado al cortar sesión (o cualquier corrida manual de `--auto`)
   perdía ese contenido sin avisar, aunque quedara archivado en
   `.ai/state/archive/handoffs/`.
+- `AI_COLLABORATION.md` §3 seguía citando "~8k tokens" como techo del
+  paquete de arranque; el código unificó ese número a `STARTUP_TOKENS_LIMIT
+  = 3500` (`common.py`) en un release anterior sin actualizar la prosa.
+- `AI_COLLABORATION.md` recortado de ~2731 a ~2139 tokens estimados (-22%):
+  §6 "Trabajo en equipo" (solo relevante con varias personas/agentes en
+  paralelo) se movió completa a
+  [`docs/trabajo-en-equipo.md`](docs/trabajo-en-equipo.md), y se ajustó la
+  prosa no accionable de §3 y §8. Es el archivo que más pesa del paquete de
+  arranque en todo proyecto que usa Continuum — el ahorro aplica a cada
+  sesión de cada proyecto, no solo a este repositorio.
 
 ## [1.6.0] - 2026-09-14
 

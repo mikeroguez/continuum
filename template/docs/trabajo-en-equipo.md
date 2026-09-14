@@ -1,0 +1,13 @@
+# Trabajo en equipo (múltiples personas o agentes)
+
+> Detalle referenciado desde `AI_COLLABORATION.md` §6 — solo aplica cuando
+> varias personas o agentes trabajan en el mismo repositorio a la vez. Si
+> estás trabajando solo/a, no necesitas leer esto.
+
+- **Aislamiento por tarea**: Cada desarrollador o sesión trabaja en su subcarpeta `.ai/tasks/<slug>/`. Al estar aisladas por slug, los merges entre ramas de Git no producen conflictos en los archivos de tarea.
+- **Visibilidad y ownership**: `continuum task claim <slug> <owner>` marca quién está trabajando en una tarea para dar visibilidad al resto del equipo en `continuum status` o `continuum task list`.
+- **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto` — nunca dejar marcadores de conflicto sin resolver commiteados; `tools/continuum doctor` lo trata como problema crítico si se te escapa (ver `docs/investigacion-2026.md` §10: se evaluó y descartó resolver esto con una estrategia de merge automática, porque descartaría contenido en silencio sin que nadie lo note).
+- **Cierre de tarea en PR**: Antes de hacer merge, la tarea se cierra con `continuum task close <slug>`, lo que traslada la carpeta a `.ai/tasks/_closed/<slug>/` para preservar la evidencia de pruebas en el historial de Git sin colisionar con las tareas activas de otros.
+- **Prefijo de commit**: Usar el slug de la tarea cuando exista: `[pagos-recurrentes] feat: agrega validación de monto mínimo` para facilitar búsquedas con `git log --grep`.
+- **Concurrencia local (`git worktree`)**: Si dos personas o agentes (Claude Code, Codex, Copilot, etc.) trabajan localmente al mismo tiempo en el mismo repo, usa `continuum task start <slug> --worktree` para crear la tarea y aislar el directorio de trabajo en un paso (por debajo corre `git worktree add ../<repo>-<slug> -b task/<slug>`). También puedes correr ese comando de git a mano si prefieres controlar la ruta o el nombre de rama. Regla dura: un agente = un worktree = una tarea — nunca dos procesos de agente escribiendo en el mismo directorio de trabajo a la vez.
+- **Nunca uses `git stash` con otros worktrees activos**: la lista de stash es del repositorio completo, no de cada worktree (`git stash list` es global) — un stash hecho en un worktree puede terminar aplicándose por error en otro. Si necesitas guardar trabajo a medias en un worktree, haz un commit local (p. ej. `wip: ...`) en vez de stash.

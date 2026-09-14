@@ -138,6 +138,21 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "fn": lambda: roles.sync(root, provider="claude"),
             })
 
+        settings_path = root / ".claude" / "settings.json"
+        source_dir = c.continuum_dir(root)
+        if source_dir == root:
+            source_dir = root / "template"
+        settings_src = source_dir / ".claude" / "settings.json"
+        if not settings_path.exists() and settings_src.exists():
+            actions.append({
+                "id": "install_claude_settings",
+                "desc": "Instalar .claude/settings.json (hooks SessionEnd/PreCompact "
+                        "que escriben .ai/HANDOFF.md automáticamente — documentado en "
+                        "AI_COLLABORATION.md §4 pero antes solo lo copiaba `continuum init`, "
+                        "nunca `doctor --fix` en proyectos ya inicializados)",
+                "fn": lambda: c.write_text(settings_path, c.read_text(settings_src)),
+            })
+
     if "copilot" in cfg["providers"]:
         agents_dir = root / ".github" / "agents"
         if not agents_dir.exists() or not list(agents_dir.glob("*.agent.md")):

@@ -69,6 +69,7 @@ def init(root: Path, force: bool = False) -> int:
             "CLAUDE.md",
             "GEMINI.md",
             ".github/copilot-instructions.md",
+            ".claude/settings.json",
         ]
         for rel in files_to_copy:
             target = root / rel

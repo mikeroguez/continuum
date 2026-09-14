@@ -21,6 +21,12 @@ ADR_FILENAME_RE = re.compile(r"^ADR-(\d+)")
 GENERATED_ROLE_MARKER = "del catálogo de Continuum"
 ROLE_NAME_RE = re.compile(r"^name:\s*(\S+)\s*$", re.MULTILINE)
 
+# Techo de tokens del "paquete de arranque" (archivos que toda sesión nueva
+# carga siempre). Un solo número compartido por `doctor` y `metrics` — antes
+# vivían por separado (8000 en doctor.py, 3500 en metrics.py) y podían
+# contradecirse para el mismo repositorio.
+STARTUP_TOKENS_LIMIT = 3500
+
 CANONICAL_FILE = "AI_COLLABORATION.md"
 PROVIDER_FILES = {
     "claude": "CLAUDE.md",
@@ -39,6 +45,11 @@ DEFAULT_CONFIG = {
         "max_index_lines": 80,
         "topics_dir": ".ai/state/topics",
         "max_topic_lines": 300,
+        # Complementa max_topic_lines: un tema con pocas líneas pero muy
+        # largas (párrafos sin cortar, listas densas) puede pesar miles de
+        # tokens sin que el conteo de líneas lo note. Ver ADR sobre esto en
+        # docs/decision-log.md.
+        "max_topic_tokens": 1500,
     },
     "roles": {
         # Catálogo de "personas" que una sesión puede adoptar para una

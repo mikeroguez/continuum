@@ -24,6 +24,89 @@ exit 0
 """
 
 
+CONTINUUM_SHIM = """#!/bin/sh
+# Continuum launcher shim — delega al motor instalado en .continuum/
+ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if [ -f "$ROOT_DIR/.continuum/tools/continuum" ]; then
+  exec python3 "$ROOT_DIR/.continuum/tools/continuum" "$@"
+elif [ -f "$ROOT_DIR/tools/_continuum/__main__.py" ]; then
+  exec python3 "$ROOT_DIR/tools/continuum" "$@"
+else
+  echo "No se encontró instalación de Continuum en .continuum/ o tools/" >&2
+  exit 1
+fi
+"""
+
+
+def init(root: Path, force: bool = False) -> int:
+    """Inicializa un proyecto consumidor configurando shim, entrypoints y githooks."""
+    import json
+    from . import roles
+
+    cdir = c.continuum_dir(root)
+    shim_path = root / "tools" / "continuum"
+    shim_path.parent.mkdir(parents=True, exist_ok=True)
+    if not shim_path.exists() or force or cdir != root:
+        c.write_text(shim_path, CONTINUUM_SHIM)
+        shim_path.chmod(0o755)
+        c.ok(f"Launcher shim configurado en {shim_path.relative_to(root)}")
+
+    # Archivos canónicos y entrypoints a copiar si no existen
+    source_dir = cdir if cdir != root else (root / "template")
+    if source_dir.exists():
+        files_to_copy = [
+            "AI_COLLABORATION.md",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "GEMINI.md",
+            ".github/copilot-instructions.md",
+        ]
+        for rel in files_to_copy:
+            target = root / rel
+            src = source_dir / rel
+            if src.exists() and (not target.exists() or force):
+                c.write_text(target, c.read_text(src))
+                c.ok(f"Creado {rel}")
+
+    # Inicializar .ai/config.json si falta
+    cfg_path = root / ".ai" / "config.json"
+    if not cfg_path.exists():
+        new_cfg = json.loads(json.dumps(c.DEFAULT_CONFIG))
+        new_cfg["project"] = root.name
+        new_cfg["template_remote"] = "https://github.com/mikeroguez/continuum.git"
+        new_cfg["template_prefix"] = ".continuum"
+        c.write_text(cfg_path, json.dumps(new_cfg, indent=2) + "\n")
+        c.ok("Creado .ai/config.json con prefijo .continuum")
+    else:
+        # Asegurar template_prefix si .continuum existe
+        cfg = c.load_config(root)
+        if (root / ".continuum").is_dir() and cfg.get("template_prefix") != ".continuum":
+            cfg["template_prefix"] = ".continuum"
+            c.write_text(cfg_path, json.dumps(cfg, indent=2) + "\n")
+
+    # Inicializar memoria viva mínima
+    handoff_path = root / ".ai" / "HANDOFF.md"
+    if not handoff_path.exists():
+        src_handoff = source_dir / ".ai" / "HANDOFF.md" if source_dir.exists() else None
+        content = c.read_text(src_handoff) if src_handoff and src_handoff.exists() else "# Handoff\n\nSin sesiones previas.\n"
+        c.write_text(handoff_path, content)
+        c.ok("Creado .ai/HANDOFF.md")
+
+    estado_path = root / ".ai" / "state" / "estado-dev.md"
+    if not estado_path.exists():
+        c.write_text(estado_path, f"# {root.name} — índice de memoria\n\n## Temas\n\n- **Resumen y stack** → `.ai/state/topics/resumen.md`\n")
+        c.ok("Creado .ai/state/estado-dev.md")
+
+    (root / ".ai" / "state" / "topics").mkdir(parents=True, exist_ok=True)
+    (root / ".ai" / "tasks" / "_closed").mkdir(parents=True, exist_ok=True)
+
+    install_hooks(root)
+    roles.sync(root)
+
+    c.ok("Continuum inicializado con éxito en el proyecto.")
+    return 0
+
+
 def install_hooks(root: Path) -> int:
     hooks_dir = root / ".githooks"
     hooks_dir.mkdir(parents=True, exist_ok=True)
@@ -59,6 +142,9 @@ def cmd_sync(
     remote = cfg.get("template_remote") or ""
     prefix = cfg.get("template_prefix") or ""
     branch = cfg.get("template_branch") or "export"
+
+    if not prefix and (root / ".continuum").is_dir():
+        prefix = ".continuum"
 
     has_remote = bool(remote and not remote.startswith("<"))
     has_prefix = bool(prefix and not prefix.startswith("<"))
@@ -127,6 +213,8 @@ def cmd_sync(
         res_pull = c.git("subtree", "pull", f"--prefix={prefix}", remote, branch, "--squash")
         if res_pull.returncode == 0:
             c.ok("Sincronización completada con éxito.")
+            from . import roles
+            roles.sync(root)
             return 0
         else:
             c.err(f"Error al ejecutar git subtree pull:\n{res_pull.stderr}")

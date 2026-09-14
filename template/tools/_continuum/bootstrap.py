@@ -24,17 +24,26 @@ exit 0
 """
 
 
-CONTINUUM_SHIM = """#!/bin/sh
-# Continuum launcher shim — delega al motor instalado en .continuum/
-ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [ -f "$ROOT_DIR/.continuum/tools/continuum" ]; then
-  exec python3 "$ROOT_DIR/.continuum/tools/continuum" "$@"
-elif [ -f "$ROOT_DIR/tools/_continuum/__main__.py" ]; then
-  exec python3 "$ROOT_DIR/tools/continuum" "$@"
-else
-  echo "No se encontró instalación de Continuum en .continuum/ o tools/" >&2
-  exit 1
-fi
+CONTINUUM_SHIM = """#!/usr/bin/env python3
+\"\"\"Punto de entrada ejecutable: `tools/continuum <comando>`.\"\"\"
+import sys
+from pathlib import Path
+
+def main():
+    root_dir = Path(__file__).resolve().parent.parent
+    dot_continuum = root_dir / ".continuum" / "tools"
+    if dot_continuum.is_dir():
+        sys.path.insert(0, str(dot_continuum))
+        from _continuum.__main__ import main as continuum_main
+        return continuum_main()
+
+    local_tools = Path(__file__).resolve().parent
+    sys.path.insert(0, str(local_tools))
+    from _continuum.__main__ import main as continuum_main
+    return continuum_main()
+
+if __name__ == "__main__":
+    sys.exit(main())
 """
 
 

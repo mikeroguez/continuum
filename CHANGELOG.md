@@ -6,7 +6,7 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
-## [1.5.0] - 2026-09-14
+## [1.6.0] - 2026-09-14
 
 ### Added
 
@@ -17,6 +17,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - `doctor.py`: verificación independiente de líneas Y tokens por tema de memoria, advirtiendo sobre párrafos densos o líneas largas.
 - `metrics.py`: nuevo indicador de eficiencia `topics_within_budget` y reporte de temas que exceden el límite de tokens recomendando compactación.
 - Soporte en `roles.py` y `doctor.py` para descubrir tanto roles upstream en `.continuum/` como roles personalizados del proyecto en `.ai/roles/`.
+
+### Changed
+
+- `README.md` y `README.en.md`: instrucciones de instalación y sincronización actualizadas con vendoring lineal y canales `export`/`export-develop`.
+- `continuum sync`: vendoring lineal por defecto con extracción limpia vía `git archive` sin merge commits en el proyecto anfitrión, soporte para `--channel` y `--version`, y fallback a subtree.
+
+## [1.5.0] - 2026-09-12
+
+### Added
+
 - `continuum task start <slug> --worktree` crea la tarea y aísla el directorio de trabajo en un `git worktree` propio (ADR-011).
 - `continuum doctor` advierte cuando detecta varias tareas activas sin aislamiento por worktree.
 - `continuum doctor` detecta marcadores de conflicto de git sin resolver en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (ADR-012).
@@ -26,35 +36,16 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 - Roles `backend`/`frontend`/`devops-infraestructura`: estándares de código por defecto y Diseño Atómico.
 - `VERSION` en la raíz como fuente única de la versión instalada; `continuum version` / `--version` la reporta.
 - `continuum uninstall`: retira Continuum de un proyecto en tres niveles de seguridad crecientes.
+- Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría WCAG 2.2.
+- Plantillas de issues y Pull Requests para propuestas de funcionalidades, documentación, correcciones, refactorizaciones, roles y tareas de mantenimiento.
 
 ### Changed
 
-- `README.md` y `README.en.md`: instrucciones de instalación y sincronización actualizadas con vendoring lineal y canales `export`/`export-develop`.
-- `continuum sync`: vendoring lineal por defecto con extracción limpia vía `git archive` sin merge commits en el proyecto anfitrión, soporte para `--channel` y `--version`, y fallback a subtree.
-- `continuum roles sync` poda subagentes generados que ya no corresponden
-  a ningún rol activo del catálogo (detectado por huella de contenido, no
-  por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber
-  qué archivos generó Continuum.
-- Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría
-  WCAG 2.2.
-- Plantillas de issues y Pull Requests para propuestas de funcionalidades,
-  documentación, correcciones, refactorizaciones, roles y tareas de
-  mantenimiento.
-
-### Changed
-
-- `AI_COLLABORATION.md` y las guías de uso documentan `--worktree` y
-  advierten contra `git stash` con otros worktrees activos (la lista de
-  stash es del repositorio, no de cada worktree).
-- `.claude/settings.json` agrega un hook `SessionStart` que corre
-  `continuum context` al arrancar o resumir una sesión de Claude Code,
-  simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
-- `continuum context` (hook `SessionStart`) vuelca el contenido completo de
-  `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado —
-  los entrypoints por proveedor quedan fuera porque el cliente ya los
-  carga de forma nativa (ver ADR-012).
-- La configuración de colaboración de GitHub exige Pull Requests, revisiones
-  de propietarios y checks automatizados antes de integrar cambios en `main`.
+- `AI_COLLABORATION.md` y las guías de uso documentan `--worktree` y advierten contra `git stash` con otros worktrees activos (la lista de stash es del repositorio, no de cada worktree).
+- `.claude/settings.json` agrega un hook `SessionStart` que corre `continuum context` al arrancar o resumir una sesión de Claude Code, simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
+- `continuum context` (hook `SessionStart`) vuelca el contenido completo de `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado — los entrypoints por proveedor quedan fuera porque el cliente ya los carga de forma nativa (ver ADR-012).
+- `continuum roles sync` poda subagentes generados que ya no corresponden a ningún rol activo del catálogo (detectado por huella de contenido, no por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber qué archivos generó Continuum.
+- La configuración de colaboración de GitHub exige Pull Requests, revisiones de propietarios y checks automatizados antes de integrar cambios en `main`.
 
 ## [1.4.1] - 2026-09-10
 

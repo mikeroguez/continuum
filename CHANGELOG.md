@@ -6,6 +6,23 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-14
+
+### Added
+
+- `ADR-013`: Distribución oficial vía Git Subtree en subcarpeta (`--prefix=.continuum`) desacoplando 100% el motor/catálogo de la memoria viva del proyecto.
+- `continuum init`: comando para inicializar el launcher shim (`tools/continuum`), entrypoints de IA, memoria inicial (`.ai/`) y githooks.
+- `tools/_continuum/common.py`: constante `STARTUP_TOKENS_LIMIT = 3500` y límite `max_topic_tokens = 1500` en `DEFAULT_CONFIG["estado_dev"]` (portado desde `classPulse`).
+- `doctor.py`: verificación independiente de líneas Y tokens por tema de memoria, advirtiendo sobre párrafos densos o líneas largas que el conteo de líneas no detectaba.
+- `metrics.py`: nuevo indicador de eficiencia `topics_within_budget` y reporte de temas que exceden el límite de tokens recomendando compactación.
+- Soporte en `roles.py` y `doctor.py` para descubrir tanto roles upstream en `.continuum/` como roles personalizados del proyecto en `.ai/roles/`.
+
+### Changed
+
+- `README.md` y `README.en.md`: instrucciones de instalación corregidas para usar `git subtree add --prefix=.continuum ...` seguido de `python3 .continuum/tools/continuum init`.
+- `continuum sync`: auto-detecta `--prefix=.continuum` y ejecuta `roles.sync` automáticamente al completar un pull exitoso.
+
+
 ### Added
 
 - `continuum task start <slug> --worktree` crea la tarea y aísla el

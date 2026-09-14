@@ -54,7 +54,7 @@ def new(root: Path, title: str, slug: str | None = None) -> int:
         c.err(f"{fpath.relative_to(root)} ya existe — pasa otro --slug.")
         return 1
 
-    template_path = root / ".ai" / "templates" / "ADR.md"
+    template_path = c.templates_dir(root) / "ADR.md"
     template_text = c.read_text(template_path)
     if not template_text:
         template_text = (

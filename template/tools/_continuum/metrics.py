@@ -41,13 +41,21 @@ def build_snapshot(root: Path) -> dict:
     topics_count = 0
     topics_total_lines = 0
     topics_total_tokens = 0
+    topics_over_limit: list[dict] = []
+    max_topic_tokens = cfg["estado_dev"]["max_topic_tokens"]
     if topics_dir.exists():
         topic_files = sorted(list(topics_dir.glob("*.md")))
         topics_count = len(topic_files)
         for tf in topic_files:
             t_text = c.read_text(tf)
+            t_tokens = c.estimate_tokens(t_text)
             topics_total_lines += t_text.count("\n") + (1 if t_text else 0)
-            topics_total_tokens += c.estimate_tokens(t_text)
+            topics_total_tokens += t_tokens
+            if t_tokens > max_topic_tokens:
+                topics_over_limit.append({
+                    "path": str(tf.relative_to(root)),
+                    "tokens": t_tokens,
+                })
 
     # 4. Tasks stats
     tasks_dir = root / cfg["tasks"]["dir"]
@@ -82,6 +90,7 @@ def build_snapshot(root: Path) -> dict:
             "topics_count": topics_count,
             "topics_total_lines": topics_total_lines,
             "topics_total_tokens": topics_total_tokens,
+            "topics_over_limit": topics_over_limit,
         },
         "tasks": {
             "active": active_tasks,
@@ -148,8 +157,9 @@ def cmd_report(root: Path, json_output: bool = False) -> int:
         "title": "Reporte de Métricas e Impacto de Continuum",
         "snapshot": snap,
         "efficiency": {
-            "startup_budget_ok": snap["startup_tokens"] <= 3500,
+            "startup_budget_ok": snap["startup_tokens"] <= c.STARTUP_TOKENS_LIMIT,
             "memory_topics_fragmented": snap["memory"]["topics_count"] > 0,
+            "topics_within_budget": len(snap["memory"]["topics_over_limit"]) == 0,
         },
     }
 
@@ -171,8 +181,19 @@ def cmd_report(root: Path, json_output: bool = False) -> int:
         f"- Hook pre-commit local: {'✓ Instalado' if snap['hooks']['pre_commit_installed'] else '✗ No instalado'}",
         "",
         "## Indicadores de Eficiencia",
-        f"- Presupuesto de arranque acotado (<= 3500 tokens): {'✓ CUMPLIDO' if snap['startup_tokens'] <= 3500 else '⚠️ EXCEDE TECHO RECOMENDADO'}",
+        f"- Presupuesto de arranque acotado (<= {c.STARTUP_TOKENS_LIMIT} tokens): "
+        f"{'✓ CUMPLIDO' if report_data['efficiency']['startup_budget_ok'] else '⚠️ EXCEDE TECHO RECOMENDADO'}",
         f"- Memoria viva modularizada en temas: {'✓ CUMPLIDO' if snap['memory']['topics_count'] > 0 else '⚠️ MEMORIA MONOLÍTICA'}",
+        f"- Temas dentro del presupuesto individual: "
+        f"{'✓ CUMPLIDO' if report_data['efficiency']['topics_within_budget'] else '⚠️ HAY TEMAS SOBRE EL LÍMITE'}",
+    ]
+    if snap["memory"]["topics_over_limit"]:
+        lines.append("")
+        lines.append("### Temas que exceden el presupuesto individual")
+        for item in snap["memory"]["topics_over_limit"]:
+            lines.append(f"- `{item['path']}`: ~{item['tokens']} tokens — "
+                          f"corre `continuum compact --topic {Path(item['path']).stem}`")
+    lines += [
         "",
         "_Nota: lo de arriba es un snapshot estático del repositorio, no el "
         "consumo real de tokens/tool-calls de una sesión de agente. Para "

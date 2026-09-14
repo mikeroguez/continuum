@@ -49,18 +49,16 @@ flowchart LR
 # Agregar el remoto de Continuum (una sola vez)
 git remote add continuum https://github.com/mikeroguez/continuum.git
 
-# Montar la plantilla en la raíz usando la rama export
-git subtree add --prefix=. continuum export --squash -m "chore: instala Continuum v1.4.0"
+# Montar el motor en .continuum/ usando la rama export
+git subtree add --prefix=.continuum continuum export --squash -m "chore: instala Continuum"
+
+# Inicializar configuración, entrypoints y githooks
+python3 .continuum/tools/continuum init
 ```
 
-### 2. Configurar e Inicializar
+### 2. Verificar estado
 
 ```bash
-# Configurar los datos del proyecto en .ai/config.json
-$EDITOR .ai/config.json
-
-# Instalar githooks locales y verificar estado
-tools/continuum install-hooks
 tools/continuum doctor
 ```
 

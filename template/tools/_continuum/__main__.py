@@ -86,6 +86,9 @@ def build_parser() -> argparse.ArgumentParser:
     un.add_argument("--purge-memory", action="store_true", help="Incluye el nivel 3 (.ai/HANDOFF.md, .ai/state/, .ai/tasks/) — historia real del proyecto, no solo mecanismo.")
     un.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
+    ini = sub.add_parser("init", help="Inicializa Continuum en el repositorio (configura launcher shim, entrypoints y githooks).")
+    ini.add_argument("--force", action="store_true", help="Sobreescribe archivos existentes si es necesario.")
+
     sy = sub.add_parser("sync", help="Sincronización de la plantilla Continuum en proyectos consumidores.")
     sy.add_argument("--check", action="store_true", help="Audita la configuración y el estado del repositorio.")
     sy.add_argument("--dry-run", action="store_true", default=False, help="Muestra el plan de sincronización.")
@@ -231,6 +234,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "install-hooks":
         return bootstrap.install_hooks(root)
+
+    if args.cmd == "init":
+        return bootstrap.init(root, force=getattr(args, "force", False))
 
     if args.cmd == "uninstall":
         return uninstall.cmd_uninstall(

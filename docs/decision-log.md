@@ -402,3 +402,30 @@ eficiencia, es que la métrica pasa a ser exacta. Los puntos 2 y 3 son
 verificaciones nuevas en `doctor`, consistentes con el principio de
 mecanizar en vez de confiar en la memoria humana (§2.3). El punto 4 no
 cambia el flujo de ninguna sesión existente.
+
+## ADR-013 — Distribución vía Git Subtree en subcarpeta (`.continuum/`) y comando `init`
+
+**Contexto.** ADR-001 estableció que Continuum se distribuye a proyectos
+consumidores mediante `git subtree`. Sin embargo, la instrucción original
+proponía `--prefix=.` en la raíz. Git rechaza explícitamente el uso de la raíz
+como prefijo (`fatal: prefix '.' already exists.`). Por esta razón, ningún
+proyecto consumidor temprano pudo usar subtree real, recurriendo a copias
+manuales a la raíz. Además, mezclar el motor distribuible (`tools/`) y el
+catálogo (`roles/`) en los mismos directorios que la memoria viva del proyecto
+(`.ai/state/`, `.ai/tasks/`, `.ai/HANDOFF.md`) hacía imposible realizar
+`git subtree pull` sin causar conflictos destructivos con el estado de las
+sesiones de trabajo.
+
+**Decisión.** 
+1. La distribución oficial de Continuum se realiza montando el subtree en una
+   subcarpeta propia: `--prefix=.continuum`.
+2. Se introduce el comando `continuum init` (ejecutado tras el subtree add)
+   para generar el launcher shim en `tools/continuum`, scaffoldear los
+   entrypoints raíz (`AI_COLLABORATION.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`),
+   inicializar la memoria viva (`.ai/`) e instalar los githooks locales.
+3. El comando `continuum sync` opera automáticamente con `--prefix=.continuum`
+   cuando detecta la presencia de esa carpeta.
+4. Se garantiza el desacoplamiento total: las actualizaciones traídas por
+   `continuum sync` (`git subtree pull`) tocan exclusivamente `.continuum/`,
+   asegurando cero colisiones con la memoria privada de tareas y handoffs del proyecto.
+

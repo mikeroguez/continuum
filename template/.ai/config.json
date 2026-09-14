@@ -5,7 +5,8 @@
     "path": ".ai/state/estado-dev.md",
     "max_index_lines": 80,
     "topics_dir": ".ai/state/topics",
-    "max_topic_lines": 300
+    "max_topic_lines": 300,
+    "max_topic_tokens": 1500
   },
   "tasks": {
     "dir": ".ai/tasks",

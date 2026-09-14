@@ -1,5 +1,6 @@
 import contextlib
 import io
+import json
 import os
 import shutil
 import stat
@@ -49,6 +50,52 @@ class TestSyncTemplateInstructions(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("git subtree pull", buf.getvalue())
             self.assertIn("<url-del-repo-plantilla>", buf.getvalue())
+
+    def test_auto_detects_dot_continuum_prefix(self):
+        with temp_project() as root:
+            (root / ".continuum").mkdir(parents=True, exist_ok=True)
+            # template_prefix no configurado
+            cfg = c.load_config(root)
+            cfg["template_prefix"] = ""
+            cfg["template_remote"] = "https://github.com/mikeroguez/continuum.git"
+            (root / ".ai" / "config.json").write_text(json.dumps(cfg))
+
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                code = bootstrap.sync_template_instructions(root)
+            self.assertEqual(code, 0)
+            self.assertIn("--prefix=.continuum", buf.getvalue())
+
+
+class TestInit(unittest.TestCase):
+    def test_init_scaffolds_project_from_dot_continuum(self):
+        with temp_project() as root:
+            # Simular instalación de .continuum
+            dot_continuum = root / ".continuum"
+            shutil.copytree(TEMPLATE_DIR, dot_continuum)
+
+            # Limpiar archivos de la raíz para simular un repo nuevo donde solo se hizo git subtree add en .continuum
+            for p in list(root.iterdir()):
+                if p.name != ".continuum" and p.name != ".git":
+                    if p.is_dir():
+                        shutil.rmtree(p)
+                    else:
+                        p.unlink()
+
+            code = bootstrap.init(root)
+            self.assertEqual(code, 0)
+            self.assertTrue((root / "tools" / "continuum").exists())
+            self.assertTrue((root / "AI_COLLABORATION.md").exists())
+            self.assertTrue((root / "AGENTS.md").exists())
+            self.assertTrue((root / "CLAUDE.md").exists())
+            self.assertTrue((root / "GEMINI.md").exists())
+            self.assertTrue((root / ".ai" / "config.json").exists())
+            self.assertTrue((root / ".ai" / "HANDOFF.md").exists())
+            self.assertTrue((root / ".ai" / "state" / "estado-dev.md").exists())
+
+            # Verificar que config.json tiene prefix .continuum
+            cfg = c.load_config(root)
+            self.assertEqual(cfg["template_prefix"], ".continuum")
 
 
 if __name__ == "__main__":

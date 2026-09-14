@@ -275,13 +275,15 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
 
     # 3. Duplicados conocidos
     section("Duplicados")
+    ignore_prefixes = tuple(cfg.get("doctor", {}).get("ignore_paths", []))
     watch_names = ["estado-dev.md", "estado-proyecto.md", "CHANGELOG.md", "AI_COLLABORATION.md"]
     for name in watch_names:
         matches = [p for p in root.rglob(name)
                    if ".git" not in p.parts and "_closed" not in p.parts
                    and "archive" not in p.parts and "node_modules" not in p.parts
                    and "vendor" not in p.parts and "template" not in p.parts
-                   and ".continuum" not in p.parts]
+                   and ".continuum" not in p.parts
+                   and not str(p.relative_to(root)).startswith(ignore_prefixes)]
         if len(matches) > 1:
             rels = ", ".join(str(m.relative_to(root)) for m in matches)
             c.warn(f"{name} aparece {len(matches)} veces: {rels} "

@@ -51,6 +51,13 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   sincronizó al `template/`. `CLAUDE.md` actualizado en ambas copias para
   indicar explícitamente que no hace falta releer con `Read` lo que el
   hook ya inyectó.
+- `.ai/config.json`: nueva clave `doctor.ignore_paths` — rutas relativas a
+  la raíz donde `continuum doctor` nunca busca duplicados de
+  estado-dev.md/CHANGELOG.md/etc. Los nombres estándar (`vendor/`,
+  `node_modules/`, `.git/`...) ya se excluían siempre; esto cubre vendor
+  con nombre no convencional (p. ej. un micro-framework que lo llama
+  `App/Core/` en vez de `vendor/`), donde varios `CHANGELOG.md` de
+  librerías de terceros es esperado, no un riesgo de divergencia.
 
 ## [1.6.0] - 2026-09-14
 

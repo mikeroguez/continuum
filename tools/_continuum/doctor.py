@@ -306,14 +306,26 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
         for topic_file in sorted(topics_dir.glob("*.md")):
             t_text = c.read_text(topic_file)
             t_lines = t_text.count("\n") + 1
+            t_tokens = c.estimate_tokens(t_text)
             max_topic = cfg["estado_dev"]["max_topic_lines"]
+            max_topic_tokens = cfg["estado_dev"]["max_topic_tokens"]
             rel = topic_file.relative_to(root)
+            # Dos chequeos independientes: líneas (detecta temas que
+            # acumulan muchas entradas) y tokens (detecta pocas líneas pero
+            # muy largas — un tema puede pasar el primero y aun así pesar
+            # miles de tokens).
             if t_lines > max_topic:
                 c.warn(f"{rel} tiene {t_lines} líneas (límite {max_topic}). "
                        f"Corre `continuum compact --topic {topic_file.stem}` o divide el tema.")
                 warnings += 1
+            elif t_tokens > max_topic_tokens:
+                c.warn(f"{rel} tiene solo {t_lines} líneas pero ~{t_tokens} tokens "
+                       f"(límite {max_topic_tokens}) — son líneas muy largas, no muchas "
+                       f"entradas, así que el chequeo de líneas no lo detecta. "
+                       f"Corre `continuum compact --topic {topic_file.stem}` o divide el tema.")
+                warnings += 1
             else:
-                ok(f"{rel}: {t_lines} líneas.")
+                ok(f"{rel}: {t_lines} líneas, ~{t_tokens} tokens.")
     else:
         c.warn(f"No existe {cfg['estado_dev']['topics_dir']}/ — la memoria detallada "
                f"debería vivir ahí, no en el índice.")
@@ -426,12 +438,12 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
                 print(f"  {rel}: ~{t} tokens")
     if not quiet:
         print(f"  TOTAL estimado de arranque: ~{total_tokens} tokens")
-    if total_tokens > 8000:
-        c.warn("El paquete de arranque supera ~8k tokens estimados. Con el índice "
-               "acotado a temas separados esto no debería pasar salvo que los "
-               "entrypoints (AGENTS.md/CLAUDE.md/GEMINI.md) tengan contenido "
-               "inferible o boilerplate — revisa qué se puede borrar antes de "
-               "asumir que hay que compactar más.")
+    if total_tokens > c.STARTUP_TOKENS_LIMIT:
+        c.warn(f"El paquete de arranque supera ~{c.STARTUP_TOKENS_LIMIT} tokens "
+               "estimados. Con el índice acotado a temas separados esto no "
+               "debería pasar salvo que los entrypoints (AGENTS.md/CLAUDE.md/"
+               "GEMINI.md) tengan contenido inferible o boilerplate — revisa "
+               "qué se puede borrar antes de asumir que hay que compactar más.")
         warnings += 1
 
     if not quiet:

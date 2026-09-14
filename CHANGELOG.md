@@ -16,6 +16,17 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
   antes de este fix instalando `.claude/settings.json` si falta y hay una
   fuente disponible (`.continuum/.claude/settings.json` o `template/.claude/settings.json`).
 
+### Changed
+
+- `continuum handoff --auto`: si el handoff anterior ya tenía `Objetivo` y/o
+  `Siguiente paso recomendado` completados (no el placeholder de la
+  plantilla), el borrador automático los hereda tal cual en vez de
+  reemplazarlos por `_(completar manualmente)_` — marcados con una nota de
+  que vienen del handoff anterior y conviene revisarlos. Antes, el hook
+  disparado al cortar sesión (o cualquier corrida manual de `--auto`)
+  perdía ese contenido sin avisar, aunque quedara archivado en
+  `.ai/state/archive/handoffs/`.
+
 ## [1.6.0] - 2026-09-14
 
 ### Added

@@ -113,6 +113,30 @@ class TestContext(unittest.TestCase):
             self.assertIn("startup_tokens", data)
             self.assertIn("items", data)
 
+    def test_cmd_context_hook_adds_preamble_without_dropping_content(self):
+        """El hook SessionStart llama `continuum context --hook` -- debe
+        seguir volcando AI_COLLABORATION.md/HANDOFF.md/estado-dev.md
+        completos, más una nota explícita de que ya se inyectó (para que
+        el agente no los vuelva a leer con Read)."""
+        with temp_project() as tmp:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = context.cmd_context(tmp, hook=True)
+            self.assertEqual(res, 0)
+            text = out.getvalue()
+            self.assertIn("Inyectado automáticamente por el hook SessionStart", text)
+            self.assertIn("no necesitas leer AI_COLLABORATION.md", text)
+            self.assertIn("--- AI_COLLABORATION.md (contenido completo) ---", text)
+            self.assertIn("--- .ai/HANDOFF.md (contenido completo) ---", text)
+
+    def test_cmd_context_without_hook_flag_has_no_preamble(self):
+        with temp_project() as tmp:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                context.cmd_context(tmp, hook=False)
+            text = out.getvalue()
+            self.assertNotIn("Inyectado automáticamente por el hook SessionStart", text)
+
     def test_cmd_tokens_human_and_json(self):
         with temp_project() as tmp:
             out_human = io.StringIO()

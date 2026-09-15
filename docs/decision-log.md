@@ -402,3 +402,54 @@ eficiencia, es que la métrica pasa a ser exacta. Los puntos 2 y 3 son
 verificaciones nuevas en `doctor`, consistentes con el principio de
 mecanizar en vez de confiar en la memoria humana (§2.3). El punto 4 no
 cambia el flujo de ninguna sesión existente.
+
+## ADR-013 — Distribución vía Git Subtree en subcarpeta (`.continuum/`) y comando `init`
+
+**Contexto.** ADR-001 estableció que Continuum se distribuye a proyectos
+consumidores mediante `git subtree`. Sin embargo, la instrucción original
+proponía `--prefix=.` en la raíz. Git rechaza explícitamente el uso de la raíz
+como prefijo (`fatal: prefix '.' already exists.`). Por esta razón, ningún
+proyecto consumidor temprano pudo usar subtree real, recurriendo a copias
+manuales a la raíz. Además, mezclar el motor distribuible (`tools/`) y el
+catálogo (`roles/`) en los mismos directorios que la memoria viva del proyecto
+(`.ai/state/`, `.ai/tasks/`, `.ai/HANDOFF.md`) hacía imposible realizar
+`git subtree pull` sin causar conflictos destructivos con el estado de las
+sesiones de trabajo.
+
+**Decisión.** 
+1. La distribución oficial de Continuum se realiza montando el subtree en una
+   subcarpeta propia: `--prefix=.continuum`.
+2. Se introduce el comando `continuum init` (ejecutado tras el subtree add)
+   para generar el launcher shim en `tools/continuum`, scaffoldear los
+   entrypoints raíz (`AI_COLLABORATION.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`),
+   inicializar la memoria viva (`.ai/`) e instalar los githooks locales.
+3. El comando `continuum sync` opera automáticamente con `--prefix=.continuum`
+   cuando detecta la presencia de esa carpeta.
+4. Se garantiza el desacoplamiento total: las actualizaciones traídas por
+   `continuum sync` (`git subtree pull`) tocan exclusivamente `.continuum/`,
+   asegurando cero colisiones con la memoria privada de tareas y handoffs del proyecto.
+
+## ADR-014 — Distribución limpia: vendoring lineal, canales (stable/dev) y selección de versiones
+
+**Contexto.** Si bien ADR-013 resolvió el desacoplamiento físico aislando el motor en
+`.continuum/`, la utilización de `git subtree add/pull --squash` en repositorios anfitriones
+adolece de un problema intrínseco de Git: genera commits sintéticos sin ancestros comunes
+(raíces huérfanas) y merge commits de 2 padres. En visualizadores de Git (`git log --graph`),
+esto genera bifurcaciones desconectadas que afean y desordenan el historial del proyecto.
+Asimismo, faltaba una separación formal de canales de exportación (producción vs desarrollo)
+y la posibilidad de fijar versiones específicas mediante tags SemVer.
+
+**Decisión.**
+1. **Vendoring Lineal como modo por defecto en `continuum sync`:** Las actualizaciones se
+   descargan vía `git fetch` y se extraen limpiamente en `.continuum/` utilizando `git archive`
+   y `tarfile` de la librería estándar de Python. El usuario realiza un commit lineal normal
+   de 1 solo padre (`chore(continuum): actualiza a v1.5.0`), preservando la limpieza total
+   del historial de Git. Se mantiene soporte retrocompatible para `template_sync_mode: "subtree"`
+   mediante `--mode subtree`.
+2. **Canales de distribución:**
+   - **Estable (`export`):** generado desde la rama `main` al publicar releases oficiales.
+   - **Desarrollo (`export-develop`):** generado desde la rama `develop` para pruebas continuas.
+3. **Versiones inmutables (Tags):** Cada release oficial coloca un tag SemVer en `export`
+   (p. ej. `v1.5.0`).
+4. **Parámetros en `sync`:** `continuum sync` acepta `--channel [stable|dev]` y `--version [tag]`,
+   registrando la versión y canal en `.ai/config.json`.

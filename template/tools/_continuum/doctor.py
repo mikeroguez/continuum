@@ -138,6 +138,21 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
                 "fn": lambda: roles.sync(root, provider="claude"),
             })
 
+        settings_path = root / ".claude" / "settings.json"
+        source_dir = c.continuum_dir(root)
+        if source_dir == root:
+            source_dir = root / "template"
+        settings_src = source_dir / ".claude" / "settings.json"
+        if not settings_path.exists() and settings_src.exists():
+            actions.append({
+                "id": "install_claude_settings",
+                "desc": "Instalar .claude/settings.json (hooks SessionEnd/PreCompact "
+                        "que escriben .ai/HANDOFF.md automáticamente — documentado en "
+                        "AI_COLLABORATION.md §4 pero antes solo lo copiaba `continuum init`, "
+                        "nunca `doctor --fix` en proyectos ya inicializados)",
+                "fn": lambda: c.write_text(settings_path, c.read_text(settings_src)),
+            })
+
     if "copilot" in cfg["providers"]:
         agents_dir = root / ".github" / "agents"
         if not agents_dir.exists() or not list(agents_dir.glob("*.agent.md")):
@@ -260,12 +275,15 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
 
     # 3. Duplicados conocidos
     section("Duplicados")
+    ignore_prefixes = tuple(cfg.get("doctor", {}).get("ignore_paths", []))
     watch_names = ["estado-dev.md", "estado-proyecto.md", "CHANGELOG.md", "AI_COLLABORATION.md"]
     for name in watch_names:
         matches = [p for p in root.rglob(name)
                    if ".git" not in p.parts and "_closed" not in p.parts
                    and "archive" not in p.parts and "node_modules" not in p.parts
-                   and "vendor" not in p.parts and "template" not in p.parts]
+                   and "vendor" not in p.parts and "template" not in p.parts
+                   and ".continuum" not in p.parts
+                   and not str(p.relative_to(root)).startswith(ignore_prefixes)]
         if len(matches) > 1:
             rels = ", ".join(str(m.relative_to(root)) for m in matches)
             c.warn(f"{name} aparece {len(matches)} veces: {rels} "
@@ -306,14 +324,26 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
         for topic_file in sorted(topics_dir.glob("*.md")):
             t_text = c.read_text(topic_file)
             t_lines = t_text.count("\n") + 1
+            t_tokens = c.estimate_tokens(t_text)
             max_topic = cfg["estado_dev"]["max_topic_lines"]
+            max_topic_tokens = cfg["estado_dev"]["max_topic_tokens"]
             rel = topic_file.relative_to(root)
+            # Dos chequeos independientes: líneas (detecta temas que
+            # acumulan muchas entradas) y tokens (detecta pocas líneas pero
+            # muy largas — un tema puede pasar el primero y aun así pesar
+            # miles de tokens).
             if t_lines > max_topic:
                 c.warn(f"{rel} tiene {t_lines} líneas (límite {max_topic}). "
                        f"Corre `continuum compact --topic {topic_file.stem}` o divide el tema.")
                 warnings += 1
+            elif t_tokens > max_topic_tokens:
+                c.warn(f"{rel} tiene solo {t_lines} líneas pero ~{t_tokens} tokens "
+                       f"(límite {max_topic_tokens}) — son líneas muy largas, no muchas "
+                       f"entradas, así que el chequeo de líneas no lo detecta. "
+                       f"Corre `continuum compact --topic {topic_file.stem}` o divide el tema.")
+                warnings += 1
             else:
-                ok(f"{rel}: {t_lines} líneas.")
+                ok(f"{rel}: {t_lines} líneas, ~{t_tokens} tokens.")
     else:
         c.warn(f"No existe {cfg['estado_dev']['topics_dir']}/ — la memoria detallada "
                f"debería vivir ahí, no en el índice.")
@@ -322,15 +352,23 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
     # 5. Roles activos
     section("Roles")
     roles_dir = root / cfg["roles"]["dir"]
+    cdir = c.continuum_dir(root)
+    continuum_roles_dirs = [cdir / ".ai" / "roles", cdir / "roles"] if cdir != root else []
+    candidate_dirs = [roles_dir] + continuum_roles_dirs
+
     for pack in cfg["roles"]["packs"]:
-        pack_dir = roles_dir / pack
-        if not pack_dir.is_dir() or not any(pack_dir.glob("*.md")):
+        pack_roles = []
+        for r_dir in candidate_dirs:
+            p_dir = r_dir / pack
+            if p_dir.is_dir():
+                pack_roles.extend(list(p_dir.glob("*.md")))
+        if not pack_roles:
             c.warn(f"Pack de roles '{pack}' declarado en .ai/config.json pero "
                    f"no existe o está vacío en {roles_dir.relative_to(root)}/.")
             warnings += 1
         else:
-            n = len(list(pack_dir.glob("*.md")))
-            ok(f"Pack '{pack}': {n} rol(es).")
+            unique_roles = {p.stem for p in pack_roles}
+            ok(f"Pack '{pack}': {len(unique_roles)} rol(es).")
 
     # 6. Tareas abandonadas
     section("Tareas activas")
@@ -426,12 +464,12 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
                 print(f"  {rel}: ~{t} tokens")
     if not quiet:
         print(f"  TOTAL estimado de arranque: ~{total_tokens} tokens")
-    if total_tokens > 8000:
-        c.warn("El paquete de arranque supera ~8k tokens estimados. Con el índice "
-               "acotado a temas separados esto no debería pasar salvo que los "
-               "entrypoints (AGENTS.md/CLAUDE.md/GEMINI.md) tengan contenido "
-               "inferible o boilerplate — revisa qué se puede borrar antes de "
-               "asumir que hay que compactar más.")
+    if total_tokens > c.STARTUP_TOKENS_LIMIT:
+        c.warn(f"El paquete de arranque supera ~{c.STARTUP_TOKENS_LIMIT} tokens "
+               "estimados. Con el índice acotado a temas separados esto no "
+               "debería pasar salvo que los entrypoints (AGENTS.md/CLAUDE.md/"
+               "GEMINI.md) tengan contenido inferible o boilerplate — revisa "
+               "qué se puede borrar antes de asumir que hay que compactar más.")
         warnings += 1
 
     if not quiet:

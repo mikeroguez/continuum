@@ -6,63 +6,99 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+### Fixed
+
+- `continuum init`: `.claude/settings.json` (hooks `SessionEnd`/`PreCompact` que
+  escriben `.ai/HANDOFF.md` automáticamente, documentados desde v1.x en
+  `AI_COLLABORATION.md` §4) faltaba en `files_to_copy` — se documentaba pero
+  nunca se instalaba en el proyecto consumidor.
+- `continuum doctor --fix --no-dry-run`: repara proyectos ya inicializados
+  antes de este fix instalando `.claude/settings.json` si falta y hay una
+  fuente disponible (`.continuum/.claude/settings.json` o `template/.claude/settings.json`).
+
+### Changed
+
+- `continuum handoff --auto`: si el handoff anterior ya tenía `Objetivo` y/o
+  `Siguiente paso recomendado` completados (no el placeholder de la
+  plantilla), el borrador automático los hereda tal cual en vez de
+  reemplazarlos por `_(completar manualmente)_` — marcados con una nota de
+  que vienen del handoff anterior y conviene revisarlos. Antes, el hook
+  disparado al cortar sesión (o cualquier corrida manual de `--auto`)
+  perdía ese contenido sin avisar, aunque quedara archivado en
+  `.ai/state/archive/handoffs/`.
+- `AI_COLLABORATION.md` §3 seguía citando "~8k tokens" como techo del
+  paquete de arranque; el código unificó ese número a `STARTUP_TOKENS_LIMIT
+  = 3500` (`common.py`) en un release anterior sin actualizar la prosa.
+- `AI_COLLABORATION.md` recortado de ~2731 a ~2139 tokens estimados (-22%):
+  §6 "Trabajo en equipo" (solo relevante con varias personas/agentes en
+  paralelo) se movió completa a
+  [`docs/trabajo-en-equipo.md`](docs/trabajo-en-equipo.md), y se ajustó la
+  prosa no accionable de §3 y §8. Es el archivo que más pesa del paquete de
+  arranque en todo proyecto que usa Continuum — el ahorro aplica a cada
+  sesión de cada proyecto, no solo a este repositorio.
+
+### Added
+
+- `continuum context --hook`: nuevo flag para el hook `SessionStart` de
+  Claude Code — antepone una nota explícita de que el contenido ya se
+  inyectó al arranque, para que el agente no vuelva a leer
+  `AI_COLLABORATION.md`/`HANDOFF.md`/`estado-dev.md` con `Read`.
+  `template/.claude/settings.json` (lo que se distribuye a proyectos
+  consumidores) nunca había tenido el hook `SessionStart` conectado pese a
+  que `AI_COLLABORATION.md` §0 lo documenta desde hace versiones — sí
+  existía en la copia autoalojada de este mismo repositorio
+  (`.claude/settings.json`, sin el flag `--hook`), pero nunca se
+  sincronizó al `template/`. `CLAUDE.md` actualizado en ambas copias para
+  indicar explícitamente que no hace falta releer con `Read` lo que el
+  hook ya inyectó.
+- `.ai/config.json`: nueva clave `doctor.ignore_paths` — rutas relativas a
+  la raíz donde `continuum doctor` nunca busca duplicados de
+  estado-dev.md/CHANGELOG.md/etc. Los nombres estándar (`vendor/`,
+  `node_modules/`, `.git/`...) ya se excluían siempre; esto cubre vendor
+  con nombre no convencional (p. ej. un micro-framework que lo llama
+  `App/Core/` en vez de `vendor/`), donde varios `CHANGELOG.md` de
+  librerías de terceros es esperado, no un riesgo de divergencia.
+
+## [1.6.0] - 2026-09-14
+
+### Added
+
+- `ADR-013`: Distribución oficial en subcarpeta (`.continuum/`) desacoplando el motor/catálogo de la memoria viva del proyecto.
+- `ADR-014`: Vendoring Lineal como modo de distribución por defecto, canales `export`/`export-develop` y selección de versiones por tag.
+- `continuum init`: comando para inicializar el launcher shim (`tools/continuum`), entrypoints de IA, memoria inicial (`.ai/`) y githooks.
+- `tools/_continuum/common.py`: constante `STARTUP_TOKENS_LIMIT = 3500` y límite `max_topic_tokens = 1500` en `DEFAULT_CONFIG["estado_dev"]`.
+- `doctor.py`: verificación independiente de líneas Y tokens por tema de memoria, advirtiendo sobre párrafos densos o líneas largas.
+- `metrics.py`: nuevo indicador de eficiencia `topics_within_budget` y reporte de temas que exceden el límite de tokens recomendando compactación.
+- Soporte en `roles.py` y `doctor.py` para descubrir tanto roles upstream en `.continuum/` como roles personalizados del proyecto en `.ai/roles/`.
+
+### Changed
+
+- `README.md` y `README.en.md`: instrucciones de instalación y sincronización actualizadas con vendoring lineal y canales `export`/`export-develop`.
+- `continuum sync`: vendoring lineal por defecto con extracción limpia vía `git archive` sin merge commits en el proyecto anfitrión, soporte para `--channel` y `--version`, y fallback a subtree.
+
 ## [1.5.0] - 2026-09-12
 
 ### Added
 
-- `continuum task start <slug> --worktree` crea la tarea y aísla el
-  directorio de trabajo en un `git worktree` propio, para agentes o
-  personas trabajando en paralelo sobre el mismo repositorio (ver
-  ADR-011).
-- `continuum doctor` advierte cuando detecta varias tareas activas sin
-  evidencia de aislamiento por worktree.
-- `continuum doctor` detecta marcadores de conflicto de git sin resolver
-  en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (en
-  `docs/decision-log.md` y en `docs/architecture/ADR-*.md`) — ver ADR-012.
-- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente
-  número libre, en la convención que el proyecto ya use.
-- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 que
-  `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md`
-  (ADR-010) cuando queda desactualizada, sin tocar su prosa curada.
-- `docs/metodologia-medicion.md`: protocolo de medición antes/después de
-  consumo real de tokens/tool-calls en sesiones de agente (opt-in, no
-  paso obligatorio de ningún flujo).
-- Roles `backend`/`frontend`/`devops-infraestructura`: sección "Estándares
-  de código por defecto" con guías concretas y específicas del dominio
-  (evitar N+1, abstraer solo con evidencia, disciplina de comentarios,
-  documentación mínima); `frontend` además incorpora Diseño Atómico
-  (átomos/moléculas/organismos/templates/páginas) para organizar
-  componentes. Rol `qa`: "bien" en software ahora incluye esos estándares.
-- `VERSION` en la raíz como fuente única de la versión instalada;
-  `continuum version` / `--version` la reporta, y `continuum release
-  --no-dry-run` la actualiza sola.
-- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de
-  seguridad crecientes (mecanismo / protocolo-config / memoria del
-  proyecto) — nunca commitea por sí solo, nunca toca `docs/architecture/`.
-- `continuum roles sync` poda subagentes generados que ya no corresponden
-  a ningún rol activo del catálogo (detectado por huella de contenido, no
-  por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber
-  qué archivos generó Continuum.
-- Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría
-  WCAG 2.2.
-- Plantillas de issues y Pull Requests para propuestas de funcionalidades,
-  documentación, correcciones, refactorizaciones, roles y tareas de
-  mantenimiento.
+- `continuum task start <slug> --worktree` crea la tarea y aísla el directorio de trabajo en un `git worktree` propio (ADR-011).
+- `continuum doctor` advierte cuando detecta varias tareas activas sin aislamiento por worktree.
+- `continuum doctor` detecta marcadores de conflicto de git sin resolver en `.ai/HANDOFF.md`, y números de ADR duplicados o con huecos (ADR-012).
+- `continuum adr new "<título>"` crea una entrada de ADR con el siguiente número libre.
+- `continuum doctor --fix --no-dry-run` recalcula sola la huella sha256 de `.github/copilot-instructions.md`.
+- `docs/metodologia-medicion.md`: protocolo de medición antes/después de consumo real de tokens/tool-calls en sesiones de agente.
+- Roles `backend`/`frontend`/`devops-infraestructura`: estándares de código por defecto y Diseño Atómico.
+- `VERSION` en la raíz como fuente única de la versión instalada; `continuum version` / `--version` la reporta.
+- `continuum uninstall`: retira Continuum de un proyecto en tres niveles de seguridad crecientes.
+- Skill nativa de Codex para el rol de accesibilidad y checklist de auditoría WCAG 2.2.
+- Plantillas de issues y Pull Requests para propuestas de funcionalidades, documentación, correcciones, refactorizaciones, roles y tareas de mantenimiento.
 
 ### Changed
 
-- `AI_COLLABORATION.md` y las guías de uso documentan `--worktree` y
-  advierten contra `git stash` con otros worktrees activos (la lista de
-  stash es del repositorio, no de cada worktree).
-- `.claude/settings.json` agrega un hook `SessionStart` que corre
-  `continuum context` al arrancar o resumir una sesión de Claude Code,
-  simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
-- `continuum context` (hook `SessionStart`) vuelca el contenido completo de
-  `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado —
-  los entrypoints por proveedor quedan fuera porque el cliente ya los
-  carga de forma nativa (ver ADR-012).
-- La configuración de colaboración de GitHub exige Pull Requests, revisiones
-  de propietarios y checks automatizados antes de integrar cambios en `main`.
+- `AI_COLLABORATION.md` y las guías de uso documentan `--worktree` y advierten contra `git stash` con otros worktrees activos (la lista de stash es del repositorio, no de cada worktree).
+- `.claude/settings.json` agrega un hook `SessionStart` que corre `continuum context` al arrancar o resumir una sesión de Claude Code, simétrico al `SessionEnd`/`PreCompact` que ya escribía el handoff.
+- `continuum context` (hook `SessionStart`) vuelca el contenido completo de `AI_COLLABORATION.md`/`estado-dev.md`/`HANDOFF.md`, no solo su listado — los entrypoints por proveedor quedan fuera porque el cliente ya los carga de forma nativa (ver ADR-012).
+- `continuum roles sync` poda subagentes generados que ya no corresponden a ningún rol activo del catálogo (detectado por huella de contenido, no por nombre de archivo) — mismo mecanismo que usa `uninstall` para saber qué archivos generó Continuum.
+- La configuración de colaboración de GitHub exige Pull Requests, revisiones de propietarios y checks automatizados antes de integrar cambios en `main`.
 
 ## [1.4.1] - 2026-09-10
 

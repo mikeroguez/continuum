@@ -39,28 +39,30 @@ flowchart LR
 
 ## Quickstart
 
-> [!NOTE]
-> **Recommended distribution via `git subtree`:**
-> Continuum is installed into target repositories using `git subtree` to maintain clean tracking and reproducible updates.
+> [!TIP]
+> **Clean Distribution (Linear Vendoring):**
+> Continuum is installed into `.continuum/` keeping your project's Git history 100% clean and linear (no synthetic orphan commits or merge clutter).
 
 ### 1. Install into an existing project
 
 ```bash
-# Add the Continuum remote (one-time setup)
-git remote add continuum https://github.com/mikeroguez/continuum.git
+# Download Continuum into .continuum/ via clean vendoring (recommended)
+mkdir -p .continuum
+git fetch https://github.com/mikeroguez/continuum.git export
+git archive FETCH_HEAD | tar -x -C .continuum/
 
-# Mount the template at the project root using the export branch
-git subtree add --prefix=. continuum export --squash -m "chore: install Continuum v1.5.0"
+# Initialize configuration, entrypoints, and githooks
+python3 .continuum/tools/continuum init
+
+# Commit cleanly to your repository (1 clean commit)
+git add -A && git commit -m "chore: install Continuum"
 ```
 
-### 2. Configure and Initialize
+*(Optional: If you prefer `git subtree`: `git subtree add --prefix=.continuum https://github.com/mikeroguez/continuum.git export --squash` followed by `python3 .continuum/tools/continuum init`)*
+
+### 2. Verify Health
 
 ```bash
-# Configure project metadata in .ai/config.json
-$EDITOR .ai/config.json
-
-# Install local githooks and verify health
-tools/continuum install-hooks
 tools/continuum doctor
 ```
 
@@ -96,10 +98,13 @@ tools/continuum task claim <slug> <owner>                    # Declare task owne
 tools/continuum task close <slug>                           # Close and archive task
 ```
 
-### Synchronization (`sync`)
+### Synchronization & Channels (`sync`)
 ```bash
-tools/continuum sync --apply           # Synchronize template with remote repository
-tools/continuum install-hooks          # Install local pre-commit githook
+tools/continuum sync                       # Diagnostics and update plan
+tools/continuum sync --apply               # Clean update of .continuum/ (vendoring mode)
+tools/continuum sync --channel dev --apply # Switch to development channel (export-develop)
+tools/continuum sync --version v1.5.0      # Pin a specific release version by tag
+tools/continuum install-hooks              # Install local pre-commit githook
 ```
 
 ### Uninstall
@@ -118,7 +123,7 @@ Three increasing safety tiers — never commits on its own, never touches
 
 > [!IMPORTANT]
 > **No history pollution:**
-> By using `--squash`, `git subtree` adds **only 1 single commit** to the destination project history. No sprawling commit logs from Continuum are mixed into the main project tree.
+> With default **Linear Vendoring**, updates to `.continuum/` do not create orphan roots or synthetic merge commits. Your Git commit graph stays 100% clean, linear, and professional.
 
 ---
 

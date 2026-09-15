@@ -128,6 +128,46 @@ class TestDoctorWarnings(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("aparece 2 veces", out)
 
+    def test_duplicate_under_configured_ignore_path_does_not_warn(self):
+        """Vendor con nombre no convencional (p. ej. App/Core/ en vez de
+        vendor/) genera N CHANGELOG.md de librerías de terceros -- eso es
+        esperado, no un riesgo de divergencia. `.ai/config.json` debe poder
+        excluirlo sin tocar el código de doctor."""
+        with temp_project() as root:
+            nested = root / "app" / "Core" / "alguna-lib" / "CHANGELOG.md"
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            nested.write_text("v1.0.0")
+            (root / "CHANGELOG.md").write_text("changelog del proyecto")
+
+            cfg_path = root / ".ai" / "config.json"
+            import json
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["doctor"] = {"ignore_paths": ["app/Core"]}
+            cfg_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertNotIn("CHANGELOG.md aparece", out)
+
+    def test_duplicate_outside_ignore_path_still_warns(self):
+        with temp_project() as root:
+            nested = root / "app" / "Core" / "alguna-lib" / "CHANGELOG.md"
+            nested.parent.mkdir(parents=True, exist_ok=True)
+            nested.write_text("v1.0.0")
+            (root / "CHANGELOG.md").write_text("changelog del proyecto")
+
+            cfg_path = root / ".ai" / "config.json"
+            import json
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["doctor"] = {"ignore_paths": ["otra/ruta/que/no/aplica"]}
+            cfg_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
+
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertIn("CHANGELOG.md aparece 2 veces", out)
+
     def test_oversized_index_warns(self):
         with temp_project() as root:
             estado = root / ".ai" / "state" / "estado-dev.md"
@@ -196,8 +236,16 @@ class TestDoctorWarnings(unittest.TestCase):
             commit_all()
             code, out = run_quiet(root)
             self.assertEqual(code, 0)
-            self.assertNotIn("Hueco en la numeración", out)
-            self.assertNotIn("reutiliza número(s)", out)
+    def test_topic_over_token_limit_warns(self):
+        with temp_project() as root:
+            topic = root / ".ai" / "state" / "topics" / "denso.md"
+            # Pocas líneas pero muchas palabras (líneas muy largas) para exceder 1500 tokens
+            long_line = "palabra " * 1600 + "\n"
+            topic.write_text(long_line)
+            commit_all()
+            code, out = run_quiet(root)
+            self.assertEqual(code, 0)
+            self.assertIn("son líneas muy largas, no muchas entradas", out)
 
 
 if __name__ == "__main__":

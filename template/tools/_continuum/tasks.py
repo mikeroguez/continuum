@@ -74,7 +74,7 @@ def start(root: Path, slug: str, size: str, owner: str | None, role: str | None 
                    f"Corre `continuum roles list` para ver los disponibles.")
             role_display = role
 
-    templates_dir = root / ".ai" / "templates"
+    templates_dir = c.templates_dir(root)
     task_dir.mkdir(parents=True, exist_ok=True)
 
     common_vars = dict(

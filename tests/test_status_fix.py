@@ -5,9 +5,10 @@ import contextlib
 import hashlib
 import io
 import json
+import shutil
 import unittest
 
-from .helpers import temp_project
+from .helpers import TEMPLATE_DIR, temp_project
 from _continuum import doctor, status
 
 
@@ -94,6 +95,32 @@ class TestStatusFix(unittest.TestCase):
             with contextlib.redirect_stdout(out2):
                 doctor.run_fix(tmp, dry_run=False)
             self.assertNotIn("Actualizar la huella sha256", out2.getvalue())
+
+    def test_doctor_fix_installs_missing_claude_settings_in_vendored_project(self):
+        """Un proyecto consumidor vendorizado (`.continuum/`) que hizo
+        `continuum init` antes de que `.claude/settings.json` estuviera en
+        `files_to_copy` (ver bootstrap.init) se queda sin los hooks
+        SessionEnd/PreCompact que documenta AI_COLLABORATION.md §4.
+        `doctor --fix` debe poder repararlo sin intervención humana."""
+        with temp_project() as tmp:
+            shutil.copytree(TEMPLATE_DIR, tmp / ".continuum")
+            settings_path = tmp / ".claude" / "settings.json"
+            settings_path.unlink()
+            self.assertFalse(settings_path.exists())
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                res = doctor.run_fix(tmp, dry_run=False)
+            self.assertEqual(res, 0)
+            self.assertIn("Instalar .claude/settings.json", out.getvalue())
+            self.assertTrue(settings_path.exists())
+            self.assertIn("SessionEnd", settings_path.read_text())
+
+            # Idempotente: correr de nuevo no debe volver a proponer el fix.
+            out2 = io.StringIO()
+            with contextlib.redirect_stdout(out2):
+                doctor.run_fix(tmp, dry_run=False)
+            self.assertNotIn("Instalar .claude/settings.json", out2.getvalue())
 
 
 if __name__ == "__main__":

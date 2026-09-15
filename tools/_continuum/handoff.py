@@ -13,10 +13,67 @@ carpeta de tarea formal. Se diseñó para dos disparadores:
 """
 from __future__ import annotations
 
+import re
 import shutil
 from pathlib import Path
 
 from . import common as c
+
+# Prefijos de encabezado "## " que write_auto intenta heredar del handoff
+# anterior en vez de dejar en blanco. Prefijo, no texto exacto, porque el
+# handoff manual usa "## Objetivo" y el propio write_auto históricamente
+# escribe "## Objetivo de esta sesión" — ambos deben reconocerse.
+_CARRY_SECTIONS = {
+    "objetivo": "Objetivo",
+    "siguiente_paso": "Siguiente paso",
+}
+
+# Placeholders sin completar de las plantillas (`.ai/templates/HANDOFF.md`
+# y el propio write_auto) — si una sección solo contiene esto, no hay nada
+# real que heredar.
+_PLACEHOLDER_PREFIXES = (
+    "_(completar manualmente)_",
+    "_(qué se pidió hacer)_",
+    "_(lo primero que debería hacer",
+)
+
+# Marca la nota que write_auto agrega al heredar una sección — se usa para
+# despojarla ANTES de heredar de nuevo, así dos hooks seguidos sin edición
+# manual entre medio (p. ej. PreCompact y luego SessionEnd) no la anidan.
+_CARRIED_NOTE_MARKER = "> Heredado del handoff anterior"
+
+
+def _extract_carried_section(text: str, header_prefix: str) -> str | None:
+    """Extrae el cuerpo de la primera sección markdown de nivel 2 cuyo
+    encabezado empieza con `header_prefix` (case-insensitive). Devuelve
+    None si la sección no existe, está vacía, o solo tiene un placeholder
+    sin completar — en esos casos no hay nada útil que heredar."""
+    lines = text.splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        if re.match(rf"^##\s+{re.escape(header_prefix)}", line, re.IGNORECASE):
+            start = i + 1
+            break
+    if start is None:
+        return None
+
+    end = len(lines)
+    for j in range(start, len(lines)):
+        if lines[j].startswith("## "):
+            end = j
+            break
+
+    body = "\n".join(lines[start:end]).strip()
+
+    marker_idx = body.find(_CARRIED_NOTE_MARKER)
+    if marker_idx != -1:
+        body = body[:marker_idx].rstrip()
+
+    if not body:
+        return None
+    if any(body.startswith(p) for p in _PLACEHOLDER_PREFIXES):
+        return None
+    return body
 
 
 def _archive_previous(root: Path, cfg: dict) -> None:
@@ -53,12 +110,29 @@ def write_auto(root: Path, provider: str | None, role: str | None = None) -> int
     sesión sin aviso (p. ej. se acaban los tokens a media tarea).
     """
     cfg = c.load_config(root)
+    handoff_path = root / cfg["handoff"]["path"]
+    previous_text = c.read_text(handoff_path) if handoff_path.exists() else ""
     _archive_previous(root, cfg)
 
     status = c.git("status", "--porcelain").stdout.strip()
     diff_stat = c.git("diff", "--stat", "HEAD").stdout.strip()
     last_commit = c.git("log", "-1", "--format=%h %s").stdout.strip()
     branch = c.git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+
+    carried_note = (
+        "\n\n> Heredado del handoff anterior (archivado en "
+        f"`{cfg['handoff']['archive_dir']}/`) — esta sesión se cortó sin "
+        "confirmarlo, revisa si sigue vigente."
+    )
+    carried_objetivo = _extract_carried_section(previous_text, _CARRY_SECTIONS["objetivo"])
+    carried_siguiente = _extract_carried_section(previous_text, _CARRY_SECTIONS["siguiente_paso"])
+
+    objetivo_block = (
+        f"{carried_objetivo}{carried_note}" if carried_objetivo else "_(completar manualmente)_"
+    )
+    siguiente_block = (
+        f"{carried_siguiente}{carried_note}" if carried_siguiente else "_(completar manualmente)_"
+    )
 
     lines = [
         "# Handoff (auto-generado)",
@@ -80,14 +154,18 @@ def write_auto(root: Path, provider: str | None, role: str | None = None) -> int
         f"```\n{diff_stat}\n```" if diff_stat else "(sin diferencias)",
         "",
         "## Objetivo de esta sesión",
-        "_(completar manualmente)_",
+        objetivo_block,
         "",
         "## Siguiente paso recomendado",
-        "_(completar manualmente)_",
+        siguiente_block,
     ]
     c.write_text(root / cfg["handoff"]["path"], "\n".join(lines) + "\n")
-    c.ok(f"Handoff automático escrito en {cfg['handoff']['path']}. "
-         f"Faltan por completar 'Objetivo' y 'Siguiente paso'.")
+    if carried_objetivo or carried_siguiente:
+        c.ok(f"Handoff automático escrito en {cfg['handoff']['path']} "
+             f"(Objetivo/Siguiente paso heredados del handoff anterior — revísalos).")
+    else:
+        c.ok(f"Handoff automático escrito en {cfg['handoff']['path']}. "
+             f"Faltan por completar 'Objetivo' y 'Siguiente paso'.")
     return 0
 
 

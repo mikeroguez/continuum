@@ -21,6 +21,12 @@ ADR_FILENAME_RE = re.compile(r"^ADR-(\d+)")
 GENERATED_ROLE_MARKER = "del catálogo de Continuum"
 ROLE_NAME_RE = re.compile(r"^name:\s*(\S+)\s*$", re.MULTILINE)
 
+# Techo de tokens del "paquete de arranque" (archivos que toda sesión nueva
+# carga siempre). Un solo número compartido por `doctor` y `metrics` — antes
+# vivían por separado (8000 en doctor.py, 3500 en metrics.py) y podían
+# contradecirse para el mismo repositorio.
+STARTUP_TOKENS_LIMIT = 3500
+
 CANONICAL_FILE = "AI_COLLABORATION.md"
 PROVIDER_FILES = {
     "claude": "CLAUDE.md",
@@ -39,6 +45,11 @@ DEFAULT_CONFIG = {
         "max_index_lines": 80,
         "topics_dir": ".ai/state/topics",
         "max_topic_lines": 300,
+        # Complementa max_topic_lines: un tema con pocas líneas pero muy
+        # largas (párrafos sin cortar, listas densas) puede pesar miles de
+        # tokens sin que el conteo de líneas lo note. Ver ADR sobre esto en
+        # docs/decision-log.md.
+        "max_topic_tokens": 1500,
     },
     "roles": {
         # Catálogo de "personas" que una sesión puede adoptar para una
@@ -58,8 +69,21 @@ DEFAULT_CONFIG = {
         "archive_dir": ".ai/state/archive/handoffs",
         "stale_after_hours": 24,
     },
+    "doctor": {
+        # Rutas (relativas a la raíz) donde `doctor` nunca busca duplicados
+        # de estado-dev.md/CHANGELOG.md/etc. Los nombres estándar (vendor/,
+        # node_modules/, .git/...) ya se excluyen siempre y no hace falta
+        # listarlos aquí — esto es para vendor con nombre no convencional
+        # (p. ej. un micro-framework que lo llama App/Core/ en vez de
+        # vendor/), donde N CHANGELOG.md de librerías de terceros es
+        # esperado, no un riesgo de divergencia.
+        "ignore_paths": [],
+    },
     "template_remote": "",
     "template_prefix": "",
+    "template_branch": "export",
+    "template_version": "",
+    "template_sync_mode": "vendoring",
 }
 
 
@@ -76,11 +100,41 @@ def date_str() -> str:
 
 
 def read_version(root: Path) -> str | None:
-    """Lee `VERSION` en la raíz — fuente única de la versión instalada,
-    actualizada por `continuum release --no-dry-run`. None si el proyecto
-    instaló Continuum antes de que este archivo existiera."""
-    text = read_text(root / "VERSION").strip()
+    """Lee `VERSION` en la raíz o en `.continuum/VERSION`."""
+    p = root / "VERSION"
+    if not p.exists():
+        p = root / ".continuum" / "VERSION"
+    text = read_text(p).strip()
     return text or None
+
+
+def continuum_dir(root: Path) -> Path:
+    """Devuelve el directorio base donde vive el código/catálogo de Continuum.
+
+    Si el proyecto instaló Continuum mediante git subtree en `.continuum/`,
+    devuelve `root / ".continuum"`. Si es un repositorio autoalojado o
+    instalación en raíz, devuelve `root`.
+    """
+    c_dir = root / ".continuum"
+    if c_dir.is_dir():
+        return c_dir
+    return root
+
+
+def templates_dir(root: Path) -> Path:
+    """Ruta del directorio de plantillas (.ai/templates/).
+
+    Respeta plantillas locales del proyecto en `.ai/templates/`. Si no existen,
+    recurre a las plantillas del catálogo de Continuum en `.continuum/`.
+    """
+    local_tpl = root / ".ai" / "templates"
+    if local_tpl.is_dir():
+        return local_tpl
+    cdir = continuum_dir(root)
+    for sub in [cdir / ".ai" / "templates", cdir / "templates"]:
+        if sub.is_dir():
+            return sub
+    return local_tpl
 
 
 def repo_root() -> Path:
@@ -134,6 +188,11 @@ def load_config(root: Path) -> dict:
         except json.JSONDecodeError as e:
             warn(f"No se pudo leer {cfg_path}: {e}. Usando configuración por defecto.")
     return cfg
+
+
+def save_config(root: Path, cfg: dict) -> None:
+    cfg_path = root / ".ai" / "config.json"
+    write_text(cfg_path, json.dumps(cfg, indent=2) + "\n")
 
 
 def _deep_merge(base: dict, override: dict) -> None:

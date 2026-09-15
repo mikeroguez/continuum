@@ -30,7 +30,7 @@ En este orden, y nada más hasta no tener claro el alcance de la tarea:
 No leas más que eso para empezar. El resto se explora bajo demanda (§3).
 
 En clientes con el hook `SessionStart` instalado (ver `.claude/settings.json`
-de ejemplo), `tools/continuum context` ya empuja el contenido completo de
+de ejemplo), `tools/continuum context --hook` ya empuja el contenido completo de
 este archivo, de `estado-dev.md` y de `HANDOFF.md` al arranque — no depende
 de que decidas abrirlos tú. Los entrypoints por proveedor (`CLAUDE.md`,
 `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`) no se
@@ -75,26 +75,21 @@ Nunca renumerar ni reutilizar identificadores de requisitos/tareas ya usados
 
 - Localiza antes de leer: `rg`/`grep` para encontrar, no explorar carpetas completas "por si acaso".
 - Lee índices/encabezados antes que archivos completos cuando el archivo lo permita.
-- Usa primero las herramientas nativas de lectura por rango/`grep` de tu
-  cliente para archivos grandes. `tools/continuum packetize` (chunking estático
-  a Markdown) es **último recurso** — solo para pasarle contenido a un
-  sub-proceso o modelo sin acceso a herramientas de archivo. Si tu cliente ya
-  puede leer por offset/límite y grepear, trocear a mano no aporta nada y es
-  trabajo de más.
+- Usa lectura por rango/`grep` nativos de tu cliente para archivos grandes.
+  `tools/continuum packetize` es **último recurso**, solo para pasar
+  contenido a un sub-proceso sin acceso a herramientas de archivo.
 - Solo abre un archivo de `.ai/state/topics/` si la tarea lo necesita — el
-  índice (`estado-dev.md`) existe justamente para decidir eso sin tener que
-  abrirlos todos.
-- Si tu cliente soporta prompt caching (Claude vía API/Claude Code lo aplica
-  solo si el prefijo del contexto es idéntico entre turnos): **no edites**
-  este archivo, los entrypoints ni el índice a media tarea si lo puedes
-  evitar — cualquier cambio en ese bloque invalida el caché para el resto de
-  la sesión. Todo lo estable va primero, lo variable (diffs, resultados de
-  comandos) al final.
+  índice (`estado-dev.md`) existe justamente para decidir eso.
+- Prompt caching (Claude vía API/Claude Code): **no edites** este archivo,
+  los entrypoints ni el índice a media tarea si lo puedes evitar — invalida
+  el caché del resto de la sesión. Lo estable va primero, lo variable
+  (diffs, resultados de comandos) al final.
 - `tools/continuum doctor` reporta el costo estimado en tokens del "paquete de
   arranque" (entrypoints + índice + handoff — los temas NO cuentan porque se
-  cargan bajo demanda). Si supera ~8k tokens con el índice acotado, el
-  problema casi siempre es contenido inferible en un entrypoint (§3.1), no
-  que "haga falta compactar".
+  cargan bajo demanda) contra `STARTUP_TOKENS_LIMIT` (`common.py`, ~3500
+  tokens). Si lo supera con el índice acotado, el problema casi siempre es
+  contenido inferible en un entrypoint (§3.1) — empezando por este mismo
+  archivo, que es el que más pesa —, no que "haga falta compactar".
 - El volcado automático de `continuum context` (§0) no es costo nuevo: ese
   contenido ya se leía, el cambio es que ahora es el hook quien lo entrega en
   vez de depender de un `Read` posterior del agente — por eso queda fuera del
@@ -162,13 +157,11 @@ nativamente Claude Code (`MEMORY.md` + archivos por tema, ver
 
 ## 6. Trabajo en equipo (múltiples personas)
 
-- **Aislamiento por tarea**: Cada desarrollador o sesión trabaja en su subcarpeta `.ai/tasks/<slug>/`. Al estar aisladas por slug, los merges entre ramas de Git no producen conflictos en los archivos de tarea.
-- **Visibilidad y ownership**: `continuum task claim <slug> <owner>` marca quién está trabajando en una tarea para dar visibilidad al resto del equipo en `continuum status` o `continuum task list`.
-- **Manejo de `HANDOFF.md` en merges**: `.ai/HANDOFF.md` representa la continuidad de la rama actual. En Pull Requests o merges a `main`, si ocurre un conflicto en `HANDOFF.md`, la regla es aceptar la versión de la rama principal o regenerarla inmediatamente ejecutando `tools/continuum handoff --auto` — nunca dejar marcadores de conflicto sin resolver commiteados; `tools/continuum doctor` lo trata como problema crítico si se te escapa (ver `docs/investigacion-2026.md` §10: se evaluó y descartó resolver esto con una estrategia de merge automática, porque descartaría contenido en silencio sin que nadie lo note).
-- **Cierre de tarea en PR**: Antes de hacer merge, la tarea se cierra con `continuum task close <slug>`, lo que traslada la carpeta a `.ai/tasks/_closed/<slug>/` para preservar la evidencia de pruebas en el historial de Git sin colisionar con las tareas activas de otros.
-- **Prefijo de commit**: Usar el slug de la tarea cuando exista: `[pagos-recurrentes] feat: agrega validación de monto mínimo` para facilitar búsquedas con `git log --grep`.
-- **Concurrencia local (`git worktree`)**: Si dos personas o agentes (Claude Code, Codex, Copilot, etc.) trabajan localmente al mismo tiempo en el mismo repo, usa `continuum task start <slug> --worktree` para crear la tarea y aislar el directorio de trabajo en un paso (por debajo corre `git worktree add ../<repo>-<slug> -b task/<slug>`). También puedes correr ese comando de git a mano si prefieres controlar la ruta o el nombre de rama. Regla dura: un agente = un worktree = una tarea — nunca dos procesos de agente escribiendo en el mismo directorio de trabajo a la vez.
-- **Nunca uses `git stash` con otros worktrees activos**: la lista de stash es del repositorio completo, no de cada worktree (`git stash list` es global) — un stash hecho en un worktree puede terminar aplicándose por error en otro. Si necesitas guardar trabajo a medias en un worktree, haz un commit local (p. ej. `wip: ...`) en vez de stash.
+Solo aplica con varias personas/agentes en el mismo repositorio a la vez
+(aislamiento por tarea, ownership, merges de `HANDOFF.md`, `git worktree`,
+por qué nunca usar `git stash` con varios worktrees activos): ver
+[`template/docs/trabajo-en-equipo.md`](template/docs/trabajo-en-equipo.md).
+Si trabajas solo/a, sáltate esta sección.
 
 ## 7. Convención de commits
 
@@ -187,20 +180,13 @@ del arranque. Es una advertencia, no un bloqueo duro — usa `git commit
 
 `tools/continuum doctor --fix --no-dry-run` aplica auto-reparaciones que no
 requieren criterio humano (crear directorios/handoff faltantes, sincronizar
-subagentes de roles, y desde ADR-012 también recalcular la huella sha256
-que `.github/copilot-instructions.md` guarda de `AI_COLLABORATION.md` —
-ADR-010 — sin tocar su prosa curada). Sin `--no-dry-run` solo muestra el
-plan. `continuum roles sync` también poda subagentes generados que ya no
-corresponden a ningún rol activo del catálogo, detectados por huella de
-contenido, nunca por nombre de archivo.
+subagentes de roles, refrescar la huella sha256 de
+`.github/copilot-instructions.md` — ADR-010, sin tocar su prosa curada).
+Sin `--no-dry-run` solo muestra el plan.
 
-`tools/continuum --version` (o `continuum version`) reporta la versión
-instalada desde `VERSION` en la raíz — se actualiza sola con `continuum
-release --no-dry-run`, nunca a mano. Si el proyecto necesita desinstalar
-Continuum por completo, `tools/continuum uninstall` (ver `README.md`) lo
-hace en tres niveles de seguridad crecientes, nunca commitea por sí solo y
-nunca toca `docs/architecture/` ni `.ai/state`/`.ai/tasks`/`HANDOFF.md`
-salvo que se pida explícitamente.
+`tools/continuum --version` reporta la versión instalada (`VERSION` en la
+raíz, nunca a mano). `tools/continuum uninstall` (ver `README.md`) retira
+Continuum en tres niveles de seguridad crecientes.
 
 ## 9. Roles: catálogo de expertos
 

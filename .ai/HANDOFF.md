@@ -1,31 +1,17 @@
-# Handoff (auto-generado)
+# Handoff
 
-**Fecha:** 2026-09-14 · **Proveedor:** gemini · **Rol:** desconocido · **Branch:** develop
-
-> Este borrador se generó automáticamente al cortar la sesión (hook SessionEnd/PreCompact o pre-push). Complementa manualmente el 'por qué' y el 'siguiente paso' antes de continuar en otra sesión.
-
-## Último commit
-`51e4133 chore(release): bump version to 1.6.0 (ADR-013, ADR-014)`
-
-## Cambios sin commitear
-(sin cambios pendientes)
-
-## Resumen de diff vs HEAD
-(sin diferencias)
+**Fecha:** 2026-09-25 · **Proveedor:** gemini · **Rol:** orquestador · **Branch:** develop
 
 ## Objetivo de esta sesión
-Implementar arquitectura de distribución limpia con vendoring lineal (ADR-014), canales export/export-develop y selección de versiones. Limpiar el historial en classPulse dejándolo 100% lineal. Incrementar versión a v1.6.0 (dado que v1.5.0 ya existía en main) y preparar el PR #7 hacia main para revisión y votación de Wada.
+Optimizar el framework Continuum para reducir el consumo excesivo de tokens y prevenir la invalidación de Prompt Caching en todos los proveedores (Claude Code, Gemini, Codex, Copilot).
 
 ## Decisiones y validaciones
-- **ADR-014:** Vendoring lineal por defecto en `continuum sync`, canales `export` (main/estable) y `export-develop` (develop/edge), y soporte de tags SemVer (`vX.Y.Z`).
-- **Versión 1.6.0:** Se actualizó `VERSION`, `template/VERSION`, `tools/_continuum/__init__.py`, `template/tools/_continuum/__init__.py` y se separó `CHANGELOG.md` en secciones [1.6.0] y [1.5.0].
-- **classPulse migrado y limpio:** Historial local consolidado en 1 solo commit lineal sobre `main` instalando Continuum v1.6.0 en `.continuum/`. Sincronizado exitosamente desde `export-develop` con `sync --apply` (0 problemas críticos en doctor).
-- **Canal export-develop actualizado:** Rama `export-develop` actualizada con el código de v1.6.0 y pusheada a `origin/export-develop`.
-- **Suite completa:** 164 tests unitarios pasando en verde.
-- **PR #7 actualizado:** Título y descripción actualizados para Continuum v1.6.0, listo para votación de Wada.
+- **AI_COLLABORATION.md optimizado:** Prosa recortada de ~2,141 a ~783 tokens. El arranque total bajó a ~2,217 tokens (techo de 3,500 tokens).
+- **Hooks de Claude Code:** Eliminada la mutación de disco en `PreCompact` para preservar el prefijo del Prompt Cache.
+- **Herramientas de compactación:** Implementado `continuum compact --handoff` (`handoff --compact`) para archivar resúmenes viejos a `.ai/state/archive/handoffs/`.
+- **Limpieza de tareas inactivas:** Implementado `continuum task archive-stale` y ejecutado para archivar `copilot-compatibility` en `.ai/tasks/_closed/`.
+- **Verificación de calidad:** `continuum doctor` reporta 0 problemas críticos y 0 advertencias. Pruebas unitarias al 100% pasando (176/176 tests en verde).
 
 ## Siguiente paso recomendado
-- Presentar a Wada el PR #7 (https://github.com/mikeroguez/continuum/pull/7) para su revisión y votación.
-- Tras la aprobación y voto favorable de Wada, mergear a `main`, generar el tag `v1.6.0` y refrescar la rama `export` con:
-  `python3 tools/continuum export refresh --channel stable --no-dry-run`
-  `git push origin main export --tags`
+- Commitear los cambios de optimización en la rama `develop`.
+- Sincronizar proyectos consumidores (como `sisteap`) ejecutando `tools/continuum sync --channel dev --apply` para que reciban la optimización de tokens y hooks corregidos.

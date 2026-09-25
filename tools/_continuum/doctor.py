@@ -118,11 +118,12 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
         })
     else:
         h_text = c.read_text(handoff_path)
-        if h_text.count("\n") + 1 > 50 or c.estimate_tokens(h_text) > 600:
+        h_lines = h_text.count("\n") + 1
+        if h_lines > 50 or c.estimate_tokens(h_text) > 600:
             from . import handoff
             actions.append({
                 "id": "compact_handoff",
-                "desc": f"Compactar {cfg['handoff']['path']} ({h_text.count('\n') + 1} líneas, ~{c.estimate_tokens(h_text)} tokens)",
+                "desc": f"Compactar {cfg['handoff']['path']} ({h_lines} líneas, ~{c.estimate_tokens(h_text)} tokens)",
                 "fn": lambda: handoff.compact_handoff(root),
             })
 

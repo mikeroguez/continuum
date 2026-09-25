@@ -3,15 +3,18 @@
 **Fecha:** 2026-09-25 · **Proveedor:** gemini · **Rol:** orquestador · **Branch:** develop
 
 ## Objetivo de esta sesión
-Optimizar el framework Continuum para reducir el consumo excesivo de tokens y prevenir la invalidación de Prompt Caching en todos los proveedores (Claude Code, Gemini, Codex, Copilot).
+Preparar la versión v1.7.0, actualizar documentación y dejar todo listo para el PR a main y el release oficial.
 
 ## Decisiones y validaciones
-- **AI_COLLABORATION.md optimizado:** Prosa recortada de ~2,141 a ~783 tokens. El arranque total bajó a ~2,217 tokens (techo de 3,500 tokens).
-- **Hooks de Claude Code:** Eliminada la mutación de disco en `PreCompact` para preservar el prefijo del Prompt Cache.
-- **Herramientas de compactación:** Implementado `continuum compact --handoff` (`handoff --compact`) para archivar resúmenes viejos a `.ai/state/archive/handoffs/`.
-- **Limpieza de tareas inactivas:** Implementado `continuum task archive-stale` y ejecutado para archivar `copilot-compatibility` en `.ai/tasks/_closed/`.
-- **Verificación de calidad:** `continuum doctor` reporta 0 problemas críticos y 0 advertencias. Pruebas unitarias al 100% pasando (176/176 tests en verde).
+- **Bump de versión v1.7.0:** Actualizado `VERSION`, `template/VERSION`, `tools/_continuum/__init__.py`, `template/tools/_continuum/__init__.py` a `1.7.0`.
+- **Changelog y Badges:** `CHANGELOG.md` estructurado con la sección `[1.7.0] - 2026-09-25`. Badges en `README.md` y `README.en.md` actualizados a `v1.7.0`.
+- **Fix en CLI `release`:** Corregida colisión de argumentos de `--version` vs `release <version>` en `tools/_continuum/__main__.py` y `template/tools/_continuum/__main__.py`.
+- **Validaciones exitosas:**
+  - `python3 tools/continuum release v1.7.0 --dry-run` ejecutado exitosamente con 0 errores (SemVer OK, CHANGELOG OK, Doctor OK, Tag OK).
+  - `python3 tools/continuum doctor` reporta 0 problemas críticos y 0 advertencias.
+  - Pruebas unitarias ejecutadas al 100% (176/176 tests pasando).
 
 ## Siguiente paso recomendado
-- Commitear los cambios de optimización en la rama `develop`.
-- Sincronizar proyectos consumidores (como `sisteap`) ejecutando `tools/continuum sync --channel dev --apply` para que reciban la optimización de tokens y hooks corregidos.
+- Mergear los cambios a `develop` y pushear a `origin/develop`.
+- Crear o actualizar el PR de `develop` a `main` para el release v1.7.0.
+- Tras la aprobación, mergear a `main` y ejecutar `continuum release v1.7.0 --no-dry-run` para generar el tag y refrescar la rama `export`.

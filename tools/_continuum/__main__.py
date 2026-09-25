@@ -201,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = c.repo_root()
 
-    if getattr(args, "version", False):
+    if args.cmd is None and getattr(args, "version", False):
         return status.cmd_version(root)
 
     if args.cmd == "version":

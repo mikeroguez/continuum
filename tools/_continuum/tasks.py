@@ -265,3 +265,36 @@ def resume(root: Path, slug: str | None = None, json_output: bool = False) -> in
     print("\n".join(lines))
     return 0
 
+
+def archive_stale(root: Path, days: int | None = None) -> int:
+    """Archiva en lote las tareas inactivas en .ai/tasks/ que no han tenido actividad
+    durante más de 'days' días y no tienen handoff.md completado.
+    """
+    import time
+    cfg = c.load_config(root)
+    tasks_dir = root / cfg["tasks"]["dir"]
+    stale_days = days if days is not None else cfg["tasks"]["stale_after_days"]
+    if not tasks_dir.exists():
+        c.info("No hay directorio de tareas.")
+        return 0
+
+    active = [p for p in tasks_dir.iterdir() if p.is_dir() and p.name != "_closed"]
+    archived_count = 0
+
+    for task_dir in active:
+        task_md = task_dir / "task.md"
+        handoff_md = task_dir / "handoff.md"
+        if not task_md.exists():
+            continue
+        age_days = (time.time() - task_md.stat().st_mtime) / 86400
+        if age_days > stale_days and not handoff_md.exists():
+            close(root, task_dir.name, force=True)
+            archived_count += 1
+
+    if archived_count > 0:
+        c.ok(f"Se archivaron {archived_count} tarea(s) inactiva(s) en {cfg['tasks']['closed_dir']}")
+    else:
+        c.info(f"No hay tareas inactivas (>{stale_days} días sin handoff) que archivar.")
+    return 0
+
+

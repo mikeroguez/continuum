@@ -116,6 +116,35 @@ def run_fix(root: Path, dry_run: bool = True) -> int:
             "desc": f"Crear {cfg['handoff']['path']} inicial",
             "fn": lambda: handoff.write_manual(root, "Handoff inicial creado por doctor --fix"),
         })
+    else:
+        h_text = c.read_text(handoff_path)
+        h_lines = h_text.count("\n") + 1
+        if h_lines > 50 or c.estimate_tokens(h_text) > 600:
+            from . import handoff
+            actions.append({
+                "id": "compact_handoff",
+                "desc": f"Compactar {cfg['handoff']['path']} ({h_lines} líneas, ~{c.estimate_tokens(h_text)} tokens)",
+                "fn": lambda: handoff.compact_handoff(root),
+            })
+
+    # 2.1 Check stale tasks
+    tasks_dir = root / cfg["tasks"]["dir"]
+    stale_days = cfg["tasks"]["stale_after_days"]
+    if tasks_dir.exists():
+        stale_list = [
+            p for p in tasks_dir.iterdir()
+            if p.is_dir() and p.name != "_closed"
+            and (p / "task.md").exists()
+            and not (p / "handoff.md").exists()
+            and (time.time() - (p / "task.md").stat().st_mtime) / 86400 > stale_days
+        ]
+        if stale_list:
+            from . import tasks
+            actions.append({
+                "id": "archive_stale_tasks",
+                "desc": f"Archivar {len(stale_list)} tarea(s) inactiva(s) abandonada(s) ({', '.join(t.name for t in stale_list)}) en {cfg['tasks']['closed_dir']}/",
+                "fn": lambda: tasks.archive_stale(root),
+            })
 
     # 3. Check hook (.githooks/pre-commit)
     hook_path = root / ".githooks" / "pre-commit"
@@ -419,12 +448,19 @@ def run(root: Path, quiet: bool = False, fix: bool = False, dry_run: bool = True
         else:
             age_h = (time.time() - handoff_path.stat().st_mtime) / 3600
             dirty = c.git("status", "--porcelain").stdout.strip() != ""
-            if dirty and age_h > cfg["handoff"]["stale_after_hours"]:
+            h_lines = handoff_text.count("\n") + 1
+            h_tokens = c.estimate_tokens(handoff_text)
+            if h_lines > 50 or h_tokens > 600:
+                c.warn(f"{cfg['handoff']['path']} tiene {h_lines} líneas y ~{h_tokens} tokens "
+                       f"(límite recomendado: ~400 tokens / 50 líneas). "
+                       f"Corre 'continuum compact --handoff' para archivar resúmenes pasados.")
+                warnings += 1
+            elif dirty and age_h > cfg["handoff"]["stale_after_hours"]:
                 c.warn(f"Hay cambios sin commitear y el handoff tiene {age_h:.0f}h de antigüedad. "
                        f"Si vas a cortar la sesión, actualiza {cfg['handoff']['path']} antes.")
                 warnings += 1
             else:
-                ok(f"Handoff con {age_h:.0f}h de antigüedad.")
+                ok(f"Handoff acotado ({h_lines} líneas, ~{h_tokens} tokens), {age_h:.0f}h de antigüedad.")
 
     # 7.1 Numeración de ADRs
     section("ADRs")

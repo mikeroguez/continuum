@@ -5,7 +5,7 @@ carpeta de tarea formal. Se diseñó para dos disparadores:
 
 1. Manual: la IA o la persona lo actualiza al terminar una sesión o notar que
    se está por agotar el contexto/tokens.
-2. Automático: un hook (Claude Code SessionEnd/PreCompact, o un git pre-push) llama
+2. Automático: un hook (Claude Code SessionEnd o un git pre-push) llama
    `continuum handoff --auto`, que arma un borrador desde `git status`/`git diff`
    aunque nadie se acuerde de hacerlo a mano. Esto es lo que faltaba en los
    proyectos previos: la disciplina dependía 100% de la memoria humana/del
@@ -39,7 +39,7 @@ _PLACEHOLDER_PREFIXES = (
 
 # Marca la nota que write_auto agrega al heredar una sección — se usa para
 # despojarla ANTES de heredar de nuevo, así dos hooks seguidos sin edición
-# manual entre medio (p. ej. PreCompact y luego SessionEnd) no la anidan.
+# manual entre medio no la anidan.
 _CARRIED_NOTE_MARKER = "> Heredado del handoff anterior"
 
 
@@ -141,7 +141,7 @@ def write_auto(root: Path, provider: str | None, role: str | None = None) -> int
         f"**Rol:** {role or 'desconocido'} · **Branch:** {branch}",
         "",
         "> Este borrador se generó automáticamente al cortar la sesión "
-        "(hook SessionEnd/PreCompact o pre-push). Complementa manualmente el "
+        "(hook SessionEnd o pre-push). Complementa manualmente el "
         "'por qué' y el 'siguiente paso' antes de continuar en otra sesión.",
         "",
         "## Último commit",
@@ -169,6 +169,63 @@ def write_auto(root: Path, provider: str | None, role: str | None = None) -> int
     return 0
 
 
+def compact_handoff(root: Path) -> int:
+    """Compacta .ai/HANDOFF.md reduciendo secciones hipertrofiadas/historiales viejos.
+
+    Archiva una copia completa en .ai/state/archive/handoffs/ y conserva únicamente
+    las secciones activas (objetivo, decisiones vigentes, siguiente paso) acotadas.
+    """
+    cfg = c.load_config(root)
+    handoff_path = root / cfg["handoff"]["path"]
+    if not handoff_path.exists():
+        c.err(f"No existe {cfg['handoff']['path']}")
+        return 1
+
+    text = c.read_text(handoff_path)
+    lines = text.splitlines()
+    tokens = c.estimate_tokens(text)
+
+    if len(lines) <= 45 and tokens <= 500:
+        c.info(f"{cfg['handoff']['path']} ya está acotado ({len(lines)} líneas, ~{tokens} tokens). Nada que compactar.")
+        return 0
+
+    _archive_previous(root, cfg)
+
+    carried_objetivo = _extract_carried_section(text, _CARRY_SECTIONS["objetivo"])
+    carried_siguiente = _extract_carried_section(text, _CARRY_SECTIONS["siguiente_paso"])
+
+    header_lines = []
+    for line in lines[:6]:
+        if line.startswith("# ") or line.startswith("**Fecha:**") or line.startswith("> "):
+            header_lines.append(line)
+
+    last_commit = c.git("log", "-1", "--format=%h %s").stdout.strip()
+    status = c.git("status", "--porcelain").stdout.strip()
+
+    compact_content = [
+        header_lines[0] if header_lines else "# Handoff",
+        "",
+        f"**Fecha:** {c.date_str()} · **Estado:** Compactado por continuum compact",
+        "",
+        "## Último commit",
+        f"`{last_commit}`" if last_commit else "(sin commits)",
+        "",
+        "## Cambios sin commitear",
+        f"```\n{status}\n```" if status else "(working tree limpio)",
+        "",
+        "## Objetivo de esta sesión",
+        carried_objetivo or "_(completar manualmente)_",
+        "",
+        "## Siguiente paso recomendado",
+        carried_siguiente or "_(completar manualmente)_",
+    ]
+
+    new_text = "\n".join(compact_content) + "\n"
+    c.write_text(handoff_path, new_text)
+    c.ok(f"Handoff compactado en {cfg['handoff']['path']} (~{c.estimate_tokens(new_text)} tokens). Copia completa archivada en {cfg['handoff']['archive_dir']}/.")
+    return 0
+
+
 def lint_handoff(root: Path) -> list[str]:
     cfg = c.load_config(root)
     handoff_path = root / cfg["handoff"]["path"]
@@ -182,7 +239,7 @@ def lint_handoff(root: Path) -> list[str]:
 
     if tokens > 400:
         warnings.append(f"El handoff tiene ~{tokens} tokens estimados (límite recomendado: ~400 tokens). "
-                        "Considera resumir secciones redundantes o diffs largos.")
+                        "Considera resumir secciones redundantes o diffs largos con 'continuum compact --handoff'.")
 
     if "_(completar manualmente)_" in text:
         warnings.append("El handoff contiene secciones sin completar ('_(completar manualmente)_').")

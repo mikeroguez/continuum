@@ -6,6 +6,8 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-25
+
 ### Fixed
 
 - `continuum init`: `.claude/settings.json` (hooks `SessionEnd`/`PreCompact` que
@@ -18,6 +20,9 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ### Changed
 
+- Optimización de Prompt Caching en hooks de Claude Code: eliminación de la
+  mutación de disco en `PreCompact` a mitad de sesión para evitar la invalidación
+  de la caché de tokens en Anthropic/Claude Code.
 - `continuum handoff --auto`: si el handoff anterior ya tenía `Objetivo` y/o
   `Siguiente paso recomendado` completados (no el placeholder de la
   plantilla), el borrador automático los hereda tal cual en vez de
@@ -39,6 +44,10 @@ versionado según [SemVer](https://semver.org/lang/es/) (ver `CONTRIBUTING.md`
 
 ### Added
 
+- `continuum compact --handoff` (`handoff --compact`): nuevo subcomando para
+  archivar resúmenes pasados de `.ai/HANDOFF.md` en `.ai/state/archive/handoffs/`.
+- `continuum task archive-stale`: nuevo subcomando para archivar automáticamente
+  tareas cerradas e inactivas.
 - `continuum context --hook`: nuevo flag para el hook `SessionStart` de
   Claude Code — antepone una nota explícita de que el contenido ya se
   inyectó al arranque, para que el agente no vuelva a leer

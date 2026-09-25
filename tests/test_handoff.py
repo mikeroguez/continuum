@@ -155,5 +155,27 @@ class TestHandoffAuto(unittest.TestCase):
             self.assertIn("Cerrar la tarea.", content_after_second)
 
 
+class TestHandoffCompact(unittest.TestCase):
+    def test_compact_handoff_archives_and_shortens(self):
+        with temp_project() as root:
+            handoff_path = root / ".ai" / "HANDOFF.md"
+            lines = ["# Handoff Monolítico\n\n**Fecha:** 2026-09-25\n\n## Objetivo\nObjetivo activo.\n\n## Siguiente paso recomendado\nPaso activo.\n"]
+            for i in range(60):
+                lines.append(f"## Sprint {i}\nResumen del sprint {i} con mucho contenido de relleno que ocupa tokens.\n")
+            handoff_path.write_text("\n".join(lines), encoding="utf-8")
+
+            code = handoff.compact_handoff(root)
+            self.assertEqual(code, 0)
+
+            new_content = handoff_path.read_text()
+            self.assertLess(len(new_content.splitlines()), 45)
+            self.assertIn("Objetivo activo.", new_content)
+
+            archive_dir = root / ".ai" / "state" / "archive" / "handoffs"
+            self.assertTrue(archive_dir.exists())
+            self.assertGreater(len(list(archive_dir.glob("*.md"))), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
+

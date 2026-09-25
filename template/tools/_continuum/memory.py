@@ -31,7 +31,11 @@ def _slugify(title: str) -> str:
     return title or "tema"
 
 
-def compact(root: Path, topic: str | None = None, keep_last: int = 5) -> int:
+def compact(root: Path, topic: str | None = None, keep_last: int = 5, handoff: bool = False) -> int:
+    if handoff or topic == "handoff":
+        from . import handoff as handoff_mod
+        return handoff_mod.compact_handoff(root)
+
     cfg = c.load_config(root)
     if topic:
         target_path = root / cfg["estado_dev"]["topics_dir"] / f"{topic}.md"
@@ -121,9 +125,6 @@ def split_legacy(root: Path) -> int:
     chrono_matches = list(ENTRY_HEADING_RE.finditer(text))
     stable_start = _first_stable_heading(text, chrono_matches[-1].start()) if chrono_matches else 0
 
-    # 1. Archiva entradas cronológicas viejas tal como compact() lo haría,
-    #    pero aquí simplemente las movemos todas al archive (es una migración,
-    #    no una poda incremental).
     if chrono_matches:
         archive_dir = root / ".ai" / "state" / "archive"
         archive_dir.mkdir(parents=True, exist_ok=True)
@@ -137,7 +138,6 @@ def split_legacy(root: Path) -> int:
             c.write_text(archive_file, f"# Historial archivado — {month}\n\n" + "\n".join(blocks) + "\n")
         c.ok(f"{len(chrono_matches)} entrada(s) cronológica(s) movidas a .ai/state/archive/")
 
-    # 2. Cada sección estable "## N. Título" se vuelve un archivo de tema.
     stable_text = text[stable_start:]
     topics_dir = root / cfg["estado_dev"]["topics_dir"]
     topics_dir.mkdir(parents=True, exist_ok=True)
@@ -165,9 +165,6 @@ def split_legacy(root: Path) -> int:
 
         existing = c.read_text(topic_path)
         if existing.strip():
-            # No pisamos un tema que ya tiene contenido real (típico: la
-            # plantilla ya trae resumen.md/pendientes.md/etc. por defecto).
-            # Se anexa con separador y se marca para revisión manual.
             c.write_text(
                 topic_path,
                 existing.rstrip() + "\n\n---\n\n"

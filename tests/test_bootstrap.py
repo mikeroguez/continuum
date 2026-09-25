@@ -116,8 +116,8 @@ class TestClaudeSettingsShape(unittest.TestCase):
         settings = self._load()
         self.assertIn("SessionStart", settings["hooks"])
         self.assertIn("SessionEnd", settings["hooks"])
-        self.assertIn("PreCompact", settings["hooks"])
-        # Nunca "Stop": dispara en cada turno, no solo al cerrar sesión.
+        # No PreCompact ni Stop: evitan escrituras en disco a mitad de sesión que rompen Prompt Caching.
+        self.assertNotIn("PreCompact", settings["hooks"])
         self.assertNotIn("Stop", settings["hooks"])
 
     def test_session_start_calls_context_hook_flag(self):
@@ -127,11 +127,10 @@ class TestClaudeSettingsShape(unittest.TestCase):
         self.assertIn("context", cmd)
         self.assertIn("--hook", cmd)
 
-    def test_session_end_and_precompact_call_handoff_auto(self):
+    def test_session_end_calls_handoff_auto(self):
         settings = self._load()
-        for event in ("SessionEnd", "PreCompact"):
-            cmd = self._hook_command(settings, event)
-            self.assertIn("handoff --auto", cmd)
+        cmd = self._hook_command(settings, "SessionEnd")
+        self.assertIn("handoff --auto", cmd)
 
 
 if __name__ == "__main__":

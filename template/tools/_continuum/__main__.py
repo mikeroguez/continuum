@@ -56,15 +56,19 @@ def build_parser() -> argparse.ArgumentParser:
     tres.add_argument("slug", nargs="?", default=None, help="Slug de la tarea a retomar (opcional si solo hay 1 tarea activa).")
     tres.add_argument("--json", action="store_true", help="Emite el resultado en formato JSON.")
 
+    tarch = tsub.add_parser("archive-stale", help="Archiva tareas inactivas abiertas sin handoff.")
+    tarch.add_argument("--days", type=int, default=None, help="Días de inactividad a considerar (por defecto los configurados en config.json).")
 
     h = sub.add_parser("handoff", help="Escribe/actualiza .ai/HANDOFF.md.")
     h.add_argument("--auto", action="store_true", help="Genera un borrador desde git status/diff.")
+    h.add_argument("--compact", action="store_true", help="Compacta .ai/HANDOFF.md archivando resúmenes pasados.")
     h.add_argument("--provider", default=None, help="claude|codex|gemini|copilot|humano (informativo).")
     h.add_argument("--message", default=None, help="Texto libre a insertar en el handoff manual.")
     h.add_argument("--role", default=None, help="Slug de un rol de .ai/roles/ (informativo).")
 
-    m = sub.add_parser("compact", help="Archiva entradas viejas de un tema (o del índice) por mes.")
+    m = sub.add_parser("compact", help="Archiva entradas viejas de un tema (o del índice/handoff) por mes.")
     m.add_argument("--topic", default=None, help="Nombre del archivo en .ai/state/topics/ (sin .md). Sin esto, opera sobre el índice.")
+    m.add_argument("--handoff", action="store_true", help="Compacta .ai/HANDOFF.md archivando resúmenes pasados.")
     m.add_argument("--keep-last", type=int, default=5)
 
     sub.add_parser("memory-split-legacy", help=(
@@ -197,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = c.repo_root()
 
-    if getattr(args, "version", False):
+    if args.cmd is None and getattr(args, "version", False):
         return status.cmd_version(root)
 
     if args.cmd == "version":
@@ -225,14 +229,20 @@ def main(argv: list[str] | None = None) -> int:
             return tasks.current(root, json_output=args.json)
         if args.task_cmd == "resume":
             return tasks.resume(root, slug=args.slug, json_output=args.json)
+        if args.task_cmd == "archive-stale":
+            return tasks.archive_stale(root, days=args.days)
 
 
     if args.cmd == "handoff":
+        if getattr(args, "compact", False):
+            return handoff.compact_handoff(root)
         if args.auto:
             return handoff.write_auto(root, args.provider, args.role)
         return handoff.write_manual(root, args.message, args.role)
 
     if args.cmd == "compact":
+        if getattr(args, "handoff", False) or args.topic == "handoff":
+            return handoff.compact_handoff(root)
         return memory.compact(root, topic=args.topic, keep_last=args.keep_last)
 
     if args.cmd == "memory-split-legacy":
